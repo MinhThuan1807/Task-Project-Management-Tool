@@ -1,4 +1,7 @@
 import { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
@@ -6,39 +9,62 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui
 import { Separator } from '../ui/separator';
 import { Zap, Mail, Lock, ArrowLeft, Eye, EyeOff } from 'lucide-react';
 import { toast } from 'sonner';
+import { loginUserAPI } from '@/lib/features/auth/authSlice';
+import { useAppDispatch } from '@/lib/hooks';
+import { useRouter } from 'next/navigation';
+
+const loginSchema = z.object({
+  email: z
+    .string()
+    .min(1, 'Email is required')
+    .email('Invalid email address'),
+  password: z
+    .string()
+    .min(1, 'Password is required')
+    .min(6, 'Password must be at least 6 characters'),
+});
+
+type LoginFormData = z.infer<typeof loginSchema>;
 
 type LoginPageProps = {
-  onLogin: (email: string, password: string) => void;
-  onNavigateToRegister: () => void;
+  onNavigateToResgister: () => void;
   onNavigateToLanding: () => void;
 };
 
 export function LoginPageNew({
-  onLogin,
-  onNavigateToRegister,
+  onNavigateToResgister,
   onNavigateToLanding,
 }: LoginPageProps) {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const dispatch = useAppDispatch();
+  const router = useRouter();
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!email || !password) {
-      toast.error('Please fill in all fields');
-      return;
-    }
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<LoginFormData>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: '',
+      password: '',
+    },
+  });
 
+  const onSubmit = async (data: LoginFormData) => {
     setIsLoading(true);
+    try {
+      await dispatch(loginUserAPI(data)).unwrap();
+      setTimeout(() => {
+        toast.success('Login successful!');
+        router.push('/dashboard');
+      }, 500);
+    }
+    catch (error) {
+      toast.error(error as string);
+    }
     
-    // Simulate API call
-    setTimeout(() => {
-      setIsLoading(false);
-      toast.success('Welcome back!');
-      onLogin(email, password);
-    }, 1000);
   };
 
   return (
@@ -74,7 +100,7 @@ export function LoginPageNew({
         </CardHeader>
 
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             {/* Email */}
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
@@ -84,10 +110,9 @@ export function LoginPageNew({
                   id="email"
                   type="email"
                   placeholder="you@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
                   className="pl-10"
                   disabled={isLoading}
+                  {...register('email')}
                 />
               </div>
             </div>
@@ -105,16 +130,18 @@ export function LoginPageNew({
                   Forgot password?
                 </Button>
               </div>
+              {errors.email && (
+                <p className="text-sm text-red-500">{errors.email.message}</p>
+              )}
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                 <Input
                   id="password"
                   type={showPassword ? 'text' : 'password'}
                   placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
                   className="pl-10 pr-10"
                   disabled={isLoading}
+                  {...register('password')}
                 />
                 <Button
                   type="button"
@@ -131,6 +158,9 @@ export function LoginPageNew({
                   )}
                 </Button>
               </div>
+              {errors.password && (
+                <p className="text-sm text-red-500">{errors.password.message}</p>
+              )}
             </div>
 
             {/* Submit Button */}
@@ -189,7 +219,7 @@ export function LoginPageNew({
               <Button
                 variant="link"
                 size="sm"
-                onClick={onNavigateToRegister}
+                onClick={onNavigateToResgister}
                 className="p-0 h-auto text-blue-600 hover:text-blue-700"
                 disabled={isLoading}
               >

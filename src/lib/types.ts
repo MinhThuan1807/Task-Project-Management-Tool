@@ -1,10 +1,11 @@
 // Type definitions for Sprintos
 export type User = {
-  id: string;
+  _id: string;
   email: string;
   displayName: string;
   avatarUrl?: string;
-  role: 'user' | 'admin';
+  // role: 'user' | 'admin';
+  role: string;
 };
 
 export type Project = {

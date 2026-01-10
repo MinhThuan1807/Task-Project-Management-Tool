@@ -8,6 +8,9 @@ import { AppSidebar } from '@/components/dashboard/app-sidebar';
 import { TopBar } from '@/components/dashboard/top-bar';
 import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
 import { Separator } from '@/components/ui/separator';
+import { getCurrentUserAPI, selectCurrentUser } from '@/lib/features/auth/authSlice';
+import { useSelector, useDispatch } from 'react-redux';
+import { useAppDispatch, useAppSelector } from '@/lib/hooks';
 
 export default function DashboardLayout({
   children,
@@ -16,29 +19,16 @@ export default function DashboardLayout({
 }) {
   const router = useRouter();
   const pathname = usePathname();
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const user = useAppSelector(selectCurrentUser)
+  const dispatch = useAppDispatch()
 
-  // Check authentication
-  useEffect(() => {
-    const isAuthenticated = localStorage.getItem('isAuthenticated');
-    const storedUser = localStorage.getItem('currentUser');
-
-    if (!isAuthenticated || !storedUser) {
-      router.push('/login');
-      return;
+  // Check authentication on mount
+   useEffect(() => {
+    if (!user) {
+      dispatch(getCurrentUserAPI())
     }
-
-    try {
-      const user = JSON.parse(storedUser);
-      setCurrentUser(user);
-    } catch (error) {
-      console.error('Failed to parse user data:', error);
-      router.push('/login');
-    } finally {
-      setIsLoading(false);
-    }
-  }, [router]);
+  }, [dispatch, user])
 
   // Get current view from pathname
   const getCurrentView = (): 'dashboard' | 'projects' | 'backlog' | 'sprint' | 'chat' | 'profile' | 'security' => {
@@ -80,16 +70,16 @@ export default function DashboardLayout({
     }
   };
 
-  if (isLoading || !currentUser) {
-    return (
-      <div className="h-screen w-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-blue-50">
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading...</p>
-        </div>
-      </div>
-    );
-  }
+  // if (isLoading || !user) {
+  //   return (
+  //     <div className="h-screen w-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-blue-50">
+  //       <div className="text-center">
+  //         <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+  //         <p className="text-gray-600">Loading...</p>
+  //       </div>
+  //     </div>
+  //   );
+  // }
 
   // Get all projects and selected project from localStorage
   const allProjectsData = localStorage.getItem('allProjects');
@@ -100,7 +90,7 @@ export default function DashboardLayout({
   return (
     <SidebarProvider>
       <AppSidebar
-        currentUser={currentUser}
+        currentUser={user}
         allProjects={allProjects}
         selectedProjectId={selectedProjectId}
         currentView={getCurrentView()}
@@ -112,7 +102,7 @@ export default function DashboardLayout({
           <SidebarTrigger className="-ml-1" />
           <Separator orientation="vertical" className="mr-2 h-4" />
           <TopBar
-            currentUser={currentUser}
+            currentUser={user}
             selectedProject={selectedProject}
             currentView={getCurrentView()}
           />
