@@ -2,7 +2,7 @@ import { Project, Sprint, User } from './types';
 
 // Mock current user
 export const mockCurrentUser: User = {
-  id: 'user-1',
+  _id: 'user-1',
   email: 'pm@sprintos.com',
   displayName: 'Project Manager',
   avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=PM',

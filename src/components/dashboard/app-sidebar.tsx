@@ -47,9 +47,9 @@ export function AppSidebar({
   onProjectSelect,
   onViewChange,
 }: AppSidebarProps) {
-  const myProjects = allProjects.filter((p) => p.ownerId === currentUser.id);
+  const myProjects = allProjects.filter((p) => p.ownerId === currentUser?._id);
   const participatingProjects = allProjects.filter(
-    (p) => p.ownerId !== currentUser.id && p.members.includes(currentUser.id)
+    (p) => p.ownerId !== currentUser?._id && p.members.includes(currentUser?._id)
   );
 
   return (
@@ -253,17 +253,17 @@ export function AppSidebar({
             <SidebarMenuButton
               size="lg"
               onClick={() => onViewChange('profile')}
-              tooltip={currentUser.displayName}
+              tooltip={currentUser?.displayName}
             >
               <Avatar className="w-8 h-8">
-                <AvatarImage src={currentUser.avatarUrl} />
+                <AvatarImage src={currentUser?.avatarUrl} />
                 <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white">
-                  {currentUser.displayName.substring(0, 2).toUpperCase()}
+                  {currentUser?.displayName.substring(0, 2).toUpperCase()}
                 </AvatarFallback>
               </Avatar>
               <div className="flex-1 text-left min-w-0">
-                <p className="text-sm truncate">{currentUser.displayName}</p>
-                <p className="text-xs text-sidebar-foreground/60 truncate">{currentUser.email}</p>
+                <p className="text-sm truncate">{currentUser?.displayName}</p>
+                <p className="text-xs text-sidebar-foreground/60 truncate">{currentUser?.email}</p>
               </div>
             </SidebarMenuButton>
           </SidebarMenuItem>

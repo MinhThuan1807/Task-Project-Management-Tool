@@ -1,4 +1,7 @@
 import { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
@@ -8,24 +11,58 @@ import { Checkbox } from '../ui/checkbox';
 import { Zap, Mail, Lock, User, ArrowLeft, Eye, EyeOff } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '../../lib/utils';
+import { authApi } from '@/lib/services/auth.service';
+import { useRouter } from 'next/dist/client/components/navigation';
+
+const registerSchema = z.object({
+  email: z
+    .string()
+    .min(1, 'Email is required')
+    .email('Invalid email address'),
+  password: z
+    .string()
+    .min(1, 'Password is required')
+    .min(8, 'Password must be at least 8 characters')
+    .regex(/[a-z]/, 'Password must contain at least one lowercase letter')
+    .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
+    .regex(/\d/, 'Password must contain at least one number'),
+  agreedToTerms: z
+    .boolean()
+    .refine((val) => val === true, 'You must agree to the terms and conditions'),
+});
+
+type RegisterFormData = z.infer<typeof registerSchema>;
 
 type RegisterPageProps = {
-  onRegister: (name: string, email: string, password: string) => void;
   onNavigateToLogin: () => void;
   onNavigateToLanding: () => void;
 };
 
 export function RegisterPageNew({
-  onRegister,
   onNavigateToLogin,
   onNavigateToLanding,
 }: RegisterPageProps) {
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
+  
+  const {
+    register,
+    handleSubmit,
+    watch,
+    setValue,
+    formState: { errors },
+  } = useForm<RegisterFormData>({
+    resolver: zodResolver(registerSchema),
+    defaultValues: {
+      email: '',
+      password: '',
+      agreedToTerms: false,
+    },
+  });
+
+  const password = watch('password');
+  const agreedToTerms = watch('agreedToTerms');
 
   // Password strength calculation
   const getPasswordStrength = () => {
@@ -54,32 +91,23 @@ export function RegisterPageNew({
     return 'Strong';
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!name || !email || !password) {
-      toast.error('Please fill in all fields');
-      return;
-    }
-
-    if (!agreedToTerms) {
-      toast.error('Please agree to the terms and conditions');
-      return;
-    }
-
-    if (passwordStrength < 50) {
-      toast.error('Please use a stronger password');
-      return;
-    }
-
+  const onSubmit = async (data: RegisterFormData) => {
     setIsLoading(true);
-
-    // Simulate API call
-    setTimeout(() => {
-      setIsLoading(false);
+    try {
+      await authApi.register({
+        email: data.email,
+        password: data.password,
+      });
       toast.success('Account created successfully!');
-      onRegister(name, email, password);
-    }, 1000);
+      setTimeout(() => {
+        router.push('/login');
+      })
+    } 
+    catch (error) {
+      toast.error(error as string)
+    }
+
+    
   };
 
   return (
@@ -115,24 +143,7 @@ export function RegisterPageNew({
         </CardHeader>
 
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Name */}
-            <div className="space-y-2">
-              <Label htmlFor="name">Full Name</Label>
-              <div className="relative">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                <Input
-                  id="name"
-                  type="text"
-                  placeholder="John Doe"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="pl-10"
-                  disabled={isLoading}
-                />
-              </div>
-            </div>
-
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             {/* Email */}
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
@@ -142,12 +153,14 @@ export function RegisterPageNew({
                   id="email"
                   type="email"
                   placeholder="you@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
                   className="pl-10"
                   disabled={isLoading}
+                  {...register('email')}
                 />
               </div>
+              {errors.email && (
+                <p className="text-sm text-red-500">{errors.email.message}</p>
+              )}
             </div>
 
             {/* Password */}
@@ -159,10 +172,9 @@ export function RegisterPageNew({
                   id="password"
                   type={showPassword ? 'text' : 'password'}
                   placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
                   className="pl-10 pr-10"
                   disabled={isLoading}
+                  {...register('password')}
                 />
                 <Button
                   type="button"
@@ -179,6 +191,9 @@ export function RegisterPageNew({
                   )}
                 </Button>
               </div>
+               {errors.password && (
+                <p className="text-sm text-red-500">{errors.password.message}</p>
+              )}
 
               {/* Password Strength */}
               {password && (
@@ -200,26 +215,31 @@ export function RegisterPageNew({
             </div>
 
             {/* Terms and Conditions */}
-            <div className="flex items-start space-x-2">
-              <Checkbox
-                id="terms"
-                checked={agreedToTerms}
-                onCheckedChange={(checked: boolean) => setAgreedToTerms(checked)}
-                disabled={isLoading}
-              />
-              <Label
-                htmlFor="terms"
-                className="text-sm text-gray-600 leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-              >
-                I agree to the{' '}
-                <Button variant="link" size="sm" className="p-0 h-auto text-blue-600 hover:text-blue-700">
-                  Terms of Service
-                </Button>{' '}
-                and{' '}
-                <Button variant="link" size="sm" className="p-0 h-auto text-blue-600 hover:text-blue-700">
-                  Privacy Policy
-                </Button>
-              </Label>
+            <div className="space-y-2">
+              <div className="flex items-start space-x-2">
+                <Checkbox
+                  id="terms"
+                  checked={agreedToTerms}
+                  onCheckedChange={(checked: boolean) => setValue('agreedToTerms', checked, { shouldValidate: true })}
+                  disabled={isLoading}
+                />
+                <Label
+                  htmlFor="terms"
+                  className="text-sm text-gray-600 leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                >
+                  I agree to the{' '}
+                  <Button variant="link" size="sm" className="p-0 h-auto text-blue-600 hover:text-blue-700">
+                    Terms of Service
+                  </Button>{' '}
+                  and{' '}
+                  <Button variant="link" size="sm" className="p-0 h-auto text-blue-600 hover:text-blue-700">
+                    Privacy Policy
+                  </Button>
+                </Label>
+                </div>
+                {errors.agreedToTerms && (
+                  <p className="text-sm text-red-500">{errors.agreedToTerms.message}</p>
+                )}
             </div>
 
             {/* Submit Button */}

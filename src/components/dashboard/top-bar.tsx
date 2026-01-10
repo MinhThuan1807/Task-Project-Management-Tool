@@ -98,12 +98,12 @@ export function TopBar({ currentUser, selectedProject, currentView }: TopBarProp
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="gap-2 h-auto py-2 px-3">
               <Avatar className="w-8 h-8">
-                <AvatarImage src={currentUser.avatarUrl} />
+                <AvatarImage src={currentUser?.avatarUrl} />
                 <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white">
-                  {currentUser.displayName.substring(0, 2).toUpperCase()}
+                  {currentUser?.displayName.substring(0, 2).toUpperCase()}
                 </AvatarFallback>
               </Avatar>
-              <span className="text-sm text-gray-700">{currentUser.displayName}</span>
+              <span className="text-sm text-gray-700">{currentUser?.displayName}</span>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">
