@@ -20,12 +20,20 @@ export const authApi = {
     const response = await axiosInstance.post('/auth/login', data);
     return response.data;
   },
+  logout: async () => {
+    const response = await axiosInstance.post('/auth/logout');
+    return response.data;
+  },
   register: async (data: RegisterFormData) => {
     const response = await axiosInstance.post('/auth/register', data);
     return response.data;
   },
   verifyEmail: async (data: VerifyEmailParams) => {
     const response = await axiosInstance.post('/auth/verify', data)
+    return response.data;
+  },
+  getCurrentUser: async () => {
+    const response = await axiosInstance.get('/users/');
     return response.data;
   }
 }

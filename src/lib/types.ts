@@ -4,18 +4,17 @@ export type User = {
   email: string;
   displayName: string;
   avatarUrl?: string;
-  // role: 'user' | 'admin';
   role: string;
 };
 
 export type Project = {
-  id: string;
+  _id: string;
   ownerId: string;
   name: string;
   description?: string;
   imageUrl?: string;
-  members: string[];
-  status: 'active' | 'completed' | 'archived';
+  members: [];
+  status: 'active' | 'archived';
   createdAt: string;
 };
 

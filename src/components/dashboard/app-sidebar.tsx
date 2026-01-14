@@ -1,5 +1,6 @@
-import { User, Project } from '../../lib/types';
-import { cn } from '../../lib/utils';
+'use client';
+
+import { useState } from 'react';
 import {
   LayoutDashboard,
   FolderKanban,
@@ -7,8 +8,7 @@ import {
   MessageSquare,
   ChevronRight,
   Plus,
-  Briefcase,
-  ChevronDown,
+  BarChart2,
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import {
@@ -25,186 +25,134 @@ import {
   SidebarMenuSub,
   SidebarMenuSubButton,
   SidebarMenuSubItem,
-  useSidebar,
 } from '../ui/sidebar';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '../ui/collapsible';
 import { Separator } from '../ui/separator';
+import { Button } from '../ui/button';
+import Link from 'next/link';
+import { CreateProjectModal } from '@/app/(dashboard)/projects/components/CreateProjectModal';
+import { useCurrentUser } from '@/lib/hooks/useAuth';
+import { useAllProjects, useCreateProject } from '@/lib/hooks/useProjects';
+import { Project } from '@/lib/types';
 
 type AppSidebarProps = {
-  currentUser: User;
-  allProjects: Project[];
   selectedProjectId: string | null;
-  currentView: string;
   onProjectSelect: (projectId: string | null) => void;
-  onViewChange: (view: 'dashboard' | 'projects' | 'backlog' | 'sprint' | 'chat' | 'profile' | 'security') => void;
+};
+
+const getProjectId = (project: Project): string => {
+  return project._id;
 };
 
 export function AppSidebar({
-  currentUser,
-  allProjects,
   selectedProjectId,
-  currentView,
   onProjectSelect,
-  onViewChange,
 }: AppSidebarProps) {
-  const myProjects = allProjects.filter((p) => p.ownerId === currentUser?._id);
-  const participatingProjects = allProjects.filter(
-    (p) => p.ownerId !== currentUser?._id && p.members.includes(currentUser?._id)
-  );
+  const [isCreateProjectOpen, setIsCreateProjectOpen] = useState(false);
+  
+  // Tự fetch data - không cần props!
+  const { data: user } = useCurrentUser();
+  const { ownedProjects, joinedProjects } = useAllProjects();
+  const createProject = useCreateProject();
+
+  const handleCreateProject = async (data: {
+    name: string;
+    description?: string;
+    imageUrl?: File;
+    members?: Array<{ email: string; role: 'owner' | 'member' | 'viewer' }>;
+  }) => {
+    createProject.mutate(data);
+    setIsCreateProjectOpen(false);
+  };
+
+  const isProjectSelected = (project: Project): boolean => {
+    return selectedProjectId === getProjectId(project);
+  };
+
+  if (!user) return null;
 
   return (
-    <Sidebar collapsible="icon" variant="sidebar">
-      {/* Header */}
-      <SidebarHeader className="border-b border-sidebar-border bg-gradient-to-r from-blue-600/10 to-purple-600/10">
-        <div className="flex items-center gap-2 p-2">
-          <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center shadow-lg shrink-0">
-            <span className="text-xl">⚡</span>
+    <>
+      <Sidebar collapsible="icon" variant="sidebar">
+        {/* Header */}
+        <SidebarHeader className="border-b border-sidebar-border bg-gradient-to-r from-blue-600/10 to-purple-600/10">
+          <div className="flex items-center gap-2 p-2">
+            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center shadow-lg shrink-0">
+              <span className="text-xl">⚡</span>
+            </div>
+            <div className="flex-1 min-w-0 group-data-[collapsible=icon]:hidden">
+              <h1 className="text-xl bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                Sprintos
+              </h1>
+              <p className="text-xs text-sidebar-foreground/60">Project Management</p>
+            </div>
           </div>
-          <div className="flex-1 min-w-0 group-data-[collapsible=icon]:hidden">
-            <h1 className="text-xl bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-              Sprintos
-            </h1>
-            <p className="text-xs text-sidebar-foreground/60">Project Management</p>
-          </div>
-        </div>
-      </SidebarHeader>
+        </SidebarHeader>
 
-      <SidebarContent>
-        {/* Main Navigation */}
-        <SidebarGroup>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  isActive={currentView === 'dashboard'}
-                  onClick={() => {
-                    onViewChange('dashboard');
-                    onProjectSelect(null);
-                  }}
-                  tooltip="Dashboard"
-                >
-                  <LayoutDashboard className="w-4 h-4" />
-                  <span>Dashboard</span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  isActive={currentView === 'chat'}
-                  onClick={() => {
-                    onViewChange('chat');
-                    onProjectSelect(null);
-                  }}
-                  tooltip="Chat"
-                >
-                  <MessageSquare className="w-4 h-4" />
-                  <span>Chat</span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+        <SidebarContent>
+          {/* Main Navigation */}
+          <SidebarGroup>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild>
+                    <Link href="/dashboard">
+                      <LayoutDashboard className="w-4 h-4" />
+                      <span>Dashboard</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild tooltip="Chat">
+                    <Link href="/chat">
+                      <MessageSquare className="w-4 h-4" />
+                      <span>Chat</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
 
-        <Separator className="my-2" />
+          <Separator className="my-2" />
 
-        {/* My Projects */}
-        <SidebarGroup>
-          <SidebarGroupLabel className="flex items-center justify-between">
-            <span>My Projects</span>
-            <button className="p-0.5 hover:bg-sidebar-accent rounded group-data-[collapsible=icon]:hidden">
-              <Plus className="w-3.5 h-3.5" />
-            </button>
-          </SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {myProjects.length === 0 && (
-                <div className="px-2 py-2 text-xs text-sidebar-foreground/60 group-data-[collapsible=icon]:hidden">
-                  No projects yet
-                </div>
-              )}
-              {myProjects.map((project) => (
-                <Collapsible
-                  key={project.id}
-                  defaultOpen={selectedProjectId === project.id}
-                  className="group/collapsible"
-                >
-                  <SidebarMenuItem>
-                    <CollapsibleTrigger asChild>
-                      <SidebarMenuButton
-                        isActive={selectedProjectId === project.id}
-                        onClick={() => {
-                          onProjectSelect(project.id);
-                          onViewChange('projects');
-                        }}
-                        tooltip={project.name}
-                      >
-                        <Avatar className="w-4 h-4">
-                          <AvatarImage src={project.imageUrl} />
-                          <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-[10px]">
-                            {project.name.substring(0, 2).toUpperCase()}
-                          </AvatarFallback>
-                        </Avatar>
-                        <span className="truncate">{project.name}</span>
-                        <ChevronRight className="ml-auto w-4 h-4 transition-transform group-data-[state=open]/collapsible:rotate-90" />
-                      </SidebarMenuButton>
-                    </CollapsibleTrigger>
-                    {selectedProjectId === project.id && (
-                      <CollapsibleContent>
-                        <SidebarMenuSub>
-                          <SidebarMenuSubItem>
-                            <SidebarMenuSubButton
-                              isActive={currentView === 'backlog'}
-                              onClick={() => onViewChange('backlog')}
-                            >
-                              <List className="w-4 h-4" />
-                              <span>Product Backlog</span>
-                            </SidebarMenuSubButton>
-                          </SidebarMenuSubItem>
-                          <SidebarMenuSubItem>
-                            <SidebarMenuSubButton
-                              isActive={currentView === 'sprint'}
-                              onClick={() => onViewChange('sprint')}
-                            >
-                              <FolderKanban className="w-4 h-4" />
-                              <span>Sprint Board</span>
-                            </SidebarMenuSubButton>
-                          </SidebarMenuSubItem>
-                        </SidebarMenuSub>
-                      </CollapsibleContent>
-                    )}
-                  </SidebarMenuItem>
-                </Collapsible>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-
-        {/* Participating Projects */}
-        {participatingProjects.length > 0 && (
-          <>
-            <Separator className="my-2" />
-            <SidebarGroup>
-              <SidebarGroupLabel>Participating</SidebarGroupLabel>
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  {participatingProjects.map((project) => (
+          {/* My Projects */}
+          <SidebarGroup>
+            <SidebarGroupLabel className="flex items-center justify-between">
+              <span>My Projects</span>
+              <Button
+                className="p-0.5 hover:bg-sidebar-accent rounded group-data-[collapsible=icon]:hidden"
+                variant="ghost"
+                onClick={() => setIsCreateProjectOpen(true)}
+              >
+                <Plus className="w-3.5 h-3.5" />
+              </Button>
+            </SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {ownedProjects.length === 0 && (
+                  <div className="px-2 py-2 text-xs text-sidebar-foreground/60 group-data-[collapsible=icon]:hidden">
+                    No projects yet
+                  </div>
+                )}
+                {ownedProjects.map((project) => {
+                  const projectId = getProjectId(project);
+                  return (
                     <Collapsible
-                      key={project.id}
-                      defaultOpen={selectedProjectId === project.id}
+                      key={projectId}
+                      defaultOpen={isProjectSelected(project)}
                       className="group/collapsible"
                     >
                       <SidebarMenuItem>
                         <CollapsibleTrigger asChild>
                           <SidebarMenuButton
-                            isActive={selectedProjectId === project.id}
-                            onClick={() => {
-                              onProjectSelect(project.id);
-                              onViewChange('projects');
-                            }}
+                            isActive={isProjectSelected(project)}
+                            onClick={() => onProjectSelect(projectId)}
                             tooltip={project.name}
                           >
                             <Avatar className="w-4 h-4">
                               <AvatarImage src={project.imageUrl} />
-                              <AvatarFallback className="bg-gradient-to-br from-green-500 to-teal-600 text-white text-[10px]">
+                              <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-[10px]">
                                 {project.name.substring(0, 2).toUpperCase()}
                               </AvatarFallback>
                             </Avatar>
@@ -212,63 +160,134 @@ export function AppSidebar({
                             <ChevronRight className="ml-auto w-4 h-4 transition-transform group-data-[state=open]/collapsible:rotate-90" />
                           </SidebarMenuButton>
                         </CollapsibleTrigger>
-                        {selectedProjectId === project.id && (
-                          <CollapsibleContent>
-                            <SidebarMenuSub>
-                              <SidebarMenuSubItem>
-                                <SidebarMenuSubButton
-                                  isActive={currentView === 'backlog'}
-                                  onClick={() => onViewChange('backlog')}
-                                >
+                        <CollapsibleContent>
+                          <SidebarMenuSub>
+                            <SidebarMenuSubItem>
+                              <SidebarMenuSubButton asChild>
+                                <Link href={`/projects/${projectId}/backlog`}>
                                   <List className="w-4 h-4" />
                                   <span>Product Backlog</span>
-                                </SidebarMenuSubButton>
-                              </SidebarMenuSubItem>
-                              <SidebarMenuSubItem>
-                                <SidebarMenuSubButton
-                                  isActive={currentView === 'sprint'}
-                                  onClick={() => onViewChange('sprint')}
-                                >
+                                </Link>
+                              </SidebarMenuSubButton>
+                            </SidebarMenuSubItem>
+                            <SidebarMenuSubItem>
+                              <SidebarMenuSubButton asChild>
+                                <Link href={`/projects/${projectId}/board`}>
                                   <FolderKanban className="w-4 h-4" />
                                   <span>Sprint Board</span>
-                                </SidebarMenuSubButton>
-                              </SidebarMenuSubItem>
-                            </SidebarMenuSub>
-                          </CollapsibleContent>
-                        )}
+                                </Link>
+                              </SidebarMenuSubButton>
+                            </SidebarMenuSubItem>
+                            <SidebarMenuSubItem>
+                              <SidebarMenuSubButton asChild>
+                                <Link href={`/projects/${projectId}/report`}>
+                                  <BarChart2 className="w-4 h-4" />
+                                  <span>Reports</span>
+                                </Link>
+                              </SidebarMenuSubButton>
+                            </SidebarMenuSubItem>
+                          </SidebarMenuSub>
+                        </CollapsibleContent>
                       </SidebarMenuItem>
                     </Collapsible>
-                  ))}
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </SidebarGroup>
-          </>
-        )}
-      </SidebarContent>
+                  );
+                })}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
 
-      {/* User Profile Footer */}
-      <SidebarFooter className="border-t border-sidebar-border">
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              size="lg"
-              onClick={() => onViewChange('profile')}
-              tooltip={currentUser?.displayName}
-            >
-              <Avatar className="w-8 h-8">
-                <AvatarImage src={currentUser?.avatarUrl} />
-                <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white">
-                  {currentUser?.displayName.substring(0, 2).toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
-              <div className="flex-1 text-left min-w-0">
-                <p className="text-sm truncate">{currentUser?.displayName}</p>
-                <p className="text-xs text-sidebar-foreground/60 truncate">{currentUser?.email}</p>
-              </div>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
-      </SidebarFooter>
-    </Sidebar>
+          {/* Participating Projects */}
+          {joinedProjects.length > 0 && (
+            <>
+              <Separator className="my-2" />
+              <SidebarGroup>
+                <SidebarGroupLabel>Participating</SidebarGroupLabel>
+                <SidebarGroupContent>
+                  <SidebarMenu>
+                    {joinedProjects.map((project) => {
+                      const projectId = getProjectId(project);
+                      return (
+                        <Collapsible
+                          key={projectId}
+                          defaultOpen={isProjectSelected(project)}
+                          className="group/collapsible"
+                        >
+                          <SidebarMenuItem>
+                            <CollapsibleTrigger asChild>
+                              <SidebarMenuButton
+                                isActive={isProjectSelected(project)}
+                                onClick={() => onProjectSelect(projectId)}
+                                tooltip={project.name}
+                              >
+                                <Avatar className="w-4 h-4">
+                                  <AvatarImage src={project.imageUrl} />
+                                  <AvatarFallback className="bg-gradient-to-br from-green-500 to-teal-600 text-white text-[10px]">
+                                    {project.name.substring(0, 2).toUpperCase()}
+                                  </AvatarFallback>
+                                </Avatar>
+                                <span className="truncate">{project.name}</span>
+                                <ChevronRight className="ml-auto w-4 h-4 transition-transform group-data-[state=open]/collapsible:rotate-90" />
+                              </SidebarMenuButton>
+                            </CollapsibleTrigger>
+                            <CollapsibleContent>
+                              <SidebarMenuSub>
+                                <SidebarMenuSubItem>
+                                  <SidebarMenuSubButton asChild>
+                                    <Link href={`/projects/${projectId}/backlog`}>
+                                      <List className="w-4 h-4" />
+                                      <span>Product Backlog</span>
+                                    </Link>
+                                  </SidebarMenuSubButton>
+                                </SidebarMenuSubItem>
+                                <SidebarMenuSubItem>
+                                  <SidebarMenuSubButton asChild>
+                                    <Link href={`/projects/${projectId}/board`}>
+                                      <FolderKanban className="w-4 h-4" />
+                                      <span>Sprint Board</span>
+                                    </Link>
+                                  </SidebarMenuSubButton>
+                                </SidebarMenuSubItem>
+                              </SidebarMenuSub>
+                            </CollapsibleContent>
+                          </SidebarMenuItem>
+                        </Collapsible>
+                      );
+                    })}
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </SidebarGroup>
+            </>
+          )}
+        </SidebarContent>
+
+        {/* User Profile Footer */}
+        <SidebarFooter className="border-t border-sidebar-border">
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton size="lg" tooltip={user?.displayName}>
+                <Avatar className="w-8 h-8">
+                  <AvatarImage src={user?.avatarUrl} />
+                  <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white">
+                    {user?.displayName?.substring(0, 2).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex-1 text-left min-w-0">
+                  <p className="text-sm truncate">{user?.displayName}</p>
+                  <p className="text-xs text-sidebar-foreground/60 truncate">
+                    {user?.email}
+                  </p>
+                </div>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarFooter>
+      </Sidebar>
+
+      <CreateProjectModal
+        open={isCreateProjectOpen}
+        onOpenChange={setIsCreateProjectOpen}
+        onCreate={handleCreateProject}
+      />
+    </>
   );
 }

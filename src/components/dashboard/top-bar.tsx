@@ -12,14 +12,16 @@ import {
 } from '../ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { Badge } from '../ui/badge';
+import { use } from 'react';
+import { useCurrentUser } from '@/lib/hooks/useAuth';
 
 type TopBarProps = {
-  currentUser: User;
+  // currentUser: User;
   selectedProject?: Project;
   currentView: string;
 };
 
-export function TopBar({ currentUser, selectedProject, currentView }: TopBarProps) {
+export function TopBar({ selectedProject, currentView }: TopBarProps) {
   const getViewTitle = () => {
     switch (currentView) {
       case 'dashboard':
@@ -38,6 +40,8 @@ export function TopBar({ currentUser, selectedProject, currentView }: TopBarProp
         return selectedProject?.name || 'Sprintos';
     }
   };
+  const { data: user } = useCurrentUser();
+
 
   return (
     <div className="flex items-center gap-4 flex-1">
@@ -98,12 +102,12 @@ export function TopBar({ currentUser, selectedProject, currentView }: TopBarProp
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="gap-2 h-auto py-2 px-3">
               <Avatar className="w-8 h-8">
-                <AvatarImage src={currentUser?.avatarUrl} />
+                <AvatarImage src={user?.avatarUrl} />
                 <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white">
-                  {currentUser?.displayName.substring(0, 2).toUpperCase()}
+                  {user?.displayName.substring(0, 2).toUpperCase()}
                 </AvatarFallback>
               </Avatar>
-              <span className="text-sm text-gray-700">{currentUser?.displayName}</span>
+              <span className="text-sm text-gray-700">{user?.displayName}</span>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">
