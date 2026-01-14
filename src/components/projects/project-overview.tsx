@@ -5,6 +5,7 @@ import { Badge } from '../ui/badge';
 import { Progress } from '../ui/progress';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
+import { useState } from 'react';
 import {
   Calendar,
   Users,
@@ -16,6 +17,8 @@ import {
   Settings,
   TrendingUp,
   AlertCircle,
+  Plus,
+  UserPlus,
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -25,6 +28,8 @@ import {
   DropdownMenuTrigger,
 } from '../ui/dropdown-menu';
 import { formatDate, getStatusColor } from '../../lib/utils';
+import { CreateSprintModal, SprintFormData } from './create-sprint-modal';
+import { InviteTeamModal, InvitationData } from './invite-team-modal';
 
 type ProjectOverviewProps = {
   project: Project;
@@ -43,9 +48,23 @@ export function ProjectOverview({
   onNavigateToSettings,
   onEditProject,
 }: ProjectOverviewProps) {
-  const isOwner = project.ownerId === currentUser.id;
+  const isOwner = project.ownerId === currentUser._id;
   const activeSprints = sprints.filter((s) => new Date(s.endDate) > new Date());
   const completedSprints = sprints.length - activeSprints.length;
+
+  // Modal states
+  const [isCreateSprintOpen, setIsCreateSprintOpen] = useState(false);
+  const [isInviteTeamOpen, setIsInviteTeamOpen] = useState(false);
+
+  const handleCreateSprint = (sprintData: SprintFormData) => {
+    console.log('Creating sprint:', sprintData);
+    // TODO: Implement actual sprint creation
+  };
+
+  const handleInviteTeam = (invitations: InvitationData[]) => {
+    console.log('Sending invitations:', invitations);
+    // TODO: Implement actual invitation sending
+  };
 
   return (
     <div className="h-full overflow-auto bg-gradient-to-br from-gray-50 to-blue-50/30">
@@ -62,7 +81,7 @@ export function ProjectOverview({
             <div>
               <div className="flex items-center gap-3 mb-2">
                 <h1 className="text-3xl text-gray-900">{project.name}</h1>
-                <Badge className={getStatusColor(project.status)}>{project.status}</Badge>
+                {/* <Badge className={getStatusColor(project.status)}>{project.status}</Badge> */}
                 {isOwner && (
                   <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-300">
                     Owner
@@ -179,10 +198,23 @@ export function ProjectOverview({
                 onClick={onNavigateToBacklog}
                 className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
               >
+                <CheckCircle2 className="w-4 h-4 mr-2" />
                 View Product Backlog
               </Button>
-              <Button variant="outline">Create New Sprint</Button>
-              <Button variant="outline">Invite Team Members</Button>
+              <Button
+                variant="outline"
+                onClick={() => setIsCreateSprintOpen(true)}
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Create New Sprint
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => setIsInviteTeamOpen(true)}
+              >
+                <UserPlus className="w-4 h-4 mr-2" />
+                Invite Team Members
+              </Button>
             </div>
           </CardContent>
         </Card>
@@ -338,6 +370,21 @@ export function ProjectOverview({
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Modals */}
+      <CreateSprintModal
+        open={isCreateSprintOpen}
+        onOpenChange={setIsCreateSprintOpen}
+        projectId={project._id}
+        onSave={handleCreateSprint}
+      />
+      
+      <InviteTeamModal
+        open={isInviteTeamOpen}
+        onOpenChange={setIsInviteTeamOpen}
+        projectId={project._id}
+        onInvite={handleInviteTeam}
+      />
     </div>
   );
 }

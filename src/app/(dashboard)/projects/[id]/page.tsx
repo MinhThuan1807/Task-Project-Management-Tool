@@ -3,68 +3,49 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { User, Project, Sprint } from '@/lib/types';
-import { mockCurrentUser, mockAllProjects, mockSprints } from '@/lib/mock-data';
+import { mockSprints } from '@/lib/mock-data';
 import { ProjectOverview } from '@/components/projects/project-overview';
 import { EditProjectModal } from '@/components/EditProjectModal';
 import { CreateSprintModal } from '@/components/CreateSprintModal';
 import { toast } from 'sonner';
+import { useCurrentUser } from '@/lib/hooks/useAuth';
+import { useAllProjects } from '@/lib/hooks/useProjects';
 
 export default function ProjectPage() {
   const params = useParams();
   const router = useRouter();
   const projectId = params.id as string;
 
-  const [currentUser, setCurrentUser] = useState<User>(mockCurrentUser);
-  const [allProjects, setAllProjects] = useState<Project[]>(mockAllProjects);
+  const { data: currentUser, isLoading: userLoading } = useCurrentUser();
+  const { data: allProjects, isLoading: projectsLoading } = useAllProjects();
+
+
   const [sprints, setSprints] = useState<Sprint[]>(mockSprints);
   const [isEditProjectOpen, setIsEditProjectOpen] = useState(false);
   const [isCreateSprintOpen, setIsCreateSprintOpen] = useState(false);
 
-  // Load data from localStorage
-  useEffect(() => {
-    const storedUser = localStorage.getItem('currentUser');
-    const storedProjects = localStorage.getItem('allProjects');
-    const storedSprints = localStorage.getItem('sprints');
+   // Loading state
+  if (userLoading || projectsLoading) {
+    return (
+      <div className="h-full flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading project...</p>
+        </div>
+      </div>
+    );
+  }
 
-    if (storedUser) setCurrentUser(JSON.parse(storedUser));
-    if (storedProjects) setAllProjects(JSON.parse(storedProjects));
-    if (storedSprints) setSprints(JSON.parse(storedSprints));
-  }, []);
-
-  // Save to localStorage when data changes
-  useEffect(() => {
-    localStorage.setItem('allProjects', JSON.stringify(allProjects));
-  }, [allProjects]);
-
-  useEffect(() => {
-    localStorage.setItem('sprints', JSON.stringify(sprints));
-  }, [sprints]);
-
-  const project = allProjects.find((p) => p.id === projectId);
+  const project = allProjects.find((p) => p._id === projectId);
   const projectSprints = sprints.filter((s) => s.projectId === projectId);
 
   const handleEditProject = (projectId: string, projectData: Partial<Project>) => {
-    const updatedProjects = allProjects.map((p) =>
-      p.id === projectId
-        ? {
-            ...p,
-            name: projectData.name || p.name,
-            description: projectData.description !== undefined ? projectData.description : p.description,
-            status: projectData.status || p.status,
-          }
-        : p
-    );
-    setAllProjects(updatedProjects);
+    // TODO: Implement với useMutation để update project qua API
     toast.success('Project updated successfully');
   };
 
   const handleDeleteProject = (projectId: string) => {
-    const updatedProjects = allProjects.filter((p) => p.id !== projectId);
-    setAllProjects(updatedProjects);
-
-    const updatedSprints = sprints.filter((s) => s.projectId !== projectId);
-    setSprints(updatedSprints);
-
+    // TODO: Implement với useMutation để delete project qua API
     toast.success('Project deleted successfully');
     router.push('/dashboard');
   };
@@ -118,7 +99,7 @@ export default function ProjectPage() {
         onOpenChange={setIsEditProjectOpen}
         onSave={handleEditProject}
         onDelete={handleDeleteProject}
-        currentUserId={currentUser.id}
+        currentUserId={currentUser._id}
       />
 
       <CreateSprintModal

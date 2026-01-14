@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { User, Project, Sprint } from '@/lib/types';
-import { mockCurrentUser, mockAllProjects, mockSprints } from '@/lib/mock-data';
+// import { mockCurrentUser, mockAllProjects, mockSprints } from '@/lib/mock-data';
 import { BacklogView } from '@/components/projects/backlog-view';
 import { CreateSprintModal } from '@/components/CreateSprintModal';
 import { toast } from 'sonner';

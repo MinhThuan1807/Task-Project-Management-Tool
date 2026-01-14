@@ -3,6 +3,7 @@ import { Inter } from 'next/font/google';
 import './globals.css';
 import { Toaster } from '@/components/ui/sonner';
 import StoreProvider from './StoreProvider';
+import { QueryProviders } from './QueryProvider';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
@@ -19,10 +20,12 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
-        <StoreProvider>
-          {children}
-          <Toaster />
-        </StoreProvider>
+        <QueryProviders>
+          <StoreProvider>
+            {children}
+            <Toaster />
+          </StoreProvider>
+        </QueryProviders>
       </body>
     </html>
   );

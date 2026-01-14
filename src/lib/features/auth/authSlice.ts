@@ -64,7 +64,7 @@ export const getCurrentUserAPI = createAsyncThunk(
   'users/getCurrentUser',
   async (_, { rejectWithValue }) => {
     try {
-      const response = await axiosInstance.get('/users/profile')
+      const response = await axiosInstance.get('/users/')
       return response.data
     } catch (error: any) {
       return rejectWithValue('Failed to fetch current user')
