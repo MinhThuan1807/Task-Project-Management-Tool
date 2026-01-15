@@ -29,7 +29,7 @@ export default function SprintPage() {
     if (storedSprints) setSprints(JSON.parse(storedSprints));
   }, []);
 
-  const project = allProjects.find((p) => p.id === projectId);
+  const project = allProjects.find((p) => p._id === projectId);
   const sprint = sprints.find((s) => s.id === sprintId);
 
   if (!project) {

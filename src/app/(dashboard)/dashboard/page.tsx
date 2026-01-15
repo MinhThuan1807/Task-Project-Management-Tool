@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { use, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -18,53 +18,51 @@ import {
   MoreVertical,
   Clock
 } from 'lucide-react';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-
+import { useAllProjects, useCreateProject } from '@/lib/hooks/useProjects';
+import { Project } from '@/lib/types';
+import { ProjectCard } from '../projects/components/ProjectCard';
+import { CreateProjectModal } from '../projects/components/CreateProjectModal';
+import { useDispatch } from 'react-redux';
+import { openCreateModal } from '@/lib/features/project/projectSlice';
 export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState('all');
 
-  const projects = [
-    {
-      id: '1',
-      name: 'E-commerce Platform',
-      description: 'Building a modern e-commerce platform with Next.js',
-      status: 'In Progress',
-      progress: 65,
-      sprints: 3,
-      members: 5,
-      imageUrl: 'https://api.dicebear.com/7.x/shapes/svg?seed=ecommerce',
-      isOwner: true,
-    },
-    {
-      id: '2',
-      name: 'Mobile App',
-      description: 'Cross-platform mobile app development',
-      status: 'Planning',
-      progress: 25,
-      sprints: 1,
-      members: 3,
-      imageUrl: 'https://api.dicebear.com/7.x/shapes/svg?seed=mobile',
-      isOwner: false,
-    },
-    {
-      id: '3',
-      name: 'Analytics Dashboard',
-      description: 'Real-time analytics and reporting dashboard',
-      status: 'In Progress',
-      progress: 80,
-      sprints: 4,
-      members: 4,
-      imageUrl: 'https://api.dicebear.com/7.x/shapes/svg?seed=analytics',
-      isOwner: true,
-    },
-  ];
-
-  const recentActivity = [
+  // const projects = [
+  //   {
+  //     id: '1',
+  //     name: 'E-commerce Platform',
+  //     description: 'Building a modern e-commerce platform with Next.js',
+  //     status: 'In Progress',
+  //     progress: 65,
+  //     sprints: 3,
+  //     members: 5,
+  //     imageUrl: 'https://api.dicebear.com/7.x/shapes/svg?seed=ecommerce',
+  //     isOwner: true,
+  //   },
+  //   {
+  //     id: '2',
+  //     name: 'Mobile App',
+  //     description: 'Cross-platform mobile app development',
+  //     status: 'Planning',
+  //     progress: 25,
+  //     sprints: 1,
+  //     members: 3,
+  //     imageUrl: 'https://api.dicebear.com/7.x/shapes/svg?seed=mobile',
+  //     isOwner: false,
+  //   },
+  //   {
+  //     id: '3',
+  //     name: 'Analytics Dashboard',
+  //     description: 'Real-time analytics and reporting dashboard',
+  //     status: 'In Progress',
+  //     progress: 80,
+  //     sprints: 4,
+  //     members: 4,
+  //     imageUrl: 'https://api.dicebear.com/7.x/shapes/svg?seed=analytics',
+  //     isOwner: true,
+  //   },
+  // ];
+    const recentActivity = [
     {
       user: 'Alice Johnson',
       action: 'completed task',
@@ -94,6 +92,9 @@ export default function DashboardPage() {
       avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Diana',
     },
   ];
+
+  const { data: projects, ownedProjects, joinedProjects } = useAllProjects();
+  const dispatch = useDispatch();
 
   return (
     <div className="h-full overflow-auto bg-gradient-to-br from-gray-50 to-blue-50/30">
@@ -154,7 +155,9 @@ export default function DashboardPage() {
             </CardHeader>
             <CardContent>
               <div className="flex items-center justify-between">
-                <div className="text-3xl font-bold">12</div>
+                <div className="text-3xl font-bold">
+                  {projects.map((project) => project.members.length).reduce((a, b) => a + b, 0)}
+                </div>
                 <Users className="w-8 h-8 opacity-80" />
               </div>
               <div className="flex items-center gap-1 mt-2 text-sm opacity-90">
@@ -175,7 +178,10 @@ export default function DashboardPage() {
                 </CardTitle>
                 <CardDescription>Manage and track your projects</CardDescription>
               </div>
-              <Button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
+              <Button 
+                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+                onClick={() => dispatch(openCreateModal())}
+             >
                 <Plus className="w-4 h-4 mr-2" />
                 New Project
               </Button>
@@ -185,101 +191,30 @@ export default function DashboardPage() {
             <Tabs value={activeTab} onValueChange={setActiveTab}>
               <TabsList className="mb-6">
                 <TabsTrigger value="all">All Projects ({projects.length})</TabsTrigger>
-                <TabsTrigger value="my">My Projects (2)</TabsTrigger>
-                <TabsTrigger value="participating">Participating (1)</TabsTrigger>
+                <TabsTrigger value="my">My Projects ({ownedProjects.length})</TabsTrigger>
+                <TabsTrigger value="participating">Participating ({joinedProjects.length})</TabsTrigger>
               </TabsList>
 
-              <TabsContent value={activeTab} className="space-y-4">
+              <TabsContent value="all" className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {projects.map((project) => (
-                    <Card
-                      key={project.id}
-                      className="hover:shadow-xl transition-all cursor-pointer group border-0 shadow-md hover:-translate-y-1"
-                    >
-                      <CardHeader>
-                        <div className="flex items-start justify-between mb-2">
-                          <Avatar className="w-12 h-12">
-                            <AvatarImage src={project.imageUrl} />
-                            <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white">
-                              {project.name.substring(0, 2).toUpperCase()}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div className="flex items-center gap-2">
-                            <Badge
-                              className={
-                                project.status === 'In Progress'
-                                  ? 'bg-blue-100 text-blue-700 hover:bg-blue-200'
-                                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                              }
-                            >
-                              {project.status}
-                            </Badge>
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-8 w-8"
-                                  onClick={(e) => e.stopPropagation()}
-                                >
-                                  <MoreVertical className="w-4 h-4" />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                <DropdownMenuItem>Edit Project</DropdownMenuItem>
-                                <DropdownMenuItem>View Details</DropdownMenuItem>
-                                <DropdownMenuItem className="text-red-600">
-                                  Delete Project
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          </div>
-                        </div>
-                        <CardTitle className="text-lg group-hover:text-blue-600 transition-colors">
-                          {project.name}
-                        </CardTitle>
-                        <CardDescription className="line-clamp-2">
-                          {project.description}
-                        </CardDescription>
-                      </CardHeader>
-                      <CardContent className="space-y-4">
-                        {/* Progress */}
-                        <div>
-                          <div className="flex items-center justify-between mb-2 text-sm">
-                            <span className="text-gray-600">Progress</span>
-                            <span className="font-semibold text-gray-900">{project.progress}%</span>
-                          </div>
-                          <Progress value={project.progress} className="h-2" />
-                        </div>
+                  {projects.map((project: Project) => (
+                    <ProjectCard key={project._id} project={project} />
+                  ))}
+                </div>
+              </TabsContent>
 
-                        {/* Stats */}
-                        <div className="flex items-center justify-between text-sm">
-                          <div className="flex items-center gap-1 text-gray-600">
-                            <Calendar className="w-4 h-4" />
-                            <span>{project.sprints} sprints</span>
-                          </div>
-                          <div className="flex items-center gap-1 text-gray-600">
-                            <Users className="w-4 h-4" />
-                            <span>{project.members} members</span>
-                          </div>
-                        </div>
+              <TabsContent value="my" className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {ownedProjects.map((project: Project) => (
+                    <ProjectCard key={project._id} project={project} />
+                  ))}
+                </div>
+              </TabsContent>
 
-                        {/* Footer */}
-                        <div className="flex items-center justify-between pt-2 border-t">
-                          <Badge variant="outline" className="text-xs">
-                            {project.isOwner ? 'Owner' : 'Member'}
-                          </Badge>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="text-blue-600 hover:text-blue-700"
-                          >
-                            View Details
-                            <ArrowUpRight className="w-4 h-4 ml-1" />
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
+              <TabsContent value="participating" className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {joinedProjects.map((project: Project) => (
+                    <ProjectCard key={project._id} project={project} />
                   ))}
                 </div>
               </TabsContent>
@@ -334,6 +269,9 @@ export default function DashboardPage() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Create Project Modal */}
+        <CreateProjectModal/>
       </div>
     </div>
   );

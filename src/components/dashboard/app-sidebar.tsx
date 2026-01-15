@@ -1,6 +1,4 @@
 'use client';
-
-import { useState } from 'react';
 import {
   LayoutDashboard,
   FolderKanban,
@@ -9,6 +7,7 @@ import {
   ChevronRight,
   Plus,
   BarChart2,
+  Router,
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import {
@@ -32,44 +31,30 @@ import { Button } from '../ui/button';
 import Link from 'next/link';
 import { CreateProjectModal } from '@/app/(dashboard)/projects/components/CreateProjectModal';
 import { useCurrentUser } from '@/lib/hooks/useAuth';
-import { useAllProjects, useCreateProject } from '@/lib/hooks/useProjects';
+import { useAllProjects } from '@/lib/hooks/useProjects';
 import { Project } from '@/lib/types';
-
-type AppSidebarProps = {
-  selectedProjectId: string | null;
-  onProjectSelect: (projectId: string | null) => void;
-};
+import { useDispatch, useSelector } from 'react-redux';
+import { openCreateModal } from '@/lib/features/project/projectSlice';
+import { useSearchParams } from 'next/dist/client/components/navigation';
+import { useRouter } from 'next/navigation';
 
 const getProjectId = (project: Project): string => {
   return project._id;
 };
 
-export function AppSidebar({
-  selectedProjectId,
-  onProjectSelect,
-}: AppSidebarProps) {
-  const [isCreateProjectOpen, setIsCreateProjectOpen] = useState(false);
-  
-  // Tự fetch data - không cần props!
+export function AppSidebar() {
+
+  const dispatch = useDispatch();
+  const router = useRouter();
   const { data: user } = useCurrentUser();
   const { ownedProjects, joinedProjects } = useAllProjects();
-  const createProject = useCreateProject();
+  const param = useSearchParams();
 
-  const handleCreateProject = async (data: {
-    name: string;
-    description?: string;
-    imageUrl?: File;
-    members?: Array<{ email: string; role: 'owner' | 'member' | 'viewer' }>;
-  }) => {
-    createProject.mutate(data);
-    setIsCreateProjectOpen(false);
-  };
-
+  const selectedProjectId = param.get('projectId');
+  
   const isProjectSelected = (project: Project): boolean => {
     return selectedProjectId === getProjectId(project);
   };
-
-  if (!user) return null;
 
   return (
     <>
@@ -123,7 +108,7 @@ export function AppSidebar({
               <Button
                 className="p-0.5 hover:bg-sidebar-accent rounded group-data-[collapsible=icon]:hidden"
                 variant="ghost"
-                onClick={() => setIsCreateProjectOpen(true)}
+                onClick={() => dispatch(openCreateModal())}
               >
                 <Plus className="w-3.5 h-3.5" />
               </Button>
@@ -135,7 +120,7 @@ export function AppSidebar({
                     No projects yet
                   </div>
                 )}
-                {ownedProjects.map((project) => {
+                {ownedProjects.map((project: Project) => {
                   const projectId = getProjectId(project);
                   return (
                     <Collapsible
@@ -147,7 +132,7 @@ export function AppSidebar({
                         <CollapsibleTrigger asChild>
                           <SidebarMenuButton
                             isActive={isProjectSelected(project)}
-                            onClick={() => onProjectSelect(projectId)}
+                            onClick={() => router.push(`/projects/${projectId}`)}
                             tooltip={project.name}
                           >
                             <Avatar className="w-4 h-4">
@@ -204,7 +189,7 @@ export function AppSidebar({
                 <SidebarGroupLabel>Participating</SidebarGroupLabel>
                 <SidebarGroupContent>
                   <SidebarMenu>
-                    {joinedProjects.map((project) => {
+                    {joinedProjects.map((project: Project) => {
                       const projectId = getProjectId(project);
                       return (
                         <Collapsible
@@ -216,7 +201,7 @@ export function AppSidebar({
                             <CollapsibleTrigger asChild>
                               <SidebarMenuButton
                                 isActive={isProjectSelected(project)}
-                                onClick={() => onProjectSelect(projectId)}
+                                onClick={() => router.push(`/projects/${projectId}`)}
                                 tooltip={project.name}
                               >
                                 <Avatar className="w-4 h-4">
@@ -283,11 +268,8 @@ export function AppSidebar({
         </SidebarFooter>
       </Sidebar>
 
-      <CreateProjectModal
-        open={isCreateProjectOpen}
-        onOpenChange={setIsCreateProjectOpen}
-        onCreate={handleCreateProject}
-      />
+      {/* Create Project Modal */}
+      <CreateProjectModal/>
     </>
   );
 }

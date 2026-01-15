@@ -13,7 +13,13 @@ export type Project = {
   name: string;
   description?: string;
   imageUrl?: string;
-  members: [];
+  members: Array<{ 
+    memberId: string; 
+    email: string; 
+    role: 'owner' | 'member' | 'viewer';
+    status: 'active' | 'left';
+    joinAt: string;
+  }>;
   status: 'active' | 'archived';
   createdAt: string;
 };

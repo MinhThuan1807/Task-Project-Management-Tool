@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { User, Project, Sprint } from '@/lib/types';
+import { Project, Sprint } from '@/lib/types';
 import { mockSprints } from '@/lib/mock-data';
 import { ProjectOverview } from '@/components/projects/project-overview';
 import { EditProjectModal } from '@/components/EditProjectModal';
@@ -18,7 +18,6 @@ export default function ProjectPage() {
 
   const { data: currentUser, isLoading: userLoading } = useCurrentUser();
   const { data: allProjects, isLoading: projectsLoading } = useAllProjects();
-
 
   const [sprints, setSprints] = useState<Sprint[]>(mockSprints);
   const [isEditProjectOpen, setIsEditProjectOpen] = useState(false);
@@ -87,7 +86,6 @@ export default function ProjectPage() {
       <ProjectOverview
         project={project}
         sprints={projectSprints}
-        currentUser={currentUser}
         onNavigateToBacklog={() => router.push(`/projects/${projectId}/backlog`)}
         onNavigateToSettings={() => {}}
         onEditProject={() => setIsEditProjectOpen(true)}

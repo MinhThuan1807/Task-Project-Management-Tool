@@ -12,6 +12,7 @@ import { toast } from 'sonner';
 import { loginUserAPI } from '@/lib/features/auth/authSlice';
 import { useAppDispatch } from '@/lib/hooks';
 import { useRouter } from 'next/navigation';
+import { getErrorMessage } from '@/lib/utils';
 
 const loginSchema = z.object({
   email: z
@@ -62,7 +63,7 @@ export function LoginPageNew({
       }, 500);
     }
     catch (error) {
-      toast.error(error as string);
+      toast.error(getErrorMessage(error));
     }
     
   };

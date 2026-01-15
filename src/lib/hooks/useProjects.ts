@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { projectApi } from '@/lib/services/project.service';
 import { toast } from 'sonner';
-
+import { getErrorMessage } from '@/lib/utils';
 // Query keys
 export const projectKeys = {
   all: ['projects'] as const,
@@ -57,12 +57,11 @@ export function useCreateProject() {
   return useMutation({
     mutationFn: projectApi.createProject,
     onSuccess: (data) => {
-      toast.success(`Project "${data.name}" created successfully!`);
       // Invalidate và refetch projects
       queryClient.invalidateQueries({ queryKey: projectKeys.all });
     },
-    onError: (error: any) => {
-      toast.error(error.response?.data?.message || 'Failed to create project');
+    onError: (error) => {
+      toast.error(getErrorMessage(error) || 'Failed to create project.');
     },
   });
 }
