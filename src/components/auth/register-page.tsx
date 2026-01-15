@@ -13,6 +13,7 @@ import { toast } from 'sonner';
 import { cn } from '../../lib/utils';
 import { authApi } from '@/lib/services/auth.service';
 import { useRouter } from 'next/dist/client/components/navigation';
+import { getErrorMessage } from '@/lib/utils';
 
 const registerSchema = z.object({
   email: z
@@ -104,10 +105,8 @@ export function RegisterPageNew({
       })
     } 
     catch (error) {
-      toast.error(error as string)
+      toast.error(getErrorMessage(error));
     }
-
-    
   };
 
   return (

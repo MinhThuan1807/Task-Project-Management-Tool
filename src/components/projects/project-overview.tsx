@@ -30,11 +30,11 @@ import {
 import { formatDate, getStatusColor } from '../../lib/utils';
 import { CreateSprintModal, SprintFormData } from './create-sprint-modal';
 import { InviteTeamModal, InvitationData } from './invite-team-modal';
+import { useCurrentUser } from '@/lib/hooks/useAuth';
 
 type ProjectOverviewProps = {
   project: Project;
   sprints: Sprint[];
-  currentUser: User;
   onNavigateToBacklog: () => void;
   onNavigateToSettings: () => void;
   onEditProject: () => void;
@@ -43,12 +43,13 @@ type ProjectOverviewProps = {
 export function ProjectOverview({
   project,
   sprints,
-  currentUser,
   onNavigateToBacklog,
   onNavigateToSettings,
   onEditProject,
 }: ProjectOverviewProps) {
-  const isOwner = project.ownerId === currentUser._id;
+  const { data: user } = useCurrentUser();
+  
+  const isOwner = project.ownerId === user?._id;
   const activeSprints = sprints.filter((s) => new Date(s.endDate) > new Date());
   const completedSprints = sprints.length - activeSprints.length;
 
@@ -301,25 +302,38 @@ export function ProjectOverview({
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {project.members.map((memberId, index) => {
-                    const isProjectOwner = memberId === project.ownerId;
-                    const mockNames = ['Alice Johnson', 'Bob Smith', 'Charlie Wilson', 'Diana Lee'];
-                    const mockRoles = ['Frontend Dev', 'Backend Dev', 'Designer', 'QA Engineer'];
+                  {project.members.map((member) => {
+                    const isProjectOwner = member.memberId === project.ownerId;
 
                     return (
-                      <div key={memberId} className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50">
+                      <div 
+                        key={member.memberId} 
+                        className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 transition-colors"
+                      >
                         <div className="flex items-center gap-3">
                           <Avatar>
-                            <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${memberId}`} />
-                            <AvatarFallback>{mockNames[index]?.substring(0, 2) || 'U'}</AvatarFallback>
+                            <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${member.email}`} />
+                            <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white">
+                              {member.email.substring(0, 2).toUpperCase()}
+                            </AvatarFallback>
                           </Avatar>
                           <div>
-                            <p className="text-sm text-gray-900">{mockNames[index] || 'Team Member'}</p>
-                            <p className="text-xs text-gray-500">{mockRoles[index] || 'Member'}</p>
+                            <p className="text-sm font-medium text-gray-900">
+                              {member.email}
+                            </p>
+                            <p className="text-xs text-gray-500 capitalize">
+                              {member.role}
+                            </p>
                           </div>
                         </div>
-                        <Badge variant="outline" className={isProjectOwner ? 'bg-yellow-50 text-yellow-700 border-yellow-300' : ''}>
-                          {isProjectOwner ? 'Owner' : 'Member'}
+                        <Badge 
+                          variant={isProjectOwner ? "default" : "outline"}
+                          className={isProjectOwner 
+                            ? 'bg-gradient-to-r from-yellow-500 to-orange-500 text-white' 
+                            : ''
+                          }
+                        >
+                          {isProjectOwner ? '👑 Owner' : member.role}
                         </Badge>
                       </div>
                     );

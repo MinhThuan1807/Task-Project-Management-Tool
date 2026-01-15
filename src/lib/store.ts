@@ -12,16 +12,18 @@ import {
 } from 'redux-persist'
 import storage from 'redux-persist/lib/storage'
 import userReducer from './features/auth/authSlice'
+import projectReducer from './features/project/projectSlice'
 
 const rootPersistConfig = {
   key: 'root', // The key for the root reducer
   storage: storage, // Use local storage for persisting user data
-  whitelist: ['user'] // user data can store in redux when press f5
+  whitelist: ['user', 'project'] // user data can store in redux when press f5
 }
 
 // Combine all reducers
 const reducers = combineReducers({
-  user: userReducer
+  user: userReducer,
+  project: projectReducer,
 })
 
 // Process persist Reducer

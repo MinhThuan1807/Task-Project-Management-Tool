@@ -23,7 +23,7 @@ export default function RootLayout({
         <QueryProviders>
           <StoreProvider>
             {children}
-            <Toaster />
+            <Toaster position="top-right"/>
           </StoreProvider>
         </QueryProviders>
       </body>

@@ -74,3 +74,17 @@ export function getRoleColor(role: string): string {
       return 'bg-gray-100 text-gray-700 border-gray-300';
   }
 }
+
+export function getErrorMessage(error: any): string {
+  // Nếu là string trực tiếp
+  if (typeof error === 'string') return error;
+  
+  // Nếu là Axios error
+  if (error?.response?.data?.message) return error.response.data.message;
+  
+  // Nếu là Error object
+  if (error?.message) return error.message;
+  
+  // Default message
+  return 'An unexpected error occurred';
+}

@@ -1,4 +1,4 @@
-import { User, Project } from '../../lib/types';
+import { Project } from '../../lib/types';
 import { Bell, Search, Settings, User as UserIcon, LogOut } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
@@ -12,18 +12,21 @@ import {
 } from '../ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { Badge } from '../ui/badge';
-import { use } from 'react';
 import { useCurrentUser } from '@/lib/hooks/useAuth';
+import { useSearchParams } from 'next/navigation';
+import { useAllProjects } from '@/lib/hooks/useProjects';
 
-type TopBarProps = {
-  // currentUser: User;
-  selectedProject?: Project;
-  currentView: string;
-};
+export function TopBar() {
 
-export function TopBar({ selectedProject, currentView }: TopBarProps) {
+  const param = useSearchParams();
+  const { data: user } = useCurrentUser();
+  const { data: allProjects, isLoading: projectsLoading } = useAllProjects();
+  const selectedProjectId = param.get('projectId');
+  const selectedProject = allProjects.find(
+    (p) => p.id === selectedProjectId || p._id === selectedProjectId
+  );
   const getViewTitle = () => {
-    switch (currentView) {
+    switch (param.get('view')) {
       case 'dashboard':
         return 'Dashboard';
       case 'chat':
@@ -40,9 +43,6 @@ export function TopBar({ selectedProject, currentView }: TopBarProps) {
         return selectedProject?.name || 'Sprintos';
     }
   };
-  const { data: user } = useCurrentUser();
-
-
   return (
     <div className="flex items-center gap-4 flex-1">
       {/* Title */}

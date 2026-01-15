@@ -1,35 +1,38 @@
-import { useState, useEffect } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { Upload, X, Search, Check, Loader2 } from 'lucide-react';
+import { useState, useEffect } from 'react'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { z } from 'zod'
+import { Upload, X, Search, Check, Loader2 } from 'lucide-react'
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
+  DialogTitle
+} from '@/components/ui/dialog'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
+import { Label } from '@/components/ui/label'
+import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { Badge } from '@/components/ui/badge'
+import { ScrollArea } from '@/components/ui/scroll-area'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { projectApi } from '@/lib/services/project.service';
-import { toast } from 'sonner';
+  SelectValue
+} from '@/components/ui/select'
+import { useCreateProject } from '@/lib/hooks/useProjects' // ✅ Import mutation hook
+import { toast } from 'sonner'
+import { useDispatch, useSelector } from 'react-redux';
+import { closeCreateModal } from '@/lib/features/project/projectSlice';
+import { RootState } from '@/lib/store';
 
 // Storage key for saved emails
-const SAVED_EMAILS_KEY = 'sprintos_invited_emails';
+const SAVED_EMAILS_KEY = 'sprintos_invited_emails'
 
 // Validation schema
 const createProjectSchema = z.object({
@@ -41,193 +44,182 @@ const createProjectSchema = z.object({
   description: z
     .string()
     .max(500, 'Description must be less than 500 characters')
-    .optional(),
-});
+    .optional()
+})
 
-type CreateProjectFormData = z.infer<typeof createProjectSchema>;
+type CreateProjectFormData = z.infer<typeof createProjectSchema>
 
-type MemberRole = 'owner' | 'member' | 'viewer';
+type MemberRole = 'owner' | 'member' | 'viewer'
 
 interface InvitedMember {
-  email: string;
-  role: MemberRole;
+  email: string
+  role: MemberRole
 }
 
-type CreateProjectModalProps = {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  onCreate?: (data: { name: string; description?: string; imageUrl?: string; members?: string[] }) => void;
-};
+export function CreateProjectModal() {
+  const [imageFile, setImageFile] = useState<File | null>(null)
+  const [imagePreview, setImagePreview] = useState<string | null>(null)
+  const [invitedMembers, setInvitedMembers] = useState<InvitedMember[]>([])
+  const [emailInput, setEmailInput] = useState('')
+  const [selectedRole, setSelectedRole] = useState<MemberRole>('member')
+  const [savedEmails, setSavedEmails] = useState<string[]>([])
+  const [showSuggestions, setShowSuggestions] = useState(false)
 
-export function CreateProjectModal({ open, onOpenChange, onCreate }: CreateProjectModalProps) {
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [invitedMembers, setInvitedMembers] = useState<InvitedMember[]>([]);
-  const [emailInput, setEmailInput] = useState('');
-  const [selectedRole, setSelectedRole] = useState<MemberRole>('member');
-  const [savedEmails, setSavedEmails] = useState<string[]>([]);
-  const [showSuggestions, setShowSuggestions] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  // ✅ Sử dụng mutation hook thay vì isLoading state
+  const createProject = useCreateProject()
 
   const {
     register,
     handleSubmit,
     reset,
-    formState: { errors },
+    formState: { errors }
   } = useForm<CreateProjectFormData>({
     resolver: zodResolver(createProjectSchema),
     defaultValues: {
       name: '',
-      description: '',
-    },
-  });
+      description: ''
+    }
+  })
 
   // Load saved emails from localStorage
   useEffect(() => {
-    const stored = localStorage.getItem(SAVED_EMAILS_KEY);
+    const stored = localStorage.getItem(SAVED_EMAILS_KEY)
     if (stored) {
       try {
-        setSavedEmails(JSON.parse(stored));
+        setSavedEmails(JSON.parse(stored))
       } catch {
-        setSavedEmails([]);
+        setSavedEmails([])
       }
     }
-  }, []);
+  }, [])
 
   // Filter suggestions based on input
   const filteredSuggestions = savedEmails.filter(
     (email) =>
       email.toLowerCase().includes(emailInput.toLowerCase()) &&
       !invitedMembers.some((m) => m.email === email)
-  );
+  )
 
   // Save email to localStorage
   const saveEmailToStorage = (email: string) => {
-    const updatedEmails = [...new Set([email, ...savedEmails])].slice(0, 20); // Keep max 20 emails
-    setSavedEmails(updatedEmails);
-    localStorage.setItem(SAVED_EMAILS_KEY, JSON.stringify(updatedEmails));
-  };
+    const updatedEmails = [...new Set([email, ...savedEmails])].slice(0, 20) // Keep max 20 emails
+    setSavedEmails(updatedEmails)
+    localStorage.setItem(SAVED_EMAILS_KEY, JSON.stringify(updatedEmails))
+  }
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+    const file = e.target.files?.[0]
     if (file) {
-      setImageFile(file);
-      const reader = new FileReader();
+      setImageFile(file)
+      const reader = new FileReader()
       reader.onloadend = () => {
-        setImagePreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
+        setImagePreview(reader.result as string)
+      }
+      reader.readAsDataURL(file)
     }
-  };
+  }
 
   const handleRemoveImage = () => {
-    setImageFile(null);
-    setImagePreview(null);
-  };
+    setImageFile(null)
+    setImagePreview(null)
+  }
 
   const isValidEmail = (email: string) => {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-  };
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+  }
 
   const handleAddMember = (emailToAdd?: string) => {
-    const email = emailToAdd || emailInput.trim();
-    
-    if (!email) return;
-    
+    const email = emailToAdd || emailInput.trim()
+
+    if (!email) return
+
     if (!isValidEmail(email)) {
-      toast.error('Please enter a valid email address');
-      return;
+      toast.error('Please enter a valid email address')
+      return
     }
 
     if (invitedMembers.some((m) => m.email === email)) {
-      toast.error('This email is already added');
-      return;
+      toast.error('This email is already added')
+      return
     }
 
-    setInvitedMembers([...invitedMembers, { email, role: selectedRole }]);
-    saveEmailToStorage(email);
-    setEmailInput('');
-    setShowSuggestions(false);
-  };
+    setInvitedMembers([...invitedMembers, { email, role: selectedRole }])
+    saveEmailToStorage(email)
+    setEmailInput('')
+    setShowSuggestions(false)
+  }
 
   const handleRemoveMember = (email: string) => {
-    setInvitedMembers(invitedMembers.filter((m) => m.email !== email));
-  };
+    setInvitedMembers(invitedMembers.filter((m) => m.email !== email))
+  }
 
   const handleUpdateMemberRole = (email: string, role: MemberRole) => {
     setInvitedMembers(
       invitedMembers.map((m) => (m.email === email ? { ...m, role } : m))
-    );
-  };
+    )
+  }
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
-      e.preventDefault();
-      handleAddMember();
+      e.preventDefault()
+      handleAddMember()
     }
-  };
+  }
 
+  // ✅ Sửa lại onSubmit để dùng mutation
   const onSubmit = async (data: CreateProjectFormData) => {
-    setIsLoading(true);
-    try {
-      const payload = {
-        name: data.name,
-        description: data.description,
-        members: invitedMembers.length > 0 ? invitedMembers : undefined,
-        imageUrl: imageFile || undefined,
-      };
-
-      await projectApi.createProject(payload);
-      
-      toast.success(`Project "${data.name}" created successfully!`);
-      
-      // Call optional onCreate callback
-      if (onCreate) {
-        onCreate({
-          name: data.name,
-          description: data.description,
-          members: invitedMembers.map((m) => m.email),
-        });
-      }
-      
-      handleClose();
-    } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to create project';
-      toast.error(errorMessage);
-    } finally {
-      setIsLoading(false);
+    const payload = {
+      name: data.name,
+      description: data.description,
+      members: invitedMembers.length > 0 ? invitedMembers : undefined,
+      imageUrl: imageFile || undefined
     }
-  };
+
+    createProject.mutate(payload, {
+      onSuccess: () => {
+        toast.success(`Project "${data.name}" created successfully!`);
+        handleClose()
+    }
+    })
+  }
 
   const handleClose = () => {
-    reset();
-    setImageFile(null);
-    setImagePreview(null);
-    setInvitedMembers([]);
-    setEmailInput('');
-    setSelectedRole('member');
-    setShowSuggestions(false);
-    onOpenChange(false);
-  };
+    reset()
+    setImageFile(null)
+    setImagePreview(null)
+    setInvitedMembers([])
+    setEmailInput('')
+    setSelectedRole('member')
+    setShowSuggestions(false)
+    dispatch(closeCreateModal());
+  }
 
   const getRoleColor = (role: MemberRole) => {
     switch (role) {
       case 'owner':
-        return 'bg-purple-100 text-purple-700';
+        return 'bg-purple-100 text-purple-700'
       case 'member':
-        return 'bg-blue-100 text-blue-700';
+        return 'bg-blue-100 text-blue-700'
       case 'viewer':
-        return 'bg-gray-100 text-gray-700';
+        return 'bg-gray-100 text-gray-700'
     }
-  };
+  }
+  const dispatch = useDispatch();
+    const open = useSelector((state: RootState) => state.project.isCreateModalOpen);
 
+    const handleOpenChange = (isOpen: boolean) => {
+      if (!isOpen) {
+        dispatch(closeCreateModal());
+      }
+    };
   return (
-    <Dialog open={open} onOpenChange={handleClose}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Create New Project</DialogTitle>
           <DialogDescription>
-            Create a new project to organize your tasks and collaborate with your team.
+            Create a new project to organize your tasks and collaborate with
+            your team.
           </DialogDescription>
         </DialogHeader>
 
@@ -242,7 +234,7 @@ export function CreateProjectModal({ open, onOpenChange, onCreate }: CreateProje
               placeholder="Enter project name"
               {...register('name')}
               className={errors.name ? 'border-red-500' : ''}
-              disabled={isLoading}
+              disabled={createProject.isPending} // ✅ Dùng isPending từ mutation
             />
             {errors.name && (
               <p className="text-sm text-red-500">{errors.name.message}</p>
@@ -258,10 +250,12 @@ export function CreateProjectModal({ open, onOpenChange, onCreate }: CreateProje
               rows={4}
               {...register('description')}
               className={errors.description ? 'border-red-500' : ''}
-              disabled={isLoading}
+              disabled={createProject.isPending} // ✅ Dùng isPending
             />
             {errors.description && (
-              <p className="text-sm text-red-500">{errors.description.message}</p>
+              <p className="text-sm text-red-500">
+                {errors.description.message}
+              </p>
             )}
           </div>
 
@@ -280,7 +274,7 @@ export function CreateProjectModal({ open, onOpenChange, onCreate }: CreateProje
                     type="button"
                     onClick={handleRemoveImage}
                     className="absolute -top-2 -right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600"
-                    disabled={isLoading}
+                    disabled={createProject.isPending} // ✅ Dùng isPending
                   >
                     <X className="w-3 h-3" />
                   </button>
@@ -294,12 +288,16 @@ export function CreateProjectModal({ open, onOpenChange, onCreate }: CreateProje
                 <label
                   htmlFor="image-upload"
                   className={`block border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-blue-400 transition-colors ${
-                    isLoading ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'
+                    createProject.isPending
+                      ? 'cursor-not-allowed opacity-50'
+                      : 'cursor-pointer'
                   }`}
                 >
                   <Upload className="w-6 h-6 text-gray-400 mx-auto mb-2" />
                   <p className="text-sm text-gray-600">Click to upload image</p>
-                  <p className="text-xs text-gray-500 mt-1">PNG, JPG up to 10MB</p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    PNG, JPG up to 10MB
+                  </p>
                 </label>
                 <input
                   id="image-upload"
@@ -307,7 +305,7 @@ export function CreateProjectModal({ open, onOpenChange, onCreate }: CreateProje
                   accept="image/*"
                   onChange={handleImageChange}
                   className="hidden"
-                  disabled={isLoading}
+                  disabled={createProject.isPending} // ✅ Dùng isPending
                 />
               </div>
             </div>
@@ -339,7 +337,7 @@ export function CreateProjectModal({ open, onOpenChange, onCreate }: CreateProje
                         onValueChange={(value: MemberRole) =>
                           handleUpdateMemberRole(member.email, value)
                         }
-                        disabled={isLoading}
+                        disabled={createProject.isPending} // ✅ Dùng isPending
                       >
                         <SelectTrigger className="w-24 h-8">
                           <SelectValue />
@@ -353,7 +351,7 @@ export function CreateProjectModal({ open, onOpenChange, onCreate }: CreateProje
                         type="button"
                         onClick={() => handleRemoveMember(member.email)}
                         className="p-1 hover:text-red-600 transition-colors"
-                        disabled={isLoading}
+                        disabled={createProject.isPending} // ✅ Dùng isPending
                       >
                         <X className="w-4 h-4" />
                       </button>
@@ -372,45 +370,49 @@ export function CreateProjectModal({ open, onOpenChange, onCreate }: CreateProje
                     placeholder="Enter email address..."
                     value={emailInput}
                     onChange={(e) => {
-                      setEmailInput(e.target.value);
-                      setShowSuggestions(true);
+                      setEmailInput(e.target.value)
+                      setShowSuggestions(true)
                     }}
                     onFocus={() => setShowSuggestions(true)}
-                    onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+                    onBlur={() =>
+                      setTimeout(() => setShowSuggestions(false), 200)
+                    }
                     onKeyDown={handleKeyDown}
                     className="pl-10"
-                    disabled={isLoading}
+                    disabled={createProject.isPending} // ✅ Dùng isPending
                   />
-                  
+
                   {/* Email Suggestions Dropdown */}
-                  {showSuggestions && filteredSuggestions.length > 0 && emailInput && (
-                    <div className="absolute z-10 w-full mt-1 bg-white border rounded-lg shadow-lg max-h-40 overflow-y-auto">
-                      {filteredSuggestions.map((email) => (
-                        <button
-                          key={email}
-                          type="button"
-                          onClick={() => {
-                            setEmailInput(email);
-                            handleAddMember(email);
-                          }}
-                          className="w-full flex items-center gap-2 px-3 py-2 hover:bg-gray-100 text-left"
-                        >
-                          <Avatar className="w-6 h-6">
-                            <AvatarFallback className="bg-gray-200 text-gray-600 text-xs">
-                              {email.substring(0, 2).toUpperCase()}
-                            </AvatarFallback>
-                          </Avatar>
-                          <span className="text-sm">{email}</span>
-                        </button>
-                      ))}
-                    </div>
-                  )}
+                  {showSuggestions &&
+                    filteredSuggestions.length > 0 &&
+                    emailInput && (
+                      <div className="absolute z-10 w-full mt-1 bg-white border rounded-lg shadow-lg max-h-40 overflow-y-auto">
+                        {filteredSuggestions.map((email) => (
+                          <button
+                            key={email}
+                            type="button"
+                            onClick={() => {
+                              setEmailInput(email)
+                              handleAddMember(email)
+                            }}
+                            className="w-full flex items-center gap-2 px-3 py-2 hover:bg-gray-100 text-left"
+                          >
+                            <Avatar className="w-6 h-6">
+                              <AvatarFallback className="bg-gray-200 text-gray-600 text-xs">
+                                {email.substring(0, 2).toUpperCase()}
+                              </AvatarFallback>
+                            </Avatar>
+                            <span className="text-sm">{email}</span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
                 </div>
-                
+
                 <Select
                   value={selectedRole}
                   onValueChange={(value: MemberRole) => setSelectedRole(value)}
-                  disabled={isLoading}
+                  disabled={createProject.isPending} // ✅ Dùng isPending
                 >
                   <SelectTrigger className="w-28">
                     <SelectValue />
@@ -420,12 +422,12 @@ export function CreateProjectModal({ open, onOpenChange, onCreate }: CreateProje
                     <SelectItem value="viewer">Viewer</SelectItem>
                   </SelectContent>
                 </Select>
-                
+
                 <Button
                   type="button"
                   variant="outline"
                   onClick={() => handleAddMember()}
-                  disabled={!emailInput.trim() || isLoading}
+                  disabled={!emailInput.trim() || createProject.isPending} // ✅ Dùng isPending
                 >
                   Add
                 </Button>
@@ -433,7 +435,8 @@ export function CreateProjectModal({ open, onOpenChange, onCreate }: CreateProje
             </div>
 
             <p className="text-xs text-gray-500">
-              {invitedMembers.length} member{invitedMembers.length !== 1 ? 's' : ''} invited
+              {invitedMembers.length} member
+              {invitedMembers.length !== 1 ? 's' : ''} invited
               {savedEmails.length > 0 && (
                 <span className="ml-2">• Start typing to see suggestions</span>
               )}
@@ -441,15 +444,20 @@ export function CreateProjectModal({ open, onOpenChange, onCreate }: CreateProje
           </div>
 
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={handleClose} disabled={isLoading}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleClose}
+              disabled={createProject.isPending} // ✅ Dùng isPending
+            >
               Cancel
             </Button>
             <Button
               type="submit"
-              disabled={isLoading}
+              disabled={createProject.isPending} // ✅ Dùng isPending
               className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
             >
-              {isLoading ? (
+              {createProject.isPending ? ( // ✅ Dùng isPending
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                   Creating...
@@ -462,5 +470,5 @@ export function CreateProjectModal({ open, onOpenChange, onCreate }: CreateProje
         </form>
       </DialogContent>
     </Dialog>
-  );
+  )
 }
