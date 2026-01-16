@@ -7,7 +7,6 @@ import {
   ChevronRight,
   Plus,
   BarChart2,
-  Router,
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import {
@@ -33,14 +32,12 @@ import { CreateProjectModal } from '@/app/(dashboard)/projects/components/Create
 import { useCurrentUser } from '@/lib/hooks/useAuth';
 import { useAllProjects } from '@/lib/hooks/useProjects';
 import { Project } from '@/lib/types';
-import { useDispatch, useSelector } from 'react-redux';
+import { useDispatch } from 'react-redux';
 import { openCreateModal } from '@/lib/features/project/projectSlice';
-import { useSearchParams } from 'next/dist/client/components/navigation';
+import { useParams, useSearchParams } from 'next/dist/client/components/navigation';
 import { useRouter } from 'next/navigation';
 
-const getProjectId = (project: Project): string => {
-  return project._id;
-};
+
 
 export function AppSidebar() {
 
@@ -48,12 +45,12 @@ export function AppSidebar() {
   const router = useRouter();
   const { data: user } = useCurrentUser();
   const { ownedProjects, joinedProjects } = useAllProjects();
-  const param = useSearchParams();
+  const param = useParams();
 
-  const selectedProjectId = param.get('projectId');
+  const selectedProjectId = param.id as string;
   
   const isProjectSelected = (project: Project): boolean => {
-    return selectedProjectId === getProjectId(project);
+    return selectedProjectId === project._id;
   };
 
   return (
@@ -121,10 +118,9 @@ export function AppSidebar() {
                   </div>
                 )}
                 {ownedProjects.map((project: Project) => {
-                  const projectId = getProjectId(project);
                   return (
                     <Collapsible
-                      key={projectId}
+                      key={project._id}
                       defaultOpen={isProjectSelected(project)}
                       className="group/collapsible"
                     >
@@ -132,7 +128,7 @@ export function AppSidebar() {
                         <CollapsibleTrigger asChild>
                           <SidebarMenuButton
                             isActive={isProjectSelected(project)}
-                            onClick={() => router.push(`/projects/${projectId}`)}
+                            onClick={() => router.push(`/projects/${project._id}`)}
                             tooltip={project.name}
                           >
                             <Avatar className="w-4 h-4">
@@ -149,7 +145,7 @@ export function AppSidebar() {
                           <SidebarMenuSub>
                             <SidebarMenuSubItem>
                               <SidebarMenuSubButton asChild>
-                                <Link href={`/projects/${projectId}/backlog`}>
+                                <Link href={`/projects/${project._id}/backlog`}>
                                   <List className="w-4 h-4" />
                                   <span>Product Backlog</span>
                                 </Link>
@@ -157,7 +153,7 @@ export function AppSidebar() {
                             </SidebarMenuSubItem>
                             <SidebarMenuSubItem>
                               <SidebarMenuSubButton asChild>
-                                <Link href={`/projects/${projectId}/board`}>
+                                <Link href={`/projects/${project._id}/sprint`}>
                                   <FolderKanban className="w-4 h-4" />
                                   <span>Sprint Board</span>
                                 </Link>
@@ -165,7 +161,7 @@ export function AppSidebar() {
                             </SidebarMenuSubItem>
                             <SidebarMenuSubItem>
                               <SidebarMenuSubButton asChild>
-                                <Link href={`/projects/${projectId}/report`}>
+                                <Link href={`/projects/${project._id}/report`}>
                                   <BarChart2 className="w-4 h-4" />
                                   <span>Reports</span>
                                 </Link>
@@ -190,10 +186,10 @@ export function AppSidebar() {
                 <SidebarGroupContent>
                   <SidebarMenu>
                     {joinedProjects.map((project: Project) => {
-                      const projectId = getProjectId(project);
+                    
                       return (
                         <Collapsible
-                          key={projectId}
+                          key={project._id}
                           defaultOpen={isProjectSelected(project)}
                           className="group/collapsible"
                         >
@@ -201,7 +197,7 @@ export function AppSidebar() {
                             <CollapsibleTrigger asChild>
                               <SidebarMenuButton
                                 isActive={isProjectSelected(project)}
-                                onClick={() => router.push(`/projects/${projectId}`)}
+                                onClick={() => router.push(`/projects/${project._id}`)}
                                 tooltip={project.name}
                               >
                                 <Avatar className="w-4 h-4">
@@ -218,7 +214,7 @@ export function AppSidebar() {
                               <SidebarMenuSub>
                                 <SidebarMenuSubItem>
                                   <SidebarMenuSubButton asChild>
-                                    <Link href={`/projects/${projectId}/backlog`}>
+                                    <Link href={`/projects/${project._id}/backlog`}>
                                       <List className="w-4 h-4" />
                                       <span>Product Backlog</span>
                                     </Link>
@@ -226,7 +222,7 @@ export function AppSidebar() {
                                 </SidebarMenuSubItem>
                                 <SidebarMenuSubItem>
                                   <SidebarMenuSubButton asChild>
-                                    <Link href={`/projects/${projectId}/board`}>
+                                    <Link href={`/projects/${project._id}/board`}>
                                       <FolderKanban className="w-4 h-4" />
                                       <span>Sprint Board</span>
                                     </Link>

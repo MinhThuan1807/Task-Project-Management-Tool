@@ -18,25 +18,26 @@ export type Project = {
     email: string; 
     role: 'owner' | 'member' | 'viewer';
     status: 'active' | 'left';
-    joinAt: string;
+    joinAt: Date;
   }>;
   status: 'active' | 'archived';
-  createdAt: string;
+  createdAt: Date;
 };
 
 export type Sprint = {
-  id: string;
+  _id: string;
   projectId: string;
   name: string;
   goal: string;
-  storyPoint: number;
-  startDate: string;
-  endDate: string;
-  createdAt: string;
+  maxStoryPoint: number;
+  startDate: Date;
+  endDate: Date;
+  status: 'planned' | 'active' | 'completed';
+  createdAt: Date;
 };
 
 export type Task = {
-  id: string;
+  _id: string;
   projectId: string;
   sprintId: string;
   columnId: string;
@@ -52,10 +53,11 @@ export type Task = {
 };
 
 export type Column = {
-  id: string;
-  projectId: string;
+  _id: string;
+  // projectId: string;
   sprintId: string;
-  title: string;
+  title: 'to do' | 'in progress' | 'done' | string;
+  taskOrderIds: string[];
   position: number;
 };
 

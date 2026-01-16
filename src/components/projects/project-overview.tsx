@@ -31,40 +31,47 @@ import { formatDate, getStatusColor } from '../../lib/utils';
 import { CreateSprintModal, SprintFormData } from './create-sprint-modal';
 import { InviteTeamModal, InvitationData } from './invite-team-modal';
 import { useCurrentUser } from '@/lib/hooks/useAuth';
+import { useAllProjects } from '@/lib/hooks/useProjects';
+import { useParams } from 'next/navigation';
+import { projectApi } from '@/lib/services/project.service';
+
+interface ProjectMember {
+  memberId: string;
+  email: string;
+  role: 'owner' | 'member' | 'viewer';
+  status: 'active' | 'left';
+  joinAt: Date;
+}
 
 type ProjectOverviewProps = {
-  project: Project;
   sprints: Sprint[];
   onNavigateToBacklog: () => void;
-  onNavigateToSettings: () => void;
   onEditProject: () => void;
 };
 
 export function ProjectOverview({
-  project,
   sprints,
   onNavigateToBacklog,
-  onNavigateToSettings,
   onEditProject,
 }: ProjectOverviewProps) {
   const { data: user } = useCurrentUser();
-  
-  const isOwner = project.ownerId === user?._id;
+  const { data: allProjects, isLoading: projectsLoading } = useAllProjects();
+  const params = useParams();
+
   const activeSprints = sprints.filter((s) => new Date(s.endDate) > new Date());
   const completedSprints = sprints.length - activeSprints.length;
 
   // Modal states
   const [isCreateSprintOpen, setIsCreateSprintOpen] = useState(false);
   const [isInviteTeamOpen, setIsInviteTeamOpen] = useState(false);
+  
+  const projectId = params.id as string;
+  const project = allProjects.find((p) => p._id === projectId);
+  const isOwner = project.ownerId === user?._id;
 
   const handleCreateSprint = (sprintData: SprintFormData) => {
     console.log('Creating sprint:', sprintData);
     // TODO: Implement actual sprint creation
-  };
-
-  const handleInviteTeam = (invitations: InvitationData[]) => {
-    console.log('Sending invitations:', invitations);
-    // TODO: Implement actual invitation sending
   };
 
   return (
@@ -112,10 +119,6 @@ export function ProjectOverview({
             <DropdownMenuContent align="end">
               {isOwner && (
                 <>
-                  <DropdownMenuItem onClick={onNavigateToSettings}>
-                    <Settings className="w-4 h-4 mr-2" />
-                    Project Settings
-                  </DropdownMenuItem>
                   <DropdownMenuItem onClick={onEditProject}>
                     <Edit className="w-4 h-4 mr-2" />
                     Edit Details
@@ -249,7 +252,7 @@ export function ProjectOverview({
                       const progress = Math.random() * 100; // Mock progress
 
                       return (
-                        <Card key={sprint.id} className="border shadow-sm">
+                        <Card key={sprint._id} className="border shadow-sm">
                           <CardContent className="pt-6">
                             <div className="flex items-start justify-between mb-4">
                               <div className="flex-1">
@@ -269,7 +272,7 @@ export function ProjectOverview({
                                   </div>
                                   <div className="flex items-center gap-1">
                                     <TrendingUp className="w-4 h-4" />
-                                    <span>{sprint.storyPoint} story points</span>
+                                    <span>{sprint.maxStoryPoint} story points</span>
                                   </div>
                                 </div>
                               </div>
@@ -302,7 +305,7 @@ export function ProjectOverview({
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {project.members.map((member) => {
+                  {project.members.map((member: ProjectMember) => {
                     const isProjectOwner = member.memberId === project.ownerId;
 
                     return (
@@ -397,7 +400,7 @@ export function ProjectOverview({
         open={isInviteTeamOpen}
         onOpenChange={setIsInviteTeamOpen}
         projectId={project._id}
-        onInvite={handleInviteTeam}
+        // onInvite={handleInviteTeam}
       />
     </div>
   );

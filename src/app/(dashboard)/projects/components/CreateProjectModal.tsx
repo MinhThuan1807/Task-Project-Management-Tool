@@ -205,7 +205,7 @@ export function CreateProjectModal() {
     }
   }
   const dispatch = useDispatch();
-    const open = useSelector((state: RootState) => state.project.isCreateModalOpen);
+  const open = useSelector((state: RootState) => state.project.isCreateModalOpen);
 
     const handleOpenChange = (isOpen: boolean) => {
       if (!isOpen) {
@@ -214,7 +214,7 @@ export function CreateProjectModal() {
     };
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle>Create New Project</DialogTitle>
           <DialogDescription>
@@ -223,251 +223,255 @@ export function CreateProjectModal() {
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-          {/* Project Name */}
-          <div className="space-y-2">
-            <Label htmlFor="name">
-              Project Name <span className="text-red-500">*</span>
-            </Label>
-            <Input
-              id="name"
-              placeholder="Enter project name"
-              {...register('name')}
-              className={errors.name ? 'border-red-500' : ''}
-              disabled={createProject.isPending} // ✅ Dùng isPending từ mutation
-            />
-            {errors.name && (
-              <p className="text-sm text-red-500">{errors.name.message}</p>
-            )}
-          </div>
-
-          {/* Description */}
-          <div className="space-y-2">
-            <Label htmlFor="description">Description</Label>
-            <Textarea
-              id="description"
-              placeholder="Describe your project..."
-              rows={4}
-              {...register('description')}
-              className={errors.description ? 'border-red-500' : ''}
-              disabled={createProject.isPending} // ✅ Dùng isPending
-            />
-            {errors.description && (
-              <p className="text-sm text-red-500">
-                {errors.description.message}
-              </p>
-            )}
-          </div>
-
-          {/* Project Image */}
-          <div className="space-y-2">
-            <Label>Project Image</Label>
-            <div className="flex items-start gap-4">
-              {imagePreview ? (
-                <div className="relative">
-                  <img
-                    src={imagePreview}
-                    alt="Project preview"
-                    className="w-24 h-24 rounded-lg object-cover border border-gray-200"
-                  />
-                  <button
-                    type="button"
-                    onClick={handleRemoveImage}
-                    className="absolute -top-2 -right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600"
-                    disabled={createProject.isPending} // ✅ Dùng isPending
-                  >
-                    <X className="w-3 h-3" />
-                  </button>
-                </div>
-              ) : (
-                <div className="w-24 h-24 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
-                  <span className="text-2xl text-white">⚡</span>
-                </div>
+      <div className="flex-1 overflow-y-auto px-1">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+            {/* Project Name */}
+            <div className="space-y-2">
+              <Label htmlFor="name">
+                Project Name <span className="text-red-500">*</span>
+              </Label>
+              <Input
+                id="name"
+                placeholder="Enter project name"
+                {...register('name')}
+                className={errors.name ? 'border-red-500' : ''}
+                disabled={createProject.isPending} // ✅ Dùng isPending từ mutation
+              />
+              {errors.name && (
+                <p className="text-sm text-red-500">{errors.name.message}</p>
               )}
-              <div className="flex-1">
-                <label
-                  htmlFor="image-upload"
-                  className={`block border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-blue-400 transition-colors ${
-                    createProject.isPending
-                      ? 'cursor-not-allowed opacity-50'
-                      : 'cursor-pointer'
-                  }`}
-                >
-                  <Upload className="w-6 h-6 text-gray-400 mx-auto mb-2" />
-                  <p className="text-sm text-gray-600">Click to upload image</p>
-                  <p className="text-xs text-gray-500 mt-1">
-                    PNG, JPG up to 10MB
-                  </p>
-                </label>
-                <input
-                  id="image-upload"
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageChange}
-                  className="hidden"
-                  disabled={createProject.isPending} // ✅ Dùng isPending
-                />
-              </div>
             </div>
-          </div>
-
-          {/* Invite Members */}
-          <div className="space-y-4">
-            <Label>Invite Team Members</Label>
-
-            {/* Selected Members */}
-            {invitedMembers.length > 0 && (
-              <div className="space-y-2 p-3 bg-gray-50 rounded-lg">
-                {invitedMembers.map((member) => (
-                  <div
-                    key={member.email}
-                    className="flex items-center justify-between gap-2 p-2 bg-white rounded-lg border"
-                  >
-                    <div className="flex items-center gap-2 min-w-0">
-                      <Avatar className="w-8 h-8">
-                        <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-xs">
-                          {member.email.substring(0, 2).toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
-                      <span className="text-sm truncate">{member.email}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Select
-                        value={member.role}
-                        onValueChange={(value: MemberRole) =>
-                          handleUpdateMemberRole(member.email, value)
-                        }
-                        disabled={createProject.isPending} // ✅ Dùng isPending
-                      >
-                        <SelectTrigger className="w-24 h-8">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="member">Member</SelectItem>
-                          <SelectItem value="viewer">Viewer</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveMember(member.email)}
-                        className="p-1 hover:text-red-600 transition-colors"
-                        disabled={createProject.isPending} // ✅ Dùng isPending
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
-                    </div>
+  
+            {/* Description */}
+            <div className="space-y-2">
+              <Label htmlFor="description">Description</Label>
+              <Textarea
+                id="description"
+                placeholder="Describe your project..."
+                rows={4}
+                {...register('description')}
+                className={errors.description ? 'border-red-500' : ''}
+                disabled={createProject.isPending} // ✅ Dùng isPending
+              />
+              {errors.description && (
+                <p className="text-sm text-red-500">
+                  {errors.description.message}
+                </p>
+              )}
+            </div>
+  
+            {/* Project Image */}
+            <div className="space-y-2">
+              <Label>Project Image</Label>
+              <div className="flex items-start gap-4">
+                {imagePreview ? (
+                  <div className="relative">
+                    <img
+                      src={imagePreview}
+                      alt="Project preview"
+                      className="w-24 h-24 rounded-lg object-cover border border-gray-200"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleRemoveImage}
+                      className="absolute -top-2 -right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600"
+                      disabled={createProject.isPending} // ✅ Dùng isPending
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
                   </div>
-                ))}
-              </div>
-            )}
-
-            {/* Email Input with Suggestions */}
-            <div className="relative">
-              <div className="flex gap-2">
-                <div className="relative flex-1">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                  <Input
-                    placeholder="Enter email address..."
-                    value={emailInput}
-                    onChange={(e) => {
-                      setEmailInput(e.target.value)
-                      setShowSuggestions(true)
-                    }}
-                    onFocus={() => setShowSuggestions(true)}
-                    onBlur={() =>
-                      setTimeout(() => setShowSuggestions(false), 200)
-                    }
-                    onKeyDown={handleKeyDown}
-                    className="pl-10"
+                ) : (
+                  <div className="w-24 h-24 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+                    <span className="text-2xl text-white">⚡</span>
+                  </div>
+                )}
+                <div className="flex-1">
+                  <label
+                    htmlFor="image-upload"
+                    className={`block border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-blue-400 transition-colors ${
+                      createProject.isPending
+                        ? 'cursor-not-allowed opacity-50'
+                        : 'cursor-pointer'
+                    }`}
+                  >
+                    <Upload className="w-6 h-6 text-gray-400 mx-auto mb-2" />
+                    <p className="text-sm text-gray-600">Click to upload image</p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      PNG, JPG up to 10MB
+                    </p>
+                  </label>
+                  <input
+                    id="image-upload"
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageChange}
+                    className="hidden"
                     disabled={createProject.isPending} // ✅ Dùng isPending
                   />
-
-                  {/* Email Suggestions Dropdown */}
-                  {showSuggestions &&
-                    filteredSuggestions.length > 0 &&
-                    emailInput && (
-                      <div className="absolute z-10 w-full mt-1 bg-white border rounded-lg shadow-lg max-h-40 overflow-y-auto">
-                        {filteredSuggestions.map((email) => (
-                          <button
-                            key={email}
-                            type="button"
-                            onClick={() => {
-                              setEmailInput(email)
-                              handleAddMember(email)
-                            }}
-                            className="w-full flex items-center gap-2 px-3 py-2 hover:bg-gray-100 text-left"
-                          >
-                            <Avatar className="w-6 h-6">
-                              <AvatarFallback className="bg-gray-200 text-gray-600 text-xs">
-                                {email.substring(0, 2).toUpperCase()}
-                              </AvatarFallback>
-                            </Avatar>
-                            <span className="text-sm">{email}</span>
-                          </button>
-                        ))}
-                      </div>
-                    )}
                 </div>
-
-                <Select
-                  value={selectedRole}
-                  onValueChange={(value: MemberRole) => setSelectedRole(value)}
-                  disabled={createProject.isPending} // ✅ Dùng isPending
-                >
-                  <SelectTrigger className="w-28">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="member">Member</SelectItem>
-                    <SelectItem value="viewer">Viewer</SelectItem>
-                  </SelectContent>
-                </Select>
-
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => handleAddMember()}
-                  disabled={!emailInput.trim() || createProject.isPending} // ✅ Dùng isPending
-                >
-                  Add
-                </Button>
               </div>
             </div>
-
-            <p className="text-xs text-gray-500">
-              {invitedMembers.length} member
-              {invitedMembers.length !== 1 ? 's' : ''} invited
-              {savedEmails.length > 0 && (
-                <span className="ml-2">• Start typing to see suggestions</span>
+  
+            {/* Invite Members */}
+            <div className="space-y-4">
+              <Label>Invite Team Members</Label>
+  
+              {/* Selected Members */}
+              {invitedMembers.length > 0 && (
+                <div className="space-y-2 p-3 bg-gray-50 rounded-lg">
+                  {invitedMembers.map((member) => (
+                    <div
+                      key={member.email}
+                      className="flex items-center justify-between gap-2 p-2 bg-white rounded-lg border"
+                    >
+                      <div className="flex items-center gap-2 min-w-0">
+                        <Avatar className="w-8 h-8">
+                          <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-xs">
+                            {member.email.substring(0, 2).toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                        <span className="text-sm truncate">{member.email}</span>
+                        <Badge className={getRoleColor(member.role)}>
+                          {member.role}
+                        </Badge>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Select
+                          value={member.role}
+                          onValueChange={(value: MemberRole) =>
+                            handleUpdateMemberRole(member.email, value)
+                          }
+                          disabled={createProject.isPending} // ✅ Dùng isPending
+                        >
+                          <SelectTrigger className="w-24 h-8">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="member">Member</SelectItem>
+                            <SelectItem value="viewer">Viewer</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveMember(member.email)}
+                          className="p-1 hover:text-red-600 transition-colors"
+                          disabled={createProject.isPending} // ✅ Dùng isPending
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               )}
-            </p>
-          </div>
-
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleClose}
-              disabled={createProject.isPending} // ✅ Dùng isPending
-            >
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              disabled={createProject.isPending} // ✅ Dùng isPending
-              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
-            >
-              {createProject.isPending ? ( // ✅ Dùng isPending
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Creating...
-                </>
-              ) : (
-                'Create Project'
-              )}
-            </Button>
-          </DialogFooter>
-        </form>
+  
+              {/* Email Input with Suggestions */}
+              <div className="relative">
+                <div className="flex gap-2">
+                  <div className="relative flex-1">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <Input
+                      placeholder="Enter email address..."
+                      value={emailInput}
+                      onChange={(e) => {
+                        setEmailInput(e.target.value)
+                        setShowSuggestions(true)
+                      }}
+                      onFocus={() => setShowSuggestions(true)}
+                      onBlur={() =>
+                        setTimeout(() => setShowSuggestions(false), 200)
+                      }
+                      onKeyDown={handleKeyDown}
+                      className="pl-10"
+                      disabled={createProject.isPending} // ✅ Dùng isPending
+                    />
+  
+                    {/* Email Suggestions Dropdown */}
+                    {showSuggestions &&
+                      filteredSuggestions.length > 0 &&
+                      emailInput && (
+                        <div className="absolute z-10 w-full mt-1 bg-white border rounded-lg shadow-lg max-h-40 overflow-y-auto">
+                          {filteredSuggestions.map((email) => (
+                            <button
+                              key={email}
+                              type="button"
+                              onClick={() => {
+                                setEmailInput(email)
+                                handleAddMember(email)
+                              }}
+                              className="w-full flex items-center gap-2 px-3 py-2 hover:bg-gray-100 text-left"
+                            >
+                              <Avatar className="w-6 h-6">
+                                <AvatarFallback className="bg-gray-200 text-gray-600 text-xs">
+                                  {email.substring(0, 2).toUpperCase()}
+                                </AvatarFallback>
+                              </Avatar>
+                              <span className="text-sm">{email}</span>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                  </div>
+  
+                  <Select
+                    value={selectedRole}
+                    onValueChange={(value: MemberRole) => setSelectedRole(value)}
+                    disabled={createProject.isPending} // ✅ Dùng isPending
+                  >
+                    <SelectTrigger className="w-28">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="member">Member</SelectItem>
+                      <SelectItem value="viewer">Viewer</SelectItem>
+                    </SelectContent>
+                  </Select>
+  
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => handleAddMember()}
+                    disabled={!emailInput.trim() || createProject.isPending} // ✅ Dùng isPending
+                  >
+                    Add
+                  </Button>
+                </div>
+              </div>
+  
+              <p className="text-xs text-gray-500">
+                {invitedMembers.length} member
+                {invitedMembers.length !== 1 ? 's' : ''} invited
+                {savedEmails.length > 0 && (
+                  <span className="ml-2">• Start typing to see suggestions</span>
+                )}
+              </p>
+            </div>
+          </form>
+      </div>
+      <DialogFooter className="border-t pt-4">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleClose}
+                disabled={createProject.isPending} // ✅ Dùng isPending
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                disabled={createProject.isPending} // ✅ Dùng isPending
+                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+              >
+                {createProject.isPending ? ( // ✅ Dùng isPending
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Creating...
+                  </>
+                ) : (
+                  'Create Project'
+                )}
+              </Button>
+      </DialogFooter>
       </DialogContent>
     </Dialog>
   )

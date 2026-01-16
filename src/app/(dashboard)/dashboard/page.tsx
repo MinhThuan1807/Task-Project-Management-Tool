@@ -1,9 +1,8 @@
 'use client';
 
-import { use, useState } from 'react';
+import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Progress } from '@/components/ui/progress';
@@ -18,14 +17,15 @@ import {
   MoreVertical,
   Clock
 } from 'lucide-react';
-import { useAllProjects, useCreateProject } from '@/lib/hooks/useProjects';
+import { useAllProjects } from '@/lib/hooks/useProjects';
 import { Project } from '@/lib/types';
 import { ProjectCard } from '../projects/components/ProjectCard';
 import { CreateProjectModal } from '../projects/components/CreateProjectModal';
 import { useDispatch } from 'react-redux';
 import { openCreateModal } from '@/lib/features/project/projectSlice';
+import { useCurrentUser } from '@/lib/hooks/useAuth';
+import ProjectSection from '@/components/dashboard/ProjectSection';
 export default function DashboardPage() {
-  const [activeTab, setActiveTab] = useState('all');
 
   // const projects = [
   //   {
@@ -94,7 +94,7 @@ export default function DashboardPage() {
   ];
 
   const { data: projects, ownedProjects, joinedProjects } = useAllProjects();
-  const dispatch = useDispatch();
+
 
   return (
     <div className="h-full overflow-auto bg-gradient-to-br from-gray-50 to-blue-50/30">
@@ -156,7 +156,7 @@ export default function DashboardPage() {
             <CardContent>
               <div className="flex items-center justify-between">
                 <div className="text-3xl font-bold">
-                  {projects.map((project) => project.members.length).reduce((a, b) => a + b, 0)}
+                  {ownedProjects.reduce((total: number, p: Project) => total + p.members.length, 0)}
                 </div>
                 <Users className="w-8 h-8 opacity-80" />
               </div>
@@ -169,58 +169,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Projects Section */}
-        <Card className="border-0 shadow-lg mb-8">
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle className="text-2xl bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                  Projects
-                </CardTitle>
-                <CardDescription>Manage and track your projects</CardDescription>
-              </div>
-              <Button 
-                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
-                onClick={() => dispatch(openCreateModal())}
-             >
-                <Plus className="w-4 h-4 mr-2" />
-                New Project
-              </Button>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList className="mb-6">
-                <TabsTrigger value="all">All Projects ({projects.length})</TabsTrigger>
-                <TabsTrigger value="my">My Projects ({ownedProjects.length})</TabsTrigger>
-                <TabsTrigger value="participating">Participating ({joinedProjects.length})</TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="all" className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {projects.map((project: Project) => (
-                    <ProjectCard key={project._id} project={project} />
-                  ))}
-                </div>
-              </TabsContent>
-
-              <TabsContent value="my" className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {ownedProjects.map((project: Project) => (
-                    <ProjectCard key={project._id} project={project} />
-                  ))}
-                </div>
-              </TabsContent>
-
-              <TabsContent value="participating" className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {joinedProjects.map((project: Project) => (
-                    <ProjectCard key={project._id} project={project} />
-                  ))}
-                </div>
-              </TabsContent>
-            </Tabs>
-          </CardContent>
-        </Card>
+        <ProjectSection/>
 
         {/* Recent Activity */}
         <Card className="border-0 shadow-lg">

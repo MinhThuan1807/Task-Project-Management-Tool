@@ -10,26 +10,22 @@ import {
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '../ui/select';
 import { Badge } from '../ui/badge';
 import { UserPlus, Mail, Shield, Eye, Crown, X } from 'lucide-react';
+import { InviteMemberPayload, projectApi } from '@/lib/services/project.service';
+import { toast } from 'sonner';
+import { getErrorMessage } from '@/lib/utils';
 
 type InviteTeamModalProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   projectId: string;
-  onInvite: (invitations: InvitationData[]) => void;
 };
 
 export type InvitationData = {
   email: string;
   role: 'owner' | 'member' | 'viewer';
+  projectId?: string;
 };
 
 type PendingInvite = {
@@ -69,7 +65,7 @@ export function InviteTeamModal({
   open,
   onOpenChange,
   projectId,
-  onInvite,
+
 }: InviteTeamModalProps) {
   const [email, setEmail] = useState('');
   const [role, setRole] = useState<'owner' | 'member' | 'viewer'>('member');
@@ -116,24 +112,29 @@ export function InviteTeamModal({
     setPendingInvites(pendingInvites.filter((inv) => inv.id !== id));
   };
 
-  const handleSendInvites = () => {
+  const handleSendInvites = async () => {
     if (pendingInvites.length === 0) {
       return;
     }
+    try {
+      const invitations: InviteMemberPayload[] = pendingInvites.map((inv) => ({
+        email: inv.email,
+        role: inv.role,
+        projectId: projectId,
+      }));
 
-    const invitations: InvitationData[] = pendingInvites.map((inv) => ({
-      email: inv.email,
-      role: inv.role,
-    }));
-
-    onInvite(invitations);
-    
-    // Reset
-    setPendingInvites([]);
-    setEmail('');
-    setRole('member');
-    setEmailError('');
-    onOpenChange(false);
+      await Promise.all(invitations.map((invitation) => projectApi.inviteMember(invitation)));
+      toast.success('Invitations sent successfully!');
+      // Reset
+      setPendingInvites([]);
+      setEmail('');
+      setRole('member');
+      setEmailError('');
+      onOpenChange(false);
+    } catch (error) {
+      toast.error(getErrorMessage(error) || 'Failed to send invitations');
+    }
+   
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {

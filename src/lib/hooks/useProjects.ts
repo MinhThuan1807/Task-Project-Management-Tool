@@ -56,7 +56,7 @@ export function useCreateProject() {
 
   return useMutation({
     mutationFn: projectApi.createProject,
-    onSuccess: (data) => {
+    onSuccess: () => {
       // Invalidate và refetch projects
       queryClient.invalidateQueries({ queryKey: projectKeys.all });
     },

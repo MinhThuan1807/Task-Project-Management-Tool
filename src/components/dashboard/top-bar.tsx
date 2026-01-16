@@ -1,4 +1,4 @@
-import { Project } from '../../lib/types';
+'use client';
 import { Bell, Search, Settings, User as UserIcon, LogOut } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
@@ -13,11 +13,10 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { Badge } from '../ui/badge';
 import { useCurrentUser } from '@/lib/hooks/useAuth';
-import { useSearchParams } from 'next/navigation';
 import { useAllProjects } from '@/lib/hooks/useProjects';
+import { useSearchParams } from 'next/navigation';
 
 export function TopBar() {
-
   const param = useSearchParams();
   const { data: user } = useCurrentUser();
   const { data: allProjects, isLoading: projectsLoading } = useAllProjects();

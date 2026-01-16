@@ -24,53 +24,59 @@ import { Input } from './ui/input';
 import { Textarea } from './ui/textarea';
 import { Label } from './ui/label';
 import { Badge } from './ui/badge';
+import { useCurrentUser } from '@/lib/hooks/useAuth';
+import { useAllProjects } from '@/lib/hooks/useProjects';
+import { useParams } from 'next/navigation';
 
 type EditProjectModalProps = {
-  project: Project;
+  // project: Project;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSave: (projectId: string, updates: Partial<Project>) => void;
   onDelete: (projectId: string) => void;
-  currentUserId: string;
+  // currentUserId: string;
 };
 
-export function EditProjectModal({ 
-  project, 
+export function EditProjectModal({  
   open, 
   onOpenChange, 
   onSave, 
   onDelete,
-  currentUserId 
 }: EditProjectModalProps) {
+  const { data: user } = useCurrentUser();
+  const { data: allProjects, isLoading: projectsLoading } = useAllProjects();
+  const params = useParams();
+  const projectId = params.id as string;
+  const project = allProjects.find((p) => p._id === projectId);
+  const isOwner = project.ownerId === user?._id;
+
   const [name, setName] = useState(project.name);
   const [description, setDescription] = useState(project.description || '');
   const [status, setStatus] = useState<'active' | 'archived' | 'completed'>(project.status);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-
-  const isOwner = project.ownerId === currentUserId;
-
+  
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onSave(project.id, {
-      name,
-      description,
-      status,
-    });
-    onOpenChange(false);
+    // e.preventDefault();
+    // onSave(project.id, {
+    //   name,
+    //   description,
+    //   status,
+    // });
+    // onOpenChange(false);
   };
 
   const handleDelete = () => {
-    onDelete(project.id);
-    setShowDeleteDialog(false);
-    onOpenChange(false);
+    // onDelete(project.id);
+    // setShowDeleteDialog(false);
+    // onOpenChange(false);
   };
 
   const handleClose = () => {
     // Reset form to original values when closing
-    setName(project.name);
-    setDescription(project.description || '');
-    setStatus(project.status);
-    onOpenChange(false);
+    // setName(project.name);
+    // setDescription(project.description || '');
+    // setStatus(project.status);
+    // onOpenChange(false);
   };
 
   return (

@@ -10,12 +10,15 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Project } from '@/lib/types';
+import { useRouter } from 'next/navigation';
 
 interface ProjectCardProps {
   project: Project;
 }
 
-export function ProjectCard({ project }: ProjectCardProps) {
+export function ProjectCard({ project}: ProjectCardProps) {
+  const router = useRouter();
+
   return (
     <Card className="hover:shadow-xl transition-all cursor-pointer group border-0 shadow-md hover:-translate-y-1">
       <CardHeader>
@@ -85,6 +88,7 @@ export function ProjectCard({ project }: ProjectCardProps) {
             variant="ghost"
             size="sm"
             className="text-blue-600 hover:text-blue-700"
+            onClick={() => router.push(`/projects/${project._id}`)}
           >
             View Details
             <ArrowUpRight className="w-4 h-4 ml-1" />

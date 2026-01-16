@@ -1,3 +1,4 @@
+import { InvitationData } from "@/components/projects/invite-team-modal";
 import axiosInstance from "../axios";
 
 interface CreateProjectPayload {
@@ -7,10 +8,15 @@ interface CreateProjectPayload {
   imageUrl?: File;
 }
 
-interface InviteMemberPayload {
+interface AcceptMemberPayload {
   email: string,
   token: string,
   projectId: string
+}
+export interface InviteMemberPayload{
+  email: string;
+  role: 'owner' | 'member' | 'viewer';
+  projectId: string;
 }
 
 export const projectApi = {
@@ -43,7 +49,11 @@ export const projectApi = {
     return response.data
   },
   inviteMember: async (data: InviteMemberPayload) => {
-    const response = await axiosInstance.put(`/projects/invite`, data);
+    const response = await axiosInstance.post(`/projects/invite`, data);
+    return response.data;
+  },
+  acceptInvite: async (data: AcceptMemberPayload) => {
+    const response = await axiosInstance.put(`/projects/verify/invite`, data);
     return response.data;
   },
   getOwnedProjects: async () => {
