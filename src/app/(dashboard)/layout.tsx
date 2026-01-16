@@ -1,4 +1,3 @@
-'use client';
 import { AppSidebar } from '@/components/dashboard/app-sidebar';
 import { TopBar } from '@/components/dashboard/top-bar';
 import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';

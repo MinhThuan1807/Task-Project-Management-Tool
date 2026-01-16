@@ -2,58 +2,39 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { User, Project, Sprint } from '@/lib/types';
-// import { mockCurrentUser, mockAllProjects, mockSprints } from '@/lib/mock-data';
+import { Sprint } from '@/lib/types';
 import { BacklogView } from '@/components/projects/backlog-view';
 import { CreateSprintModal } from '@/components/CreateSprintModal';
 import { toast } from 'sonner';
+import { useAllProjects } from '@/lib/hooks/useProjects';
+import { useCurrentUser } from '@/lib/hooks/useAuth';
+import { mockSprints } from '@/lib/mock-data';
 
 export default function BacklogPage() {
   const params = useParams();
   const router = useRouter();
   const projectId = params.id as string;
-
-  const [currentUser, setCurrentUser] = useState<User>(mockCurrentUser);
-  const [allProjects, setAllProjects] = useState<Project[]>(mockAllProjects);
   const [sprints, setSprints] = useState<Sprint[]>(mockSprints);
+
+  const { data: allProjects } = useAllProjects();
+  const { data: currentUser } = useCurrentUser();
+
   const [isCreateSprintOpen, setIsCreateSprintOpen] = useState(false);
-
-  // Load data from localStorage
-  useEffect(() => {
-    const storedUser = localStorage.getItem('currentUser');
-    const storedProjects = localStorage.getItem('allProjects');
-    const storedSprints = localStorage.getItem('sprints');
-
-    if (storedUser) setCurrentUser(JSON.parse(storedUser));
-    if (storedProjects) setAllProjects(JSON.parse(storedProjects));
-    if (storedSprints) setSprints(JSON.parse(storedSprints));
-  }, []);
 
   // Save to localStorage when data changes
   useEffect(() => {
     localStorage.setItem('sprints', JSON.stringify(sprints));
   }, [sprints]);
 
-  const project = allProjects.find((p) => p.id === projectId);
+  const project = allProjects.find((p) => p._id === projectId);
   const projectSprints = sprints.filter((s) => s.projectId === projectId);
 
   const handleCreateSprint = (sprintData: Partial<Sprint>) => {
-    const newSprint: Sprint = {
-      id: `sprint-${Date.now()}`,
-      projectId: projectId,
-      name: sprintData.name || 'New Sprint',
-      goal: sprintData.goal || '',
-      storyPoint: sprintData.storyPoint || 0,
-      startDate: sprintData.startDate || new Date().toISOString().split('T')[0],
-      endDate: sprintData.endDate || new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-      createdAt: new Date().toISOString(),
-    };
-    setSprints([...sprints, newSprint]);
-    toast.success('Sprint created successfully!');
+
   };
 
   const handleStartSprint = (sprint: Sprint) => {
-    router.push(`/projects/${projectId}/sprint/${sprint.id}`);
+    router.push(`/projects/${projectId}/sprint/${sprint._id}`);
   };
 
   if (!project) {

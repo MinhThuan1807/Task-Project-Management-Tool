@@ -2,8 +2,8 @@ import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
 import { Toaster } from '@/components/ui/sonner';
-import StoreProvider from './StoreProvider';
-import { QueryProviders } from './QueryProvider';
+import StoreProvider from './providers/StoreProvider';
+import { QueryProviders } from './providers/QueryProvider';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {

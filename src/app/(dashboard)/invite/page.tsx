@@ -56,7 +56,7 @@ export default function InvitePage() {
         }
 
         // Accept invitation
-        const response = await projectApi.inviteMember({
+        const response = await projectApi.acceptInvite({
           email,
           token,
           projectId,

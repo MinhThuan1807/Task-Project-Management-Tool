@@ -46,7 +46,7 @@ export function SprintListView({ tasks, columns, onTaskClick }: SprintListViewPr
 
             return (
               <Card
-                key={task.id}
+                key={task._id}
                 className="border-0 shadow-md hover:shadow-lg transition-shadow cursor-pointer"
                 onClick={() => onTaskClick(task)}
               >

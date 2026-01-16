@@ -28,22 +28,22 @@ export function CreateSprintModal({ projectId, open, onOpenChange, onCreate }: C
   const [endDate, setEndDate] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onCreate({
-      projectId,
-      name,
-      goal,
-      storyPoint: parseInt(storyPoint) || 0,
-      startDate,
-      endDate,
-    });
-    // Reset form
-    setName('');
-    setGoal('');
-    setStoryPoint('');
-    setStartDate('');
-    setEndDate('');
-    onOpenChange(false);
+    // e.preventDefault();
+    // onCreate({
+    //   projectId,
+    //   name,
+    //   goal,
+    //   storyPoint: parseInt(storyPoint) || 0,
+    //   startDate,
+    //   endDate,
+    // });
+    // // Reset form
+    // setName('');
+    // setGoal('');
+    // setStoryPoint('');
+    // setStartDate('');
+    // setEndDate('');
+    // onOpenChange(false);
   };
 
   return (

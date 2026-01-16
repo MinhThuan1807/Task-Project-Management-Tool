@@ -8,7 +8,6 @@ import { ProjectOverview } from '@/components/projects/project-overview';
 import { EditProjectModal } from '@/components/EditProjectModal';
 import { CreateSprintModal } from '@/components/CreateSprintModal';
 import { toast } from 'sonner';
-import { useCurrentUser } from '@/lib/hooks/useAuth';
 import { useAllProjects } from '@/lib/hooks/useProjects';
 
 export default function ProjectPage() {
@@ -16,7 +15,6 @@ export default function ProjectPage() {
   const router = useRouter();
   const projectId = params.id as string;
 
-  const { data: currentUser, isLoading: userLoading } = useCurrentUser();
   const { data: allProjects, isLoading: projectsLoading } = useAllProjects();
 
   const [sprints, setSprints] = useState<Sprint[]>(mockSprints);
@@ -24,7 +22,7 @@ export default function ProjectPage() {
   const [isCreateSprintOpen, setIsCreateSprintOpen] = useState(false);
 
    // Loading state
-  if (userLoading || projectsLoading) {
+  if (projectsLoading) {
     return (
       <div className="h-full flex items-center justify-center">
         <div className="text-center">
@@ -50,17 +48,7 @@ export default function ProjectPage() {
   };
 
   const handleCreateSprint = (sprintData: Partial<Sprint>) => {
-    const newSprint: Sprint = {
-      id: `sprint-${Date.now()}`,
-      projectId: projectId,
-      name: sprintData.name || 'New Sprint',
-      goal: sprintData.goal || '',
-      storyPoint: sprintData.storyPoint || 0,
-      startDate: sprintData.startDate || new Date().toISOString().split('T')[0],
-      endDate: sprintData.endDate || new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-      createdAt: new Date().toISOString(),
-    };
-    setSprints([...sprints, newSprint]);
+
     toast.success('Sprint created successfully!');
   };
 
@@ -84,20 +72,16 @@ export default function ProjectPage() {
   return (
     <>
       <ProjectOverview
-        project={project}
         sprints={projectSprints}
         onNavigateToBacklog={() => router.push(`/projects/${projectId}/backlog`)}
-        onNavigateToSettings={() => {}}
         onEditProject={() => setIsEditProjectOpen(true)}
       />
 
       <EditProjectModal
-        project={project}
         open={isEditProjectOpen}
         onOpenChange={setIsEditProjectOpen}
         onSave={handleEditProject}
         onDelete={handleDeleteProject}
-        currentUserId={currentUser._id}
       />
 
       <CreateSprintModal

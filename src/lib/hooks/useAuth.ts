@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { authApi } from '@/lib/services/auth.service';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
+import { getErrorMessage } from '../utils';
 
 export const authKeys = {
   user: ['auth', 'user'] as const,
@@ -31,8 +32,8 @@ export function useLogin() {
       toast.success('Login successful!');
       router.push('/dashboard');
     },
-    onError: (error: any) => {
-      toast.error(error.response?.data?.message || 'Login failed');
+    onError: (error) => {
+      toast.error(getErrorMessage(error) || 'Login failed');
     },
   });
 }

@@ -2,35 +2,26 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { User, Project, Sprint } from '@/lib/types';
-import { mockCurrentUser, mockAllProjects, mockSprints } from '@/lib/mock-data';
+import { Sprint } from '@/lib/types';
+import { mockSprints } from '@/lib/mock-data';
 import { SprintBoardDnd } from '@/components/projects/sprint-board-dnd';
 import { FolderKanban, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useAllProjects } from '@/lib/hooks/useProjects';
+import { useCurrentUser } from '@/lib/hooks/useAuth';
 
 export default function SprintPage() {
   const params = useParams();
   const router = useRouter();
   const projectId = params.id as string;
   const sprintId = params.sprintId as string;
-
-  const [currentUser, setCurrentUser] = useState<User>(mockCurrentUser);
-  const [allProjects, setAllProjects] = useState<Project[]>(mockAllProjects);
+  
+  const { data: allProjects } = useAllProjects();
+  const { data: currentUser } = useCurrentUser();
   const [sprints, setSprints] = useState<Sprint[]>(mockSprints);
 
-  // Load data from localStorage
-  useEffect(() => {
-    const storedUser = localStorage.getItem('currentUser');
-    const storedProjects = localStorage.getItem('allProjects');
-    const storedSprints = localStorage.getItem('sprints');
-
-    if (storedUser) setCurrentUser(JSON.parse(storedUser));
-    if (storedProjects) setAllProjects(JSON.parse(storedProjects));
-    if (storedSprints) setSprints(JSON.parse(storedSprints));
-  }, []);
-
   const project = allProjects.find((p) => p._id === projectId);
-  const sprint = sprints.find((s) => s.id === sprintId);
+  const sprint = sprints.find((s) => s._id === sprintId);
 
   if (!project) {
     return (
