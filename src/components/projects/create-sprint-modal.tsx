@@ -24,7 +24,6 @@ type CreateSprintModalProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   projectId: string;
-  onSave: (sprint: SprintFormData) => void;
 };
 
 export type SprintFormData = {
@@ -40,7 +39,6 @@ export function CreateSprintModal({
   open,
   onOpenChange,
   projectId,
-  onSave,
 }: CreateSprintModalProps) {
   const today = new Date().toISOString().split('T')[0];
   const twoWeeksLater = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000)
@@ -84,10 +82,6 @@ export function CreateSprintModal({
       setErrors(newErrors);
       return;
     }
-
-    // Save sprint
-    onSave(formData);
-
     // Reset form
     setFormData({
       name: '',

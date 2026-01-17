@@ -1,27 +1,44 @@
-'use client';
+'use client'
 
-import { useState, useEffect } from 'react';
-import { useParams, useRouter } from 'next/navigation';
-import { Sprint } from '@/lib/types';
-import { mockSprints } from '@/lib/mock-data';
-import { SprintBoardDnd } from '@/components/projects/sprint-board-dnd';
-import { FolderKanban, Plus } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { useAllProjects } from '@/lib/hooks/useProjects';
-import { useCurrentUser } from '@/lib/hooks/useAuth';
+import { useState, useEffect } from 'react'
+import { useParams, useRouter } from 'next/navigation'
+import { Sprint } from '@/lib/types'
+import { mockSprints } from '@/lib/mock-data'
+import { SprintBoardDnd } from '@/components/projects/sprint-board-dnd'
+import { FolderKanban, Plus, Loader2 } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { useAllProjects } from '@/lib/hooks/useProjects'
+import { useCurrentUser } from '@/lib/hooks/useAuth'
+import { useSprintsByProject } from '@/lib/hooks/useSprints'
 
 export default function SprintPage() {
-  const params = useParams();
-  const router = useRouter();
-  const projectId = params.id as string;
-  const sprintId = params.sprintId as string;
-  
-  const { data: allProjects } = useAllProjects();
-  const { data: currentUser } = useCurrentUser();
-  const [sprints, setSprints] = useState<Sprint[]>(mockSprints);
+  const params = useParams()
+  const router = useRouter()
+  const projectId = params.id as string
+  const sprintId = params.sprintId as string
 
-  const project = allProjects.find((p) => p._id === projectId);
-  const sprint = sprints.find((s) => s._id === sprintId);
+  const { data: allProjects, isLoading: isLoadingProjects } = useAllProjects()
+  const { data: currentUser, isLoading: isLoadingUser } = useCurrentUser()
+  const { data: sprints, isLoading: isLoadingSprints } =
+    useSprintsByProject(projectId)
+
+  // Loading state
+  if (isLoadingProjects || isLoadingUser || isLoadingSprints) {
+    return (
+      <div className="h-full flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="w-8 h-8 animate-spin text-blue-600 mx-auto mb-4" />
+          <p className="text-gray-600">Loading sprint...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Find project (with safe check)
+  const project = allProjects?.find((p) => p._id === projectId)
+
+  // Find sprint (with safe check)
+  const sprint = sprints?.find((s: Sprint) => s._id === sprintId)
 
   if (!project) {
     return (
@@ -36,7 +53,7 @@ export default function SprintPage() {
           </button>
         </div>
       </div>
-    );
+    )
   }
 
   if (!sprint) {
@@ -51,24 +68,29 @@ export default function SprintPage() {
             This sprint doesn't exist or has been deleted.
           </p>
           <div className="flex gap-3 justify-center">
-            <Button variant="outline" onClick={() => router.push(`/projects/${projectId}/backlog`)}>
+            <Button
+              variant="outline"
+              onClick={() => router.push(`/projects/${projectId}/backlog`)}
+            >
               Go to Backlog
             </Button>
-            <Button onClick={() => router.push('/dashboard')} className="bg-gradient-to-r from-blue-600 to-purple-600">
+            <Button
+              onClick={() => router.push('/dashboard')}
+              className="bg-gradient-to-r from-blue-600 to-purple-600"
+            >
               Back to Dashboard
             </Button>
           </div>
         </div>
       </div>
-    );
+    )
   }
 
   return (
     <SprintBoardDnd
       project={project}
       sprint={sprint}
-      currentUser={currentUser}
       onBack={() => router.push(`/projects/${projectId}/backlog`)}
     />
-  );
+  )
 }
