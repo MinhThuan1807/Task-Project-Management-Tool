@@ -27,9 +27,9 @@ import {
 } from '@/components/ui/select'
 import { useCreateProject } from '@/lib/hooks/useProjects' // ✅ Import mutation hook
 import { toast } from 'sonner'
-import { useDispatch, useSelector } from 'react-redux';
-import { closeCreateModal } from '@/lib/features/project/projectSlice';
-import { RootState } from '@/lib/store';
+import { useDispatch, useSelector } from 'react-redux'
+import { closeCreateModal } from '@/lib/features/project/projectSlice'
+import { RootState } from '@/lib/store'
 
 // Storage key for saved emails
 const SAVED_EMAILS_KEY = 'sprintos_invited_emails'
@@ -166,7 +166,6 @@ export function CreateProjectModal() {
     }
   }
 
-  // ✅ Sửa lại onSubmit để dùng mutation
   const onSubmit = async (data: CreateProjectFormData) => {
     const payload = {
       name: data.name,
@@ -177,9 +176,9 @@ export function CreateProjectModal() {
 
     createProject.mutate(payload, {
       onSuccess: () => {
-        toast.success(`Project "${data.name}" created successfully!`);
+        toast.success(`Project "${data.name}" created successfully!`)
         handleClose()
-    }
+      }
     })
   }
 
@@ -191,7 +190,7 @@ export function CreateProjectModal() {
     setEmailInput('')
     setSelectedRole('member')
     setShowSuggestions(false)
-    dispatch(closeCreateModal());
+    dispatch(closeCreateModal())
   }
 
   const getRoleColor = (role: MemberRole) => {
@@ -204,14 +203,16 @@ export function CreateProjectModal() {
         return 'bg-gray-100 text-gray-700'
     }
   }
-  const dispatch = useDispatch();
-  const open = useSelector((state: RootState) => state.project.isCreateModalOpen);
+  const dispatch = useDispatch()
+  const open = useSelector(
+    (state: RootState) => state.project.isCreateModalOpen
+  )
 
-    const handleOpenChange = (isOpen: boolean) => {
-      if (!isOpen) {
-        dispatch(closeCreateModal());
-      }
-    };
+  const handleOpenChange = (isOpen: boolean) => {
+    if (!isOpen) {
+      dispatch(closeCreateModal())
+    }
+  }
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
@@ -223,7 +224,7 @@ export function CreateProjectModal() {
           </DialogDescription>
         </DialogHeader>
 
-      <div className="flex-1 overflow-y-auto px-1">
+        <div className="flex-1 overflow-y-auto px-1">
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             {/* Project Name */}
             <div className="space-y-2">
@@ -241,7 +242,7 @@ export function CreateProjectModal() {
                 <p className="text-sm text-red-500">{errors.name.message}</p>
               )}
             </div>
-  
+
             {/* Description */}
             <div className="space-y-2">
               <Label htmlFor="description">Description</Label>
@@ -259,7 +260,7 @@ export function CreateProjectModal() {
                 </p>
               )}
             </div>
-  
+
             {/* Project Image */}
             <div className="space-y-2">
               <Label>Project Image</Label>
@@ -295,7 +296,9 @@ export function CreateProjectModal() {
                     }`}
                   >
                     <Upload className="w-6 h-6 text-gray-400 mx-auto mb-2" />
-                    <p className="text-sm text-gray-600">Click to upload image</p>
+                    <p className="text-sm text-gray-600">
+                      Click to upload image
+                    </p>
                     <p className="text-xs text-gray-500 mt-1">
                       PNG, JPG up to 10MB
                     </p>
@@ -311,11 +314,11 @@ export function CreateProjectModal() {
                 </div>
               </div>
             </div>
-  
+
             {/* Invite Members */}
             <div className="space-y-4">
               <Label>Invite Team Members</Label>
-  
+
               {/* Selected Members */}
               {invitedMembers.length > 0 && (
                 <div className="space-y-2 p-3 bg-gray-50 rounded-lg">
@@ -364,7 +367,7 @@ export function CreateProjectModal() {
                   ))}
                 </div>
               )}
-  
+
               {/* Email Input with Suggestions */}
               <div className="relative">
                 <div className="flex gap-2">
@@ -385,7 +388,7 @@ export function CreateProjectModal() {
                       className="pl-10"
                       disabled={createProject.isPending} // ✅ Dùng isPending
                     />
-  
+
                     {/* Email Suggestions Dropdown */}
                     {showSuggestions &&
                       filteredSuggestions.length > 0 &&
@@ -412,10 +415,12 @@ export function CreateProjectModal() {
                         </div>
                       )}
                   </div>
-  
+
                   <Select
                     value={selectedRole}
-                    onValueChange={(value: MemberRole) => setSelectedRole(value)}
+                    onValueChange={(value: MemberRole) =>
+                      setSelectedRole(value)
+                    }
                     disabled={createProject.isPending} // ✅ Dùng isPending
                   >
                     <SelectTrigger className="w-28">
@@ -426,7 +431,7 @@ export function CreateProjectModal() {
                       <SelectItem value="viewer">Viewer</SelectItem>
                     </SelectContent>
                   </Select>
-  
+
                   <Button
                     type="button"
                     variant="outline"
@@ -437,18 +442,18 @@ export function CreateProjectModal() {
                   </Button>
                 </div>
               </div>
-  
+
               <p className="text-xs text-gray-500">
                 {invitedMembers.length} member
                 {invitedMembers.length !== 1 ? 's' : ''} invited
                 {savedEmails.length > 0 && (
-                  <span className="ml-2">• Start typing to see suggestions</span>
+                  <span className="ml-2">
+                    • Start typing to see suggestions
+                  </span>
                 )}
               </p>
             </div>
-          </form>
-      </div>
-      <DialogFooter className="border-t pt-4">
+            <DialogFooter className="border-t pt-4">
               <Button
                 type="button"
                 variant="outline"
@@ -471,7 +476,9 @@ export function CreateProjectModal() {
                   'Create Project'
                 )}
               </Button>
-      </DialogFooter>
+            </DialogFooter>
+          </form>
+        </div>
       </DialogContent>
     </Dialog>
   )

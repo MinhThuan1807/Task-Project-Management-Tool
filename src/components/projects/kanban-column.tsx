@@ -14,11 +14,18 @@ type KanbanColumnProps = {
   };
   tasks: Task[];
   onTaskClick: (task: Task) => void;
+  canEdit?: boolean; // Add permission prop
 };
 
-export function KanbanColumn({ column, tasks, onTaskClick }: KanbanColumnProps) {
+export function KanbanColumn({ 
+  column, 
+  tasks, 
+  onTaskClick,
+  canEdit = true 
+}: KanbanColumnProps) {
   const { setNodeRef } = useDroppable({
     id: column.id,
+    disabled: !canEdit // Disable drop if no permission
   });
 
   return (
@@ -39,10 +46,15 @@ export function KanbanColumn({ column, tasks, onTaskClick }: KanbanColumnProps) 
         className="flex-1 bg-white border-l-2 border-r-2 border-b-2 border-gray-200 rounded-b-lg min-h-[500px] shadow-sm"
       >
         <ScrollArea className="h-full">
-          <SortableContext items={tasks.map((t) => t.id)} strategy={verticalListSortingStrategy}>
+          <SortableContext items={tasks.map((t) => t._id)} strategy={verticalListSortingStrategy}>
             <div className="p-3 space-y-3">
               {tasks.map((task) => (
-                <TaskCard key={task.id} task={task} onClick={() => onTaskClick(task)} />
+                <TaskCard 
+                  key={task._id} 
+                  task={task} 
+                  onClick={() => onTaskClick(task)}
+                  canEdit={canEdit} // Pass permission down
+                />
               ))}
               {tasks.length === 0 && (
                 <div className="flex flex-col items-center justify-center py-16 px-4 text-center">

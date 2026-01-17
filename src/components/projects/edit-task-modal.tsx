@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Task } from '../../lib/types';
+import { Task, BoardColumn } from '@/lib/types';
 import {
   Dialog,
   DialogContent,
@@ -34,13 +34,14 @@ import {
   AlertDialogTitle,
 } from '../ui/alert-dialog';
 import { X, Trash2, Clock } from 'lucide-react';
-import { formatDate } from '../../lib/utils';
+import { formatDate } from '@/lib/utils';
 
 type EditTaskModalProps = {
   task: Task;
+  boardColumns: BoardColumn[];
   onClose: () => void;
-  onSave: (task: Partial<Task>) => void;
-  onDelete: (taskId: string) => void;
+  onSave: (taskData: Partial<Task>) => void;
+  onDelete: () => void;
 };
 
 const priorityOptions = [
@@ -48,14 +49,6 @@ const priorityOptions = [
   { value: 'medium', label: 'Medium', color: 'bg-blue-100 text-blue-700' },
   { value: 'high', label: 'High', color: 'bg-orange-100 text-orange-700' },
   { value: 'critical', label: 'Critical', color: 'bg-red-100 text-red-700' },
-];
-
-const columnOptions = [
-  { value: 'backlog', label: 'Backlog' },
-  { value: 'todo', label: 'Todo' },
-  { value: 'in-progress', label: 'In Progress' },
-  { value: 'review', label: 'Review' },
-  { value: 'done', label: 'Done' },
 ];
 
 // Mock comments
@@ -76,12 +69,12 @@ const mockComments = [
   },
 ];
 
-export function EditTaskModal({ task, onClose, onSave, onDelete }: EditTaskModalProps) {
+export function EditTaskModal({ task, boardColumns, onClose, onSave, onDelete }: EditTaskModalProps) {
   const [formData, setFormData] = useState({
     title: task.title,
-    description: task.description,
-    priority: task.priority,
-    columnId: task.columnId,
+    description: task.description || '',
+    priority: task.priority || 'medium',
+    boardColumnId: task.boardColumnId,
     storyPoint: task.storyPoint || 0,
     dueDate: task.dueDate || '',
     labels: task.labels || [],
@@ -113,7 +106,7 @@ export function EditTaskModal({ task, onClose, onSave, onDelete }: EditTaskModal
   };
 
   const handleDelete = () => {
-    onDelete(task.id);
+    onDelete();
     setShowDeleteDialog(false);
   };
 
@@ -226,16 +219,16 @@ export function EditTaskModal({ task, onClose, onSave, onDelete }: EditTaskModal
                   <div className="space-y-2">
                     <Label htmlFor="column">Status</Label>
                     <Select
-                      value={formData.columnId}
-                      onValueChange={(value) => setFormData({ ...formData, columnId: value })}
+                      value={formData.boardColumnId}
+                      onValueChange={(value) => setFormData({ ...formData, boardColumnId: value })}
                     >
                       <SelectTrigger id="column">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        {columnOptions.map((option) => (
-                          <SelectItem key={option.value} value={option.value}>
-                            {option.label}
+                        {boardColumns.map((column) => (
+                          <SelectItem key={column._id} value={column._id}>
+                            {column.title}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -273,32 +266,26 @@ export function EditTaskModal({ task, onClose, onSave, onDelete }: EditTaskModal
                       Add
                     </Button>
                   </div>
-                  {formData.labels.length > 0 && (
-                    <div className="flex flex-wrap gap-2 mt-2">
-                      {formData.labels.map((label) => (
-                        <Badge key={label} variant="outline" className="gap-1">
-                          {label}
+                        <Badge key={task.labels} variant="outline" className="gap-1">
+                          {task.labels}
                           <button
                             type="button"
-                            onClick={() => handleRemoveLabel(label)}
+                            onClick={() => handleRemoveLabel(labels)}
                             className="ml-1 hover:bg-gray-200 rounded-full p-0.5"
                           >
                             <X className="w-3 h-3" />
                           </button>
                         </Badge>
-                      ))}
-                    </div>
-                  )}
                 </div>
 
                 {/* Assignees */}
                 <div className="space-y-2">
                   <Label>Assignees</Label>
                   <div className="flex -space-x-2">
-                    {task.assignees?.map((assignee) => (
-                      <Avatar key={assignee} className="w-8 h-8 border-2 border-white">
+                    {task.assigneeIds?.map((assigneeId) => (
+                      <Avatar key={assigneeId} className="w-8 h-8 border-2 border-white">
                         <AvatarImage
-                          src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${assignee}`}
+                          src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${assigneeId}`}
                         />
                         <AvatarFallback>U</AvatarFallback>
                       </Avatar>
@@ -370,7 +357,7 @@ export function EditTaskModal({ task, onClose, onSave, onDelete }: EditTaskModal
                     </Avatar>
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
-                        <span className="text-sm text-gray-900">{comment.userName}</span>
+                        <span className="text-sm font-medium text-gray-900">{comment.userName}</span>
                         <span className="text-xs text-gray-500">
                           {getRelativeTime(comment.timestamp)}
                         </span>
@@ -414,7 +401,7 @@ export function EditTaskModal({ task, onClose, onSave, onDelete }: EditTaskModal
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Task</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete "{task.title}"? This action cannot be undone.
+              Are you sure you want to delete &quot;{task.title}&quot;? This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

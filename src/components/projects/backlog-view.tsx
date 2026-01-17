@@ -44,7 +44,6 @@ import { AssignToSprintModal } from './assign-to-sprint-modal';
 type BacklogViewProps = {
   project: Project;
   sprints: Sprint[];
-  currentUser: User;
   onCreateSprint: () => void;
   onStartSprint: (sprint: Sprint) => void;
 };
@@ -96,11 +95,11 @@ const mockBacklogTasks = [
 export function BacklogView({
   project,
   sprints,
-  currentUser,
   onCreateSprint,
   onStartSprint,
 }: BacklogViewProps) {
   const [searchQuery, setSearchQuery] = useState('');
+  
   const [selectedSprint, setSelectedSprint] = useState<string | null>(null);
   const [isCreateTaskOpen, setIsCreateTaskOpen] = useState(false);
   const [isEditTaskOpen, setIsEditTaskOpen] = useState(false);

@@ -1,11 +1,17 @@
-import { Project, Sprint, User } from '../../lib/types';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
-import { Button } from '../ui/button';
-import { Badge } from '../ui/badge';
-import { Progress } from '../ui/progress';
-import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
-import { useState } from 'react';
+import { Project, Sprint, User } from '../../lib/types'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle
+} from '../ui/card'
+import { Button } from '../ui/button'
+import { Badge } from '../ui/badge'
+import { Progress } from '../ui/progress'
+import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs'
+import { useState, useMemo } from 'react'
 import {
   Calendar,
   Users,
@@ -19,60 +25,81 @@ import {
   AlertCircle,
   Plus,
   UserPlus,
-} from 'lucide-react';
+  Loader2
+} from 'lucide-react'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '../ui/dropdown-menu';
-import { formatDate, getStatusColor } from '../../lib/utils';
-import { CreateSprintModal, SprintFormData } from './create-sprint-modal';
-import { InviteTeamModal, InvitationData } from './invite-team-modal';
-import { useCurrentUser } from '@/lib/hooks/useAuth';
-import { useAllProjects } from '@/lib/hooks/useProjects';
-import { useParams } from 'next/navigation';
-import { projectApi } from '@/lib/services/project.service';
+  DropdownMenuTrigger
+} from '../ui/dropdown-menu'
+import { formatDate, getStatusColor } from '../../lib/utils'
+import { CreateSprintModal } from '@/components/CreateSprintModal'
+import { InviteTeamModal, InvitationData } from './invite-team-modal'
+import { useCurrentUser } from '@/lib/hooks/useAuth'
+import { useAllProjects } from '@/lib/hooks/useProjects'
+import { useParams, useRouter } from 'next/navigation'
 
 interface ProjectMember {
-  memberId: string;
-  email: string;
-  role: 'owner' | 'member' | 'viewer';
-  status: 'active' | 'left';
-  joinAt: Date;
+  memberId: string
+  email: string
+  role: 'owner' | 'member' | 'viewer'
+  status: 'active' | 'left'
+  joinAt: Date
 }
 
 type ProjectOverviewProps = {
-  sprints: Sprint[];
-  onNavigateToBacklog: () => void;
-  onEditProject: () => void;
-};
+  sprints: Sprint[]
+  onNavigateToBacklog: () => void
+  onEditProject: () => void
+}
 
 export function ProjectOverview({
-  sprints,
+  sprints = [], // Default empty array
   onNavigateToBacklog,
-  onEditProject,
+  onEditProject
 }: ProjectOverviewProps) {
-  const { data: user } = useCurrentUser();
-  const { data: allProjects, isLoading: projectsLoading } = useAllProjects();
-  const params = useParams();
-
-  const activeSprints = sprints.filter((s) => new Date(s.endDate) > new Date());
-  const completedSprints = sprints.length - activeSprints.length;
+  const { data: user } = useCurrentUser()
+  const { data: allProjects, isLoading: projectsLoading } = useAllProjects()
+  const params = useParams()
+  const router = useRouter()
 
   // Modal states
-  const [isCreateSprintOpen, setIsCreateSprintOpen] = useState(false);
-  const [isInviteTeamOpen, setIsInviteTeamOpen] = useState(false);
-  
-  const projectId = params.id as string;
-  const project = allProjects.find((p) => p._id === projectId);
-  const isOwner = project.ownerId === user?._id;
+  const [isCreateSprintOpen, setIsCreateSprintOpen] = useState(false)
+  const [isInviteTeamOpen, setIsInviteTeamOpen] = useState(false)
 
-  const handleCreateSprint = (sprintData: SprintFormData) => {
-    console.log('Creating sprint:', sprintData);
-    // TODO: Implement actual sprint creation
-  };
+  const projectId = params.id as string
+  const project = allProjects?.find((p) => p._id === projectId)
+
+  // Computed values với safe checks
+  const { activeSprints, completedSprints, totalSprints, isOwner } =
+    useMemo(() => {
+      const now = new Date()
+      const active = sprints?.filter((s) => new Date(s.endDate) > now) || []
+      const total = sprints?.length || 0
+      const completed = total - active.length
+      const owner = project?.ownerId === user?._id
+
+      return {
+        activeSprints: active,
+        completedSprints: completed,
+        totalSprints: total,
+        isOwner: owner
+      }
+    }, [sprints, project, user])
+
+  // Loading state
+  if (projectsLoading || !project) {
+    return (
+      <div className="h-full flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="w-8 h-8 animate-spin text-blue-600 mx-auto mb-4" />
+          <p className="text-gray-600">Loading project...</p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="h-full overflow-auto bg-gradient-to-br from-gray-50 to-blue-50/30">
@@ -89,14 +116,18 @@ export function ProjectOverview({
             <div>
               <div className="flex items-center gap-3 mb-2">
                 <h1 className="text-3xl text-gray-900">{project.name}</h1>
-                {/* <Badge className={getStatusColor(project.status)}>{project.status}</Badge> */}
                 {isOwner && (
-                  <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-300">
+                  <Badge
+                    variant="outline"
+                    className="bg-yellow-50 text-yellow-700 border-yellow-300"
+                  >
                     Owner
                   </Badge>
                 )}
               </div>
-              <p className="text-gray-600 max-w-2xl">{project.description || 'No description'}</p>
+              <p className="text-gray-600 max-w-2xl">
+                {project.description || 'No description'}
+              </p>
               <div className="flex items-center gap-4 mt-3 text-sm text-gray-500">
                 <div className="flex items-center gap-1">
                   <Calendar className="w-4 h-4" />
@@ -104,7 +135,7 @@ export function ProjectOverview({
                 </div>
                 <div className="flex items-center gap-1">
                   <Users className="w-4 h-4" />
-                  <span>{project.members.length} members</span>
+                  <span>{project.members?.length || 0} members</span>
                 </div>
               </div>
             </div>
@@ -143,11 +174,13 @@ export function ProjectOverview({
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           <Card className="border-0 shadow-lg">
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm text-gray-600">Total Sprints</CardTitle>
+              <CardTitle className="text-sm text-gray-600">
+                Total Sprints
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex items-center justify-between">
-                <div className="text-3xl text-gray-900">{sprints.length}</div>
+                <div className="text-3xl text-gray-900">{totalSprints}</div>
                 <Calendar className="w-8 h-8 text-blue-500" />
               </div>
             </CardContent>
@@ -155,11 +188,15 @@ export function ProjectOverview({
 
           <Card className="border-0 shadow-lg">
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm text-gray-600">Active Sprints</CardTitle>
+              <CardTitle className="text-sm text-gray-600">
+                Active Sprints
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex items-center justify-between">
-                <div className="text-3xl text-gray-900">{activeSprints.length}</div>
+                <div className="text-3xl text-gray-900">
+                  {activeSprints.length}
+                </div>
                 <Clock className="w-8 h-8 text-orange-500" />
               </div>
             </CardContent>
@@ -183,7 +220,12 @@ export function ProjectOverview({
             </CardHeader>
             <CardContent>
               <div className="flex items-center justify-between">
-                <div className="text-3xl text-gray-900">68%</div>
+                <div className="text-3xl text-gray-900">
+                  {totalSprints > 0
+                    ? Math.round((completedSprints / totalSprints) * 100)
+                    : 0}
+                  %
+                </div>
                 <TrendingUp className="w-8 h-8 text-purple-500" />
               </div>
             </CardContent>
@@ -238,18 +280,24 @@ export function ProjectOverview({
                 <CardDescription>All sprints in this project</CardDescription>
               </CardHeader>
               <CardContent>
-                {sprints.length === 0 ? (
+                {!sprints || sprints.length === 0 ? (
                   <div className="text-center py-12">
                     <AlertCircle className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                    <h3 className="text-lg text-gray-900 mb-2">No sprints yet</h3>
-                    <p className="text-gray-600 mb-4">Create your first sprint to get started</p>
-                    <Button onClick={onNavigateToBacklog}>Go to Product Backlog</Button>
+                    <h3 className="text-lg text-gray-900 mb-2">
+                      No sprints yet
+                    </h3>
+                    <p className="text-gray-600 mb-4">
+                      Create your first sprint to get started
+                    </p>
+                    <Button onClick={onNavigateToBacklog}>
+                      Go to Product Backlog
+                    </Button>
                   </div>
                 ) : (
                   <div className="space-y-4">
                     {sprints.map((sprint) => {
-                      const isActive = new Date(sprint.endDate) > new Date();
-                      const progress = Math.random() * 100; // Mock progress
+                      const isActive = new Date(sprint.endDate) > new Date()
+                      const progress = Math.random() * 100 // Mock progress
 
                       return (
                         <Card key={sprint._id} className="border shadow-sm">
@@ -257,39 +305,59 @@ export function ProjectOverview({
                             <div className="flex items-start justify-between mb-4">
                               <div className="flex-1">
                                 <div className="flex items-center gap-2 mb-2">
-                                  <h3 className="text-lg text-gray-900">{sprint.name}</h3>
-                                  <Badge variant={isActive ? 'default' : 'outline'}>
-                                    {isActive ? 'Active' : 'Completed'}
+                                  <h3 className="text-lg text-gray-900">
+                                    {sprint.name}
+                                  </h3>
+                                  <Badge
+                                    variant={isActive ? 'default' : 'outline'}
+                                  >
+                                    {sprint.status ||
+                                      (isActive ? 'Active' : 'Completed')}
                                   </Badge>
                                 </div>
-                                <p className="text-sm text-gray-600 mb-3">{sprint.goal}</p>
+                                <p className="text-sm text-gray-600 mb-3">
+                                  {sprint.goal}
+                                </p>
                                 <div className="flex items-center gap-4 text-sm text-gray-500">
                                   <div className="flex items-center gap-1">
                                     <Calendar className="w-4 h-4" />
                                     <span>
-                                      {formatDate(sprint.startDate)} - {formatDate(sprint.endDate)}
+                                      {formatDate(sprint.startDate)} -{' '}
+                                      {formatDate(sprint.endDate)}
                                     </span>
                                   </div>
                                   <div className="flex items-center gap-1">
                                     <TrendingUp className="w-4 h-4" />
-                                    <span>{sprint.maxStoryPoint} story points</span>
+                                    <span>
+                                      {sprint.maxStoryPoint} story points
+                                    </span>
                                   </div>
                                 </div>
                               </div>
-                              <Button variant="outline" size="sm">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() =>
+                                  router.push(
+                                    `/projects/${projectId}/sprint/${sprint._id}`
+                                  )
+                                }
+                              >
                                 View Board
                               </Button>
                             </div>
                             <div className="space-y-2">
                               <div className="flex items-center justify-between text-sm">
                                 <span className="text-gray-600">Progress</span>
-                                <span className="text-gray-900">{Math.round(progress)}%</span>
+                                <span className="text-gray-900">
+                                  {Math.round(progress)}%
+                                </span>
                               </div>
                               <Progress value={progress} />
                             </div>
                           </CardContent>
                         </Card>
-                      );
+                      )
                     })}
                   </div>
                 )}
@@ -301,21 +369,25 @@ export function ProjectOverview({
             <Card className="border-0 shadow-lg">
               <CardHeader>
                 <CardTitle>Team Members</CardTitle>
-                <CardDescription>{project.members.length} members in this project</CardDescription>
+                <CardDescription>
+                  {project.members?.length || 0} members in this project
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {project.members.map((member: ProjectMember) => {
-                    const isProjectOwner = member.memberId === project.ownerId;
+                  {project.members?.map((member) => {
+                    const isProjectOwner = member.memberId === project.ownerId
 
                     return (
-                      <div 
-                        key={member.memberId} 
+                      <div
+                        key={member.memberId}
                         className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 transition-colors"
                       >
                         <div className="flex items-center gap-3">
                           <Avatar>
-                            <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${member.email}`} />
+                            <AvatarImage
+                              src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${member.email}`}
+                            />
                             <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white">
                               {member.email.substring(0, 2).toUpperCase()}
                             </AvatarFallback>
@@ -329,21 +401,26 @@ export function ProjectOverview({
                             </p>
                           </div>
                         </div>
-                        <Badge 
-                          variant={isProjectOwner ? "default" : "outline"}
-                          className={isProjectOwner 
-                            ? 'bg-gradient-to-r from-yellow-500 to-orange-500 text-white' 
-                            : ''
+                        <Badge
+                          variant={isProjectOwner ? 'default' : 'outline'}
+                          className={
+                            isProjectOwner
+                              ? 'bg-gradient-to-r from-yellow-500 to-orange-500 text-white'
+                              : ''
                           }
                         >
                           {isProjectOwner ? '👑 Owner' : member.role}
                         </Badge>
                       </div>
-                    );
+                    )
                   })}
                 </div>
                 {isOwner && (
-                  <Button variant="outline" className="w-full mt-4">
+                  <Button
+                    variant="outline"
+                    className="w-full mt-4"
+                    onClick={() => setIsInviteTeamOpen(true)}
+                  >
                     <Users className="w-4 h-4 mr-2" />
                     Invite Team Members
                   </Button>
@@ -356,28 +433,65 @@ export function ProjectOverview({
             <Card className="border-0 shadow-lg">
               <CardHeader>
                 <CardTitle>Recent Activity</CardTitle>
-                <CardDescription>Latest updates in this project</CardDescription>
+                <CardDescription>
+                  Latest updates in this project
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
                   {[
-                    { user: 'Alice Johnson', action: 'completed sprint', target: 'Sprint 3', time: '2 hours ago' },
-                    { user: 'Bob Smith', action: 'created task', target: 'Setup authentication', time: '5 hours ago' },
-                    { user: 'Charlie Wilson', action: 'joined project', target: '', time: '1 day ago' },
-                    { user: 'You', action: 'created sprint', target: 'Sprint 4', time: '2 days ago' },
+                    {
+                      user: 'Alice Johnson',
+                      action: 'completed sprint',
+                      target: 'Sprint 3',
+                      time: '2 hours ago'
+                    },
+                    {
+                      user: 'Bob Smith',
+                      action: 'created task',
+                      target: 'Setup authentication',
+                      time: '5 hours ago'
+                    },
+                    {
+                      user: 'Charlie Wilson',
+                      action: 'joined project',
+                      target: '',
+                      time: '1 day ago'
+                    },
+                    {
+                      user: 'You',
+                      action: 'created sprint',
+                      target: 'Sprint 4',
+                      time: '2 days ago'
+                    }
                   ].map((activity, index) => (
-                    <div key={index} className="flex items-start gap-4 p-3 rounded-lg hover:bg-gray-50">
+                    <div
+                      key={index}
+                      className="flex items-start gap-4 p-3 rounded-lg hover:bg-gray-50"
+                    >
                       <Avatar className="w-10 h-10">
-                        <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${activity.user}`} />
-                        <AvatarFallback>{activity.user.substring(0, 2)}</AvatarFallback>
+                        <AvatarImage
+                          src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${activity.user}`}
+                        />
+                        <AvatarFallback>
+                          {activity.user.substring(0, 2)}
+                        </AvatarFallback>
                       </Avatar>
                       <div className="flex-1">
                         <p className="text-sm text-gray-900">
                           <span className="font-medium">{activity.user}</span>{' '}
-                          <span className="text-gray-600">{activity.action}</span>{' '}
-                          {activity.target && <span className="font-medium">{activity.target}</span>}
+                          <span className="text-gray-600">
+                            {activity.action}
+                          </span>{' '}
+                          {activity.target && (
+                            <span className="font-medium">
+                              {activity.target}
+                            </span>
+                          )}
                         </p>
-                        <p className="text-xs text-gray-500 mt-1">{activity.time}</p>
+                        <p className="text-xs text-gray-500 mt-1">
+                          {activity.time}
+                        </p>
                       </div>
                     </div>
                   ))}
@@ -393,15 +507,13 @@ export function ProjectOverview({
         open={isCreateSprintOpen}
         onOpenChange={setIsCreateSprintOpen}
         projectId={project._id}
-        onSave={handleCreateSprint}
       />
-      
+
       <InviteTeamModal
         open={isInviteTeamOpen}
         onOpenChange={setIsInviteTeamOpen}
         projectId={project._id}
-        // onInvite={handleInviteTeam}
       />
     </div>
-  );
+  )
 }

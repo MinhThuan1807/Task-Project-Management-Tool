@@ -9,7 +9,7 @@ import { EditProjectModal } from '@/components/EditProjectModal';
 import { CreateSprintModal } from '@/components/CreateSprintModal';
 import { toast } from 'sonner';
 import { useAllProjects } from '@/lib/hooks/useProjects';
-
+import { useSprintsByProject } from '@/lib/hooks/useSprints';
 export default function ProjectPage() {
   const params = useParams();
   const router = useRouter();
@@ -17,7 +17,8 @@ export default function ProjectPage() {
 
   const { data: allProjects, isLoading: projectsLoading } = useAllProjects();
 
-  const [sprints, setSprints] = useState<Sprint[]>(mockSprints);
+  // const [sprints, setSprints] = useState<Sprint[]>(mockSprints);
+  const { data: sprints } = useSprintsByProject(projectId);
   const [isEditProjectOpen, setIsEditProjectOpen] = useState(false);
   const [isCreateSprintOpen, setIsCreateSprintOpen] = useState(false);
 
@@ -34,7 +35,7 @@ export default function ProjectPage() {
   }
 
   const project = allProjects.find((p) => p._id === projectId);
-  const projectSprints = sprints.filter((s) => s.projectId === projectId);
+  // const projectSprints = sprints.filter((s) => s.projectId === projectId);
 
   const handleEditProject = (projectId: string, projectData: Partial<Project>) => {
     // TODO: Implement với useMutation để update project qua API
@@ -72,7 +73,7 @@ export default function ProjectPage() {
   return (
     <>
       <ProjectOverview
-        sprints={projectSprints}
+        sprints={sprints}
         onNavigateToBacklog={() => router.push(`/projects/${projectId}/backlog`)}
         onEditProject={() => setIsEditProjectOpen(true)}
       />

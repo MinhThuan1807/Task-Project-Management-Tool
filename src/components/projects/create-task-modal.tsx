@@ -1,39 +1,133 @@
-import { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '../ui/dialog';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '../ui/dialog';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Textarea } from '../ui/textarea';
 import { Label } from '../ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../ui/select';
 import { Badge } from '../ui/badge';
-import { X } from 'lucide-react';
+import { X, Loader2 } from 'lucide-react';
+import { BoardColumn } from '@/lib/types';
+import { useCreateTask } from '@/lib/hooks/useTasks';
+import { toast } from 'sonner';
+import { useState } from 'react';
+
+// Validation schema
+const createTaskSchema = z.object({
+  title: z
+    .string()
+    .min(1, 'Task title is required')
+    .min(3, 'Task title must be at least 3 characters')
+    .max(200, 'Task title must be less than 200 characters'),
+  description: z
+    .string()
+    .max(1000, 'Description must be less than 1000 characters')
+    .optional(),
+  priority: z.enum(['low', 'medium', 'high', 'critical']),
+  storyPoint: z.number().min(0).max(100),
+  boardColumnId: z.string().min(1, 'Please select a column'),
+});
+
+type CreateTaskFormData = z.infer<typeof createTaskSchema>;
 
 type CreateTaskModalProps = {
   open: boolean;
-  onOpenChange: (open: boolean) => void;
+  onClose: () => void;
   projectId: string;
-  onSave: (task: {
-    title: string;
-    description: string;
-    priority: 'low' | 'medium' | 'high' | 'critical';
-    storyPoint: number;
-    labels: string[];
-  }) => void;
+  sprintId: string;
+  boardColumns: BoardColumn[];
 };
 
 export function CreateTaskModal({
   open,
-  onOpenChange,
+  onClose,
   projectId,
-  onSave,
+  sprintId,
+  boardColumns,
 }: CreateTaskModalProps) {
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [priority, setPriority] = useState<'low' | 'medium' | 'high' | 'critical'>('medium');
-  const [storyPoint, setStoryPoint] = useState(3);
   const [labels, setLabels] = useState<string[]>([]);
   const [labelInput, setLabelInput] = useState('');
 
+  // Get default column (first column or "To Do")
+  const defaultColumn =
+    boardColumns.find((col) => col.title.toLowerCase() === 'todo') ||
+    boardColumns[0];
+
+  const {
+    register,
+    handleSubmit,
+    reset,
+    setValue,
+    watch,
+    formState: { errors },
+  } = useForm<CreateTaskFormData>({
+    resolver: zodResolver(createTaskSchema),
+    defaultValues: {
+      title: '',
+      description: '',
+      priority: 'medium',
+      storyPoint: 3,
+      boardColumnId: defaultColumn?._id || '',
+    },
+  });
+
+  const priority = watch('priority');
+  const storyPoint = watch('storyPoint');
+  const boardColumnId = watch('boardColumnId');
+  
+  // Use TanStack Query mutation
+  const createTaskMutation = useCreateTask();
+
+  // Handle form submission
+  const onSubmit = async (data: CreateTaskFormData) => {
+    const payload = {
+      sprintId,
+      title: data.title,
+      description: data.description || '',
+      priority: data.priority,
+      storyPoint: data.storyPoint,
+      boardColumnId: data.boardColumnId,
+      labels: labels.length > 0 ? labels : undefined,
+      assigneeIds: [], // Empty for now, can add assignee selection later
+    };
+
+    createTaskMutation.mutate(payload, {
+      onSuccess: () => {
+        toast.success('Task created successfully!');
+        handleClose();
+      },
+      onError: (error: any) => {
+        toast.error(error?.message || 'Failed to create task');
+      },
+    });
+  };
+
+  // Handle modal close
+  const handleClose = () => {
+    if (!createTaskMutation.isPending) {
+      reset();
+      setLabels([]);
+      setLabelInput('');
+      onClose();
+    }
+  };
+
+  // Label handlers
   const handleAddLabel = () => {
     if (labelInput.trim() && !labels.includes(labelInput.trim())) {
       setLabels([...labels, labelInput.trim()]);
@@ -45,47 +139,39 @@ export function CreateTaskModal({
     setLabels(labels.filter((l) => l !== label));
   };
 
-  const handleSave = () => {
-    if (!title.trim()) return;
-
-    onSave({
-      title: title.trim(),
-      description: description.trim(),
-      priority,
-      storyPoint,
-      labels,
-    });
-
-    // Reset form
-    setTitle('');
-    setDescription('');
-    setPriority('medium');
-    setStoryPoint(3);
-    setLabels([]);
-    setLabelInput('');
-    onOpenChange(false);
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleAddLabel();
+    }
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
+    <Dialog open={open} onOpenChange={handleClose}>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Create New Task</DialogTitle>
           <DialogDescription>
-            Add a new task to the product backlog with priority, story points, and labels.
+            Add a new task to the sprint with all necessary details.
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4 py-4">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 py-4">
           {/* Title */}
           <div className="space-y-2">
-            <Label htmlFor="title">Task Title *</Label>
+            <Label htmlFor="title">
+              Task Title <span className="text-red-500">*</span>
+            </Label>
             <Input
               id="title"
               placeholder="Enter task title..."
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
+              {...register('title')}
+              disabled={createTaskMutation.isPending}
+              className={errors.title ? 'border-red-500' : ''}
             />
+            {errors.title && (
+              <p className="text-xs text-red-500">{errors.title.message}</p>
+            )}
           </div>
 
           {/* Description */}
@@ -94,47 +180,114 @@ export function CreateTaskModal({
             <Textarea
               id="description"
               placeholder="Enter task description..."
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
               rows={4}
+              {...register('description')}
+              disabled={createTaskMutation.isPending}
+              className={errors.description ? 'border-red-500' : ''}
             />
+            {errors.description && (
+              <p className="text-xs text-red-500">{errors.description.message}</p>
+            )}
           </div>
 
+          {/* Priority & Story Points */}
           <div className="grid grid-cols-2 gap-4">
-            {/* Priority */}
             <div className="space-y-2">
-              <Label htmlFor="priority">Priority</Label>
-              <Select value={priority} onValueChange={(value: any) => setPriority(value)}>
+              <Label htmlFor="priority">
+                Priority <span className="text-red-500">*</span>
+              </Label>
+              <Select
+                value={priority}
+                onValueChange={(value: any) => setValue('priority', value)}
+                disabled={createTaskMutation.isPending}
+              >
                 <SelectTrigger id="priority">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="low">Low</SelectItem>
-                  <SelectItem value="medium">Medium</SelectItem>
-                  <SelectItem value="high">High</SelectItem>
-                  <SelectItem value="critical">Critical</SelectItem>
+                  <SelectItem value="low">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full bg-gray-500" />
+                      Low
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="medium">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full bg-blue-500" />
+                      Medium
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="high">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full bg-orange-500" />
+                      High
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="critical">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full bg-red-500" />
+                      Critical
+                    </div>
+                  </SelectItem>
                 </SelectContent>
               </Select>
+              {errors.priority && (
+                <p className="text-xs text-red-500">{errors.priority.message}</p>
+              )}
             </div>
 
-            {/* Story Points */}
             <div className="space-y-2">
               <Label htmlFor="storyPoint">Story Points</Label>
-              <Select value={storyPoint.toString()} onValueChange={(value) => setStoryPoint(Number(value))}>
+              <Select
+                value={storyPoint.toString()}
+                onValueChange={(value) => setValue('storyPoint', Number(value))}
+                disabled={createTaskMutation.isPending}
+              >
                 <SelectTrigger id="storyPoint">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="1">1</SelectItem>
-                  <SelectItem value="2">2</SelectItem>
-                  <SelectItem value="3">3</SelectItem>
-                  <SelectItem value="5">5</SelectItem>
-                  <SelectItem value="8">8</SelectItem>
-                  <SelectItem value="13">13</SelectItem>
-                  <SelectItem value="21">21</SelectItem>
+                  {[1, 2, 3, 5, 8, 13, 21].map((point) => (
+                    <SelectItem key={point} value={point.toString()}>
+                      {point}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
+              {errors.storyPoint && (
+                <p className="text-xs text-red-500">{errors.storyPoint.message}</p>
+              )}
             </div>
+          </div>
+
+          {/* Board Column */}
+          <div className="space-y-2">
+            <Label htmlFor="boardColumn">
+              Column <span className="text-red-500">*</span>
+            </Label>
+            <Select
+              value={boardColumnId}
+              onValueChange={(value) => setValue('boardColumnId', value)}
+              disabled={createTaskMutation.isPending}
+            >
+              <SelectTrigger id="boardColumn">
+                <SelectValue placeholder="Select a column" />
+              </SelectTrigger>
+              <SelectContent>
+                {boardColumns
+                  .sort((a, b) => a.position - b.position)
+                  .map((column) => (
+                    <SelectItem key={column._id} value={column._id}>
+                      {column.title}
+                    </SelectItem>
+                  ))}
+              </SelectContent>
+            </Select>
+            {errors.boardColumnId && (
+              <p className="text-xs text-red-500">
+                {errors.boardColumnId.message}
+              </p>
+            )}
           </div>
 
           {/* Labels */}
@@ -146,25 +299,28 @@ export function CreateTaskModal({
                 placeholder="Add label..."
                 value={labelInput}
                 onChange={(e) => setLabelInput(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault();
-                    handleAddLabel();
-                  }
-                }}
+                onKeyDown={handleKeyPress}
+                disabled={createTaskMutation.isPending}
               />
-              <Button type="button" variant="outline" onClick={handleAddLabel}>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleAddLabel}
+                disabled={createTaskMutation.isPending || !labelInput.trim()}
+              >
                 Add
               </Button>
             </div>
             {labels.length > 0 && (
               <div className="flex flex-wrap gap-2 mt-2">
-                {labels.map((label) => (
-                  <Badge key={label} variant="outline" className="gap-1">
+                {labels.map((label, index) => (
+                  <Badge key={`${label}-${index}`} variant="outline" className="gap-1">
                     {label}
                     <button
+                      type="button"
                       onClick={() => handleRemoveLabel(label)}
-                      className="ml-1 hover:text-red-600"
+                      disabled={createTaskMutation.isPending}
+                      className="ml-1 hover:text-red-600 disabled:cursor-not-allowed"
                     >
                       <X className="w-3 h-3" />
                     </button>
@@ -173,16 +329,32 @@ export function CreateTaskModal({
               </div>
             )}
           </div>
-        </div>
 
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
-          </Button>
-          <Button onClick={handleSave} disabled={!title.trim()} className="bg-gradient-to-r from-blue-600 to-purple-600">
-            Create Task
-          </Button>
-        </DialogFooter>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleClose}
+              disabled={createTaskMutation.isPending}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              disabled={createTaskMutation.isPending}
+              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+            >
+              {createTaskMutation.isPending ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Creating...
+                </>
+              ) : (
+                'Create Task'
+              )}
+            </Button>
+          </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   );
