@@ -12,7 +12,8 @@ import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Badge } from '../ui/badge';
 import { UserPlus, Mail, Shield, Eye, Crown, X } from 'lucide-react';
-import { InviteMemberPayload, projectApi } from '@/lib/services/project.service';
+import {  projectApi } from '@/lib/services/project.service';
+import { InviteMemberRequest } from '@/lib/types/project.types';
 import { toast } from 'sonner';
 import { getErrorMessage } from '@/lib/utils';
 
@@ -117,7 +118,7 @@ export function InviteTeamModal({
       return;
     }
     try {
-      const invitations: InviteMemberPayload[] = pendingInvites.map((inv) => ({
+      const invitations: InviteMemberRequest[] = pendingInvites.map((inv) => ({
         email: inv.email,
         role: inv.role,
         projectId: projectId,

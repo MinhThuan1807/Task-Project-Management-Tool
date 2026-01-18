@@ -122,7 +122,7 @@ export function useCreateTask() {
     },
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: taskKeys.bySprint(variables.sprintId) });
-      queryClient.invalidateQueries({ queryKey: taskKeys.byColumn(variables.boardColumnId) });
+      queryClient.invalidateQueries({ queryKey: taskKeys.byColumn(variables.boardColumnId || '') });
     },
   });
 }

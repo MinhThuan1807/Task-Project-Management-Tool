@@ -40,7 +40,7 @@ const createTaskSchema = z.object({
     .optional(),
   priority: z.enum(['low', 'medium', 'high', 'critical']),
   storyPoint: z.number().min(0).max(100),
-  boardColumnId: z.string().min(1, 'Please select a column'),
+  boardColumnId: z.string().optional(),
 });
 
 type CreateTaskFormData = z.infer<typeof createTaskSchema>;
@@ -50,13 +50,13 @@ type CreateTaskModalProps = {
   onClose: () => void;
   projectId: string;
   sprintId: string;
-  boardColumns: BoardColumn[];
+  boardColumns?: BoardColumn[];
 };
 
 export function CreateTaskModal({
   open,
   onClose,
-  projectId,
+  projectId,  
   sprintId,
   boardColumns,
 }: CreateTaskModalProps) {
@@ -65,8 +65,8 @@ export function CreateTaskModal({
 
   // Get default column (first column or "To Do")
   const defaultColumn =
-    boardColumns.find((col) => col.title.toLowerCase() === 'todo') ||
-    boardColumns[0];
+    boardColumns?.find((col) => col.title.toLowerCase() === 'todo') ||
+    boardColumns?.[0];
 
   const {
     register,
@@ -82,7 +82,7 @@ export function CreateTaskModal({
       description: '',
       priority: 'medium',
       storyPoint: 3,
-      boardColumnId: defaultColumn?._id || '',
+      boardColumnId: defaultColumn?._id || undefined,
     },
   });
 
@@ -274,8 +274,8 @@ export function CreateTaskModal({
                 <SelectValue placeholder="Select a column" />
               </SelectTrigger>
               <SelectContent>
-                {boardColumns
-                  .sort((a, b) => a.position - b.position)
+                {boardColumns?.
+                  sort((a, b) => a.position - b.position)
                   .map((column) => (
                     <SelectItem key={column._id} value={column._id}>
                       {column.title}

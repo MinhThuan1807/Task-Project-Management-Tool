@@ -23,25 +23,20 @@ import { Badge } from '../ui/badge';
 import { Separator } from '../ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '../ui/alert-dialog';
 import { X, Trash2, Clock } from 'lucide-react';
 import { formatDate } from '@/lib/utils';
+import { AssignToSprintModal } from './assign-to-sprint-modal';
+import { AssignToMemberModal } from './assign-to-member-modal';
+import { useSprintsByProject } from '@/lib/hooks/useSprints';
+import { useAllProjects } from '@/lib/hooks/useProjects';
+import { useParams } from 'next/navigation';
 
 type EditTaskModalProps = {
+  open?: boolean;
   task: Task;
-  boardColumns: BoardColumn[];
+  boardColumns?: BoardColumn[];
   onClose: () => void;
   onSave: (taskData: Partial<Task>) => void;
-  onDelete: () => void;
 };
 
 const priorityOptions = [
@@ -69,20 +64,34 @@ const mockComments = [
   },
 ];
 
-export function EditTaskModal({ task, boardColumns, onClose, onSave, onDelete }: EditTaskModalProps) {
+export function EditTaskModal({ open, task, boardColumns, onClose, onSave }: EditTaskModalProps) {
   const [formData, setFormData] = useState({
-    title: task.title,
-    description: task.description || '',
-    priority: task.priority || 'medium',
-    boardColumnId: task.boardColumnId,
-    storyPoint: task.storyPoint || 0,
-    dueDate: task.dueDate || '',
-    labels: task.labels || [],
+    title: task?.title,
+    description: task?.description || '',
+    priority: task?.priority || 'medium',
+    boardColumnId: task?.boardColumnId || '',
+    storyPoint: task?.storyPoint || 0,
+    dueDate: task?.dueDate || '',
+    labels: task?.labels || [],
   });
   const [labelInput, setLabelInput] = useState('');
   const [commentInput, setCommentInput] = useState('');
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [selectedSprint, setSelectedSprint] = useState<string | null>(null);
+  const [isEditTaskOpen, setIsEditTaskOpen] = useState(false);
+  const [isAssignSprintOpen, setIsAssignSprintOpen] = useState(false);
+  const [isAssignMemberOpen, setIsAssignMemberOpen] = useState(false);
+  // const { data: project } = useAllProjects();
+  const param = useParams();
+  const projectId = param?.id as string;
+  const { data: sprints } = useSprintsByProject(projectId);
 
+  const { data: projects } = useAllProjects();
+  const project = projects?.find((p) => p._id === projectId);
+
+  const handleAssignConfirm = (sprintId: string) => {
+    setSelectedSprint(sprintId);
+    setIsAssignSprintOpen(false);
+  }
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSave(formData);
@@ -105,11 +114,6 @@ export function EditTaskModal({ task, boardColumns, onClose, onSave, onDelete }:
     });
   };
 
-  const handleDelete = () => {
-    onDelete();
-    setShowDeleteDialog(false);
-  };
-
   const getRelativeTime = (timestamp: string) => {
     const diff = Date.now() - new Date(timestamp).getTime();
     const hours = Math.floor(diff / (1000 * 60 * 60));
@@ -121,7 +125,7 @@ export function EditTaskModal({ task, boardColumns, onClose, onSave, onDelete }:
 
   return (
     <>
-      <Dialog open onOpenChange={onClose}>
+      <Dialog open={open} onOpenChange={onClose}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <div className="flex items-start justify-between">
@@ -129,14 +133,6 @@ export function EditTaskModal({ task, boardColumns, onClose, onSave, onDelete }:
                 <DialogTitle>Edit Task</DialogTitle>
                 <DialogDescription>Update task details and track progress</DialogDescription>
               </div>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                onClick={() => setShowDeleteDialog(true)}
-              >
-                <Trash2 className="w-4 h-4" />
-              </Button>
             </div>
           </DialogHeader>
 
@@ -226,7 +222,7 @@ export function EditTaskModal({ task, boardColumns, onClose, onSave, onDelete }:
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        {boardColumns.map((column) => (
+                        {boardColumns?.map((column) => (
                           <SelectItem key={column._id} value={column._id}>
                             {column.title}
                           </SelectItem>
@@ -266,23 +262,25 @@ export function EditTaskModal({ task, boardColumns, onClose, onSave, onDelete }:
                       Add
                     </Button>
                   </div>
-                        <Badge key={task.labels} variant="outline" className="gap-1">
-                          {task.labels}
-                          <button
-                            type="button"
-                            onClick={() => handleRemoveLabel(labels)}
-                            className="ml-1 hover:bg-gray-200 rounded-full p-0.5"
-                          >
-                            <X className="w-3 h-3" />
-                          </button>
-                        </Badge>
+                       {Array.isArray(formData.labels) && formData.labels.map((label) => (
+                          <Badge key={label} variant="outline" className="gap-1">
+                            {label}
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveLabel(label)}
+                              className="ml-1 hover:bg-gray-200 rounded-full p-0.5"
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                          </Badge>
+                       ))}              
                 </div>
 
                 {/* Assignees */}
                 <div className="space-y-2">
                   <Label>Assignees</Label>
                   <div className="flex -space-x-2">
-                    {task.assigneeIds?.map((assigneeId) => (
+                    {task?.assigneeIds?.map((assigneeId) => (
                       <Avatar key={assigneeId} className="w-8 h-8 border-2 border-white">
                         <AvatarImage
                           src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${assigneeId}`}
@@ -290,7 +288,13 @@ export function EditTaskModal({ task, boardColumns, onClose, onSave, onDelete }:
                         <AvatarFallback>U</AvatarFallback>
                       </Avatar>
                     ))}
-                    <Button variant="outline" size="icon" className="w-8 h-8 rounded-full">
+                    <Button 
+                      variant="outline" size="icon" className="w-8 h-8 rounded-full"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setIsAssignMemberOpen(true)}
+                      }
+                    >
                       +
                     </Button>
                   </div>
@@ -301,7 +305,7 @@ export function EditTaskModal({ task, boardColumns, onClose, onSave, onDelete }:
                 <div className="flex items-center gap-4 text-xs text-gray-500">
                   <div className="flex items-center gap-1">
                     <Clock className="w-3 h-3" />
-                    <span>Created {formatDate(task.createdAt)}</span>
+                    <span>Created {formatDate(task?.createdAt)}</span>
                   </div>
                 </div>
 
@@ -372,7 +376,7 @@ export function EditTaskModal({ task, boardColumns, onClose, onSave, onDelete }:
             <TabsContent value="activity">
               <div className="space-y-4">
                 {[
-                  { action: 'created this task', time: task.createdAt },
+                  { action: 'created this task', time: task?.createdAt },
                   { action: 'moved to In Progress', time: new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString() },
                   { action: 'changed priority to High', time: new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString() },
                 ].map((activity, index) => (
@@ -395,26 +399,17 @@ export function EditTaskModal({ task, boardColumns, onClose, onSave, onDelete }:
         </DialogContent>
       </Dialog>
 
-      {/* Delete Confirmation Dialog */}
-      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete Task</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to delete &quot;{task.title}&quot;? This action cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDelete}
-              className="bg-red-600 hover:bg-red-700"
-            >
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {/* Assign to Member Modal (for Edit Task) */}
+      {project && task && (
+        <AssignToMemberModal
+          open={isAssignMemberOpen}
+          onOpenChange={setIsAssignMemberOpen}
+          taskId={task._id || task._id}
+          taskTitle={task.title}
+          project={project}
+          currentAssignees={task.assigneeIds || []}
+        />
+      )}
     </>
   );
 }

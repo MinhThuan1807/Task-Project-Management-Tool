@@ -35,7 +35,6 @@ import {
   DropdownMenuTrigger
 } from '../ui/dropdown-menu'
 import { formatDate, getStatusColor } from '../../lib/utils'
-import { CreateSprintModal } from '@/components/CreateSprintModal'
 import { InviteTeamModal, InvitationData } from './invite-team-modal'
 import { useCurrentUser } from '@/lib/hooks/useAuth'
 import { useAllProjects } from '@/lib/hooks/useProjects'
@@ -66,7 +65,6 @@ export function ProjectOverview({
   const router = useRouter()
 
   // Modal states
-  const [isCreateSprintOpen, setIsCreateSprintOpen] = useState(false)
   const [isInviteTeamOpen, setIsInviteTeamOpen] = useState(false)
 
   const projectId = params.id as string
@@ -75,10 +73,9 @@ export function ProjectOverview({
   // Computed values với safe checks
   const { activeSprints, completedSprints, totalSprints, isOwner } =
     useMemo(() => {
-      const now = new Date()
-      const active = sprints?.filter((s) => new Date(s.endDate) > now) || []
+      const active = sprints?.filter((s) => s.status === 'active')
       const total = sprints?.length || 0
-      const completed = total - active.length
+      const completed = sprints?.filter((s) => s.status === 'completed')
       const owner = project?.ownerId === user?._id
 
       return {
@@ -208,7 +205,7 @@ export function ProjectOverview({
             </CardHeader>
             <CardContent>
               <div className="flex items-center justify-between">
-                <div className="text-3xl text-gray-900">{completedSprints}</div>
+                <div className="text-3xl text-gray-900">{completedSprints.length}</div>
                 <CheckCircle2 className="w-8 h-8 text-green-500" />
               </div>
             </CardContent>
@@ -222,7 +219,7 @@ export function ProjectOverview({
               <div className="flex items-center justify-between">
                 <div className="text-3xl text-gray-900">
                   {totalSprints > 0
-                    ? Math.round((completedSprints / totalSprints) * 100)
+                    ? Math.round((completedSprints.length / totalSprints) * 100)
                     : 0}
                   %
                 </div>
@@ -249,7 +246,7 @@ export function ProjectOverview({
               </Button>
               <Button
                 variant="outline"
-                onClick={() => setIsCreateSprintOpen(true)}
+                onClick={onNavigateToBacklog}
               >
                 <Plus className="w-4 h-4 mr-2" />
                 Create New Sprint
@@ -503,12 +500,6 @@ export function ProjectOverview({
       </div>
 
       {/* Modals */}
-      <CreateSprintModal
-        open={isCreateSprintOpen}
-        onOpenChange={setIsCreateSprintOpen}
-        projectId={project._id}
-      />
-
       <InviteTeamModal
         open={isInviteTeamOpen}
         onOpenChange={setIsInviteTeamOpen}

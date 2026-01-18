@@ -1,9 +1,7 @@
+'use client';
 import { useState } from 'react';
-import { Project, Sprint, User } from '../../lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
 import { Button } from '../ui/button';
-import { Badge } from '../ui/badge';
-import { ScrollArea } from '../ui/scroll-area';
 import {
   Select,
   SelectContent,
@@ -34,365 +32,424 @@ import {
   Download,
   Calendar,
   Activity,
+  FileText,
+  BarChart3,
 } from 'lucide-react';
 import { formatDate } from '../../lib/utils';
+import { useAllProjects } from '@/lib/hooks/useProjects';
+import { useSprintsByProject } from '@/lib/hooks/useSprints';
+import { useParams } from 'next/navigation';
 
-type ReportsViewProps = {
-  project: Project;
-  sprints: Sprint[];
-  currentUser: User;
-};
+export function ReportsView() {
+  const param = useParams();
+  const projectId = param.id as string;
+  const { data: projects } = useAllProjects();
+  const project = projects?.find((p) => p._id === projectId);
+  const { data: sprints } = useSprintsByProject(projectId);
 
-// Mock data for charts
-const mockBurndownData = [
-  { date: 'Dec 1', ideal: 50, actual: 48 },
-  { date: 'Dec 3', ideal: 45, actual: 44 },
-  { date: 'Dec 5', ideal: 40, actual: 42 },
-  { date: 'Dec 7', ideal: 35, actual: 38 },
-  { date: 'Dec 9', ideal: 30, actual: 32 },
-  { date: 'Dec 11', ideal: 25, actual: 26 },
-  { date: 'Dec 13', ideal: 20, actual: 20 },
-  { date: 'Dec 15', ideal: 15, actual: 14 },
-  { date: 'Dec 17', ideal: 10, actual: 8 },
-  { date: 'Dec 19', ideal: 5, actual: 4 },
-  { date: 'Dec 21', ideal: 0, actual: 0 },
-];
-
-const mockVelocityData = [
-  { sprint: 'Sprint 1', planned: 45, completed: 42 },
-  { sprint: 'Sprint 2', planned: 50, completed: 48 },
-  { sprint: 'Sprint 3', planned: 48, completed: 45 },
-  { sprint: 'Sprint 4', planned: 52, completed: 50 },
-  { sprint: 'Sprint 5', planned: 50, completed: 48 },
-];
-
-const mockTaskDistribution = [
-  { name: 'To Done', value: 12, color: '#10b981' },
-  { name: 'In Progress', value: 8, color: '#3b82f6' },
-  { name: 'Todo', value: 5, color: '#f59e0b' },
-  { name: 'Blocked', value: 2, color: '#ef4444' },
-];
-
-const mockTeamContributions = [
-  { name: 'John Doe', tasks: 18 },
-  { name: 'Sarah Chen', tasks: 15 },
-  { name: 'Mike Kumar', tasks: 13 },
-  { name: 'Alan Jia', tasks: 11 },
-  { name: 'Emma Wilson', tasks: 8 },
-];
-
-const COLORS = {
-  primary: '#3b82f6',
-  secondary: '#8b5cf6',
-  success: '#10b981',
-  warning: '#f59e0b',
-  danger: '#ef4444',
-  ideal: '#94a3b8',
-};
-
-export function ReportsView({ project, sprints, currentUser }: ReportsViewProps) {
   const [selectedSprintId, setSelectedSprintId] = useState<string>(
-    sprints[0]?.id || ''
+    sprints?.[0]?._id || ''
   );
+    // ============= MOCK DATA FOR CHARTS =============
+  // 1. BURNDOWN CHART DATA
+   const burndownData = [
+    { day: 'Day 1', ideal: 100, actual: 100 },
+    { day: 'Day 2', ideal: 93, actual: 95 },
+    { day: 'Day 3', ideal: 86, actual: 88 },
+    { day: 'Day 4', ideal: 79, actual: 82 },
+    { day: 'Day 5', ideal: 71, actual: 75 },
+    { day: 'Day 6', ideal: 64, actual: 68 },
+    { day: 'Day 7', ideal: 57, actual: 60 },
+    { day: 'Day 8', ideal: 50, actual: 52 },
+    { day: 'Day 9', ideal: 43, actual: 45 },
+    { day: 'Day 10', ideal: 36, actual: 38 },
+    { day: 'Day 11', ideal: 29, actual: 30 },
+    { day: 'Day 12', ideal: 21, actual: 22 },
+    { day: 'Day 13', ideal: 14, actual: 15 },
+    { day: 'Day 14', ideal: 7, actual: 8 },
+    { day: 'Day 15', ideal: 0, actual: 0 },
+  ];
+   // 2. SPRINT PROGRESS PIE CHART DATA
+  const progressData = [
+    { name: 'Backlog', value: 5, color: '#94a3b8' },
+    { name: 'Todo', value: 8, color: '#3b82f6' },
+    { name: 'In Process', value: 12, color: '#f59e0b' },
+    { name: 'Review', value: 6, color: '#8b5cf6' },
+    { name: 'Done', value: 15, color: '#10b981' },
+  ];
 
-  const selectedSprint = sprints.find((s) => s.id === selectedSprintId);
+  const totalTasks = progressData.reduce((sum, item) => sum + item.value, 0);
+  const completedTasks = progressData.find((item) => item.name === 'Done')?.value || 0;
+  const completionRate = ((completedTasks / totalTasks) * 100).toFixed(1);
 
-  const handleExportPDF = () => {
-    console.log('Exporting PDF...');
-    // TODO: Implement PDF export
+  // 3. VELOCITY CHART DATA
+  const velocityData = [
+    { sprint: 'Sprint 1', planned: 80, completed: 75 },
+    { sprint: 'Sprint 2', planned: 85, completed: 82 },
+    { sprint: 'Sprint 3', planned: 90, completed: 88 },
+    { sprint: 'Sprint 4', planned: 85, completed: 85 },
+    { sprint: 'Sprint 5', planned: 95, completed: 92 },
+    { sprint: 'Sprint 6', planned: 100, completed: 0 }, // Current sprint
+  ];
+
+  const avgVelocity = (
+    velocityData.slice(0, -1).reduce((sum, s) => sum + s.completed, 0) /
+    (velocityData.length - 1)
+  ).toFixed(1);
+
+  // 4. TASK DISTRIBUTION BY MEMBER DATA
+  const memberDistribution = [
+    {
+      name: 'Alice Johnson',
+      done: 12,
+      inProgress: 4,
+      todo: 3,
+    },
+    {
+      name: 'Bob Smith',
+      done: 10,
+      inProgress: 5,
+      todo: 2,
+    },
+    {
+      name: 'Carol White',
+      done: 8,
+      inProgress: 3,
+      todo: 4,
+    },
+    {
+      name: 'David Brown',
+      done: 7,
+      inProgress: 2,
+      todo: 3,
+    },
+  ];
+
+   // Calculate team stats
+  const teamStats = {
+    totalMembers: memberDistribution.length,
+    totalCompleted: memberDistribution.reduce((sum, m) => sum + m.done, 0),
+    totalInProgress: memberDistribution.reduce((sum, m) => sum + m.inProgress, 0),
   };
-
-  const handleExportCSV = () => {
-    console.log('Exporting CSV...');
-    // TODO: Implement CSV export
-  };
-
-  // Calculate metrics
-  const velocity = 42;
-  const totalVelocity = 50;
-  const completionRate = Math.round((velocity / totalVelocity) * 100);
-  const totalTasks = 17;
-  const completedTasks = 20;
-  const teamMembers = 8;
-  const activeMembers = 5;
 
   return (
-    <div className="h-full flex flex-col bg-gray-50">
-      {/* Header */}
-      <div className="p-6 bg-white border-b border-gray-200">
-        <div className="flex items-center justify-between mb-4">
+    <div className="h-full overflow-auto bg-gradient-to-br from-gray-50 to-blue-50/30">
+      <div className="p-8 max-w-7xl mx-auto space-y-6">
+        {/* Header */}
+        <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-2xl text-gray-900">Sprint Reports</h2>
-            <p className="text-sm text-gray-600 mt-1">
-              Track sprint progress and team performance
-            </p>
+            <h1 className="text-3xl bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2">
+              Project Reports
+            </h1>
+            <p className="text-gray-600">{project?.name}</p>
           </div>
-          <div className="flex items-center gap-2">
-            <Button variant="outline" onClick={handleExportPDF}>
-              <Download className="w-4 h-4 mr-2" />
-              Export PDF
-            </Button>
-            <Button variant="outline" onClick={handleExportCSV}>
-              <Download className="w-4 h-4 mr-2" />
-              Export CSV
-            </Button>
-          </div>
-        </div>
-
-        {/* Sprint Selector */}
-        <div className="flex items-center gap-4">
-          <div className="flex-1 max-w-xs">
+          <div className="flex items-center gap-3">
             <Select value={selectedSprintId} onValueChange={setSelectedSprintId}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select a sprint" />
+              <SelectTrigger className="w-[200px]">
+                <SelectValue placeholder="Select Sprint" />
               </SelectTrigger>
               <SelectContent>
-                {sprints.map((sprint) => (
-                  <SelectItem key={sprint.id} value={sprint.id}>
+                {sprints?.map((sprint) => (
+                  <SelectItem key={sprint._id} value={sprint._id}>
                     {sprint.name}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
+            <Button variant="outline" size="sm">
+              <Download className="w-4 h-4 mr-2" />
+              Export PDF
+            </Button>
+            <Button variant="outline" size="sm">
+              <FileText className="w-4 h-4 mr-2" />
+              Export CSV
+            </Button>
           </div>
-          {selectedSprint && (
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-1.5 text-sm text-gray-600">
-                <Calendar className="w-4 h-4" />
-                <span>
-                  {formatDate(selectedSprint.startDate)} - {formatDate(selectedSprint.endDate)}
-                </span>
+        </div>
+
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          <Card className="border-0 shadow-lg bg-gradient-to-br from-blue-500 to-blue-600 text-white">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium opacity-90">Sprint Progress</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between">
+                <div className="text-3xl">{completionRate}%</div>
+                <BarChart3 className="w-8 h-8 opacity-80" />
               </div>
-              <Badge className="bg-green-500">Completed</Badge>
-            </div>
-          )}
+              <p className="text-xs opacity-75 mt-1">{completedTasks}/{totalTasks} tasks completed</p>
+            </CardContent>
+          </Card>
+
+          <Card className="border-0 shadow-lg bg-gradient-to-br from-purple-500 to-purple-600 text-white">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium opacity-90">Avg Velocity</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between">
+                <div className="text-3xl">{avgVelocity}</div>
+                <TrendingUp className="w-8 h-8 opacity-80" />
+              </div>
+              <p className="text-xs opacity-75 mt-1">Story points per sprint</p>
+            </CardContent>
+          </Card>
+
+          <Card className="border-0 shadow-lg bg-gradient-to-br from-green-500 to-green-600 text-white">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium opacity-90">Team Size</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between">
+                <div className="text-3xl">{teamStats.totalMembers}</div>
+                <Users className="w-8 h-8 opacity-80" />
+              </div>
+              <p className="text-xs opacity-75 mt-1">Active members</p>
+            </CardContent>
+          </Card>
+
+          <Card className="border-0 shadow-lg bg-gradient-to-br from-orange-500 to-orange-600 text-white">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium opacity-90">Completed</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between">
+                <div className="text-3xl">{teamStats.totalCompleted}</div>
+                <CheckCircle2 className="w-8 h-8 opacity-80" />
+              </div>
+              <p className="text-xs opacity-75 mt-1">Tasks this sprint</p>
+            </CardContent>
+          </Card>
         </div>
-      </div>
 
-      <ScrollArea className="flex-1 p-6">
-        <div className="max-w-7xl mx-auto space-y-6">
-          {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {/* Velocity */}
-            <Card className="border-0 shadow-lg bg-gradient-to-br from-blue-50 to-blue-100">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center">
-                    <TrendingUp className="w-5 h-5 text-white" />
-                  </div>
-                  <span className="text-xs text-blue-700">Story points</span>
-                </div>
-                <div className="text-3xl text-blue-900 mb-1">{velocity}</div>
-                <p className="text-sm text-blue-700">Velocity</p>
-                <p className="text-xs text-blue-600 mt-1">+4 (+10%)</p>
-              </CardContent>
-            </Card>
+        {/* Charts Row 1 */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* 1. Burndown Chart */}
+          <Card className="border-0 shadow-lg">
+            <CardHeader>
+              <CardTitle>📉 Burndown Chart</CardTitle>
+              <CardDescription>
+                Story points remaining over time
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={300}>
+                <LineChart data={burndownData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                  <XAxis 
+                    dataKey="day" 
+                    tick={{ fontSize: 12 }}
+                    stroke="#6b7280"
+                  />
+                  <YAxis 
+                    tick={{ fontSize: 12 }}
+                    stroke="#6b7280"
+                  />
+                  <Tooltip 
+                    contentStyle={{
+                      backgroundColor: 'white',
+                      border: '1px solid #e5e7eb',
+                      borderRadius: '8px',
+                    }}
+                  />
+                  <Legend />
+                  <Line
+                    type="monotone"
+                    dataKey="ideal"
+                    stroke="#94a3b8"
+                    strokeWidth={2}
+                    strokeDasharray="5 5"
+                    name="Ideal"
+                    dot={false}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="actual"
+                    stroke="#3b82f6"
+                    strokeWidth={3}
+                    name="Actual"
+                    dot={{ fill: '#3b82f6', r: 4 }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+              <div className="mt-4 p-3 bg-blue-50 rounded-lg">
+                <p className="text-sm text-blue-900">
+                  <TrendingUp className="w-4 h-4 inline mr-1" />
+                  Sprint is on track. Current velocity matches ideal burndown.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
 
-            {/* Completion Rate */}
-            <Card className="border-0 shadow-lg bg-gradient-to-br from-green-50 to-green-100">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="w-10 h-10 bg-green-500 rounded-lg flex items-center justify-center">
-                    <CheckCircle2 className="w-5 h-5 text-white" />
-                  </div>
-                  <span className="text-xs text-green-700">Of tasks done</span>
-                </div>
-                <div className="text-3xl text-green-900 mb-1">{completionRate}%</div>
-                <p className="text-sm text-green-700">Completion Rate</p>
-              </CardContent>
-            </Card>
-
-            {/* Total Tasks */}
-            <Card className="border-0 shadow-lg bg-gradient-to-br from-purple-50 to-purple-100">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="w-10 h-10 bg-purple-500 rounded-lg flex items-center justify-center">
-                    <Target className="w-5 h-5 text-white" />
-                  </div>
-                  <span className="text-xs text-purple-700">Completed</span>
-                </div>
-                <div className="text-3xl text-purple-900 mb-1">
-                  {totalTasks}/{completedTasks}
-                </div>
-                <p className="text-sm text-purple-700">Total Tasks</p>
-              </CardContent>
-            </Card>
-
-            {/* Team Members */}
-            <Card className="border-0 shadow-lg bg-gradient-to-br from-orange-50 to-orange-100">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="w-10 h-10 bg-orange-500 rounded-lg flex items-center justify-center">
-                    <Users className="w-5 h-5 text-white" />
-                  </div>
-                  <span className="text-xs text-orange-700">Active</span>
-                </div>
-                <div className="text-3xl text-orange-900 mb-1">{teamMembers}</div>
-                <p className="text-sm text-orange-700">Team Members</p>
-                <p className="text-xs text-orange-600 mt-1">{activeMembers} SUM M.</p>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Charts Row 1 */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Sprint Burndown */}
-            <Card className="border-0 shadow-lg">
-              <CardHeader>
-                <CardTitle className="text-lg">Sprint Burndown</CardTitle>
-                <CardDescription>Track remaining work over time</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
-                  <LineChart data={mockBurndownData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                    <XAxis
-                      dataKey="date"
-                      tick={{ fontSize: 12 }}
-                      stroke="#94a3b8"
-                    />
-                    <YAxis tick={{ fontSize: 12 }} stroke="#94a3b8" />
-                    <Tooltip />
-                    <Legend />
-                    <Line
-                      type="monotone"
-                      dataKey="ideal"
-                      stroke={COLORS.ideal}
-                      strokeWidth={2}
-                      strokeDasharray="5 5"
-                      name="Ideal Burndown"
-                      dot={false}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="actual"
-                      stroke={COLORS.primary}
-                      strokeWidth={2}
-                      name="Actual Progress"
-                      dot={{ fill: COLORS.primary, r: 4 }}
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-
-            {/* Team Velocity */}
-            <Card className="border-0 shadow-lg">
-              <CardHeader>
-                <CardTitle className="text-lg">Team Velocity (Last 5 Sprints)</CardTitle>
-                <CardDescription>Compare planned vs completed work</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={mockVelocityData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                    <XAxis
-                      dataKey="sprint"
-                      tick={{ fontSize: 12 }}
-                      stroke="#94a3b8"
-                    />
-                    <YAxis tick={{ fontSize: 12 }} stroke="#94a3b8" />
-                    <Tooltip />
-                    <Legend />
-                    <Bar
-                      dataKey="planned"
-                      fill="#dbeafe"
-                      name="Planned"
-                      radius={[4, 4, 0, 0]}
-                    />
-                    <Bar
-                      dataKey="completed"
-                      fill={COLORS.primary}
-                      name="Completed"
-                      radius={[4, 4, 0, 0]}
-                    />
-                  </BarChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Charts Row 2 */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Task Distribution */}
-            <Card className="border-0 shadow-lg">
-              <CardHeader>
-                <CardTitle className="text-lg">Task Distribution</CardTitle>
-                <CardDescription>Breakdown by status</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center justify-center">
-                  <ResponsiveContainer width="100%" height={300}>
-                    <PieChart>
-                      <Pie
-                        data={mockTaskDistribution}
-                        cx="50%"
-                        cy="50%"
-                        innerRadius={60}
-                        outerRadius={100}
-                        paddingAngle={5}
-                        dataKey="value"
-                      >
-                        {mockTaskDistribution.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={entry.color} />
-                        ))}
-                      </Pie>
-                      <Tooltip />
-                    </PieChart>
-                  </ResponsiveContainer>
-                  <div className="ml-8 space-y-2">
-                    {mockTaskDistribution.map((item) => (
-                      <div key={item.name} className="flex items-center gap-2">
-                        <div
-                          className="w-3 h-3 rounded-full"
-                          style={{ backgroundColor: item.color }}
-                        />
-                        <span className="text-sm text-gray-700">{item.name}</span>
-                        <span className="text-sm text-gray-900 ml-auto">
-                          {item.value}
-                        </span>
-                      </div>
+          {/* 2. Sprint Progress Pie Chart */}
+          <Card className="border-0 shadow-lg">
+            <CardHeader>
+              <CardTitle>📊 Sprint Progress</CardTitle>
+              <CardDescription>
+                Task distribution by status
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={300}>
+                <PieChart>
+                  <Pie
+                    data={progressData}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    label={({ name, percent }) =>
+                      `${name}: ${((percent ?? 0) * 100).toFixed(0)}%`
+                    }
+                    outerRadius={100}
+                    fill="#8884d8"
+                    dataKey="value"
+                  >
+                    {progressData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
                     ))}
+                  </Pie>
+                  <Tooltip />
+                </PieChart>
+              </ResponsiveContainer>
+              <div className="mt-4 grid grid-cols-5 gap-2">
+                {progressData.map((item) => (
+                  <div key={item.name} className="text-center">
+                    <div
+                      className="w-3 h-3 rounded-full mx-auto mb-1"
+                      style={{ backgroundColor: item.color }}
+                    />
+                    <p className="text-xs text-gray-600">{item.name}</p>
+                    <p className="text-sm">{item.value}</p>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Team Contributions */}
-            <Card className="border-0 shadow-lg">
-              <CardHeader>
-                <CardTitle className="text-lg">Team Contributions</CardTitle>
-                <CardDescription>Tasks completed by team member</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {mockTeamContributions.map((member, index) => (
-                    <div key={member.name}>
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center gap-2">
-                          <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs">
-                            {member.name.charAt(0)}
-                          </div>
-                          <span className="text-sm text-gray-700">{member.name}</span>
-                        </div>
-                        <span className="text-sm text-gray-900">{member.tasks} SP</span>
-                      </div>
-                      <div className="w-full bg-gray-200 rounded-full h-2">
-                        <div
-                          className="bg-blue-500 h-2 rounded-full transition-all"
-                          style={{
-                            width: `${(member.tasks / mockTeamContributions[0].tasks) * 100}%`,
-                          }}
-                        />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
         </div>
-      </ScrollArea>
+
+        {/* Charts Row 2 */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* 3. Velocity Chart */}
+          <Card className="border-0 shadow-lg">
+            <CardHeader>
+              <CardTitle>⚡ Velocity Chart</CardTitle>
+              <CardDescription>
+                Sprint velocity over time
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={velocityData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                  <XAxis 
+                    dataKey="sprint" 
+                    tick={{ fontSize: 12 }}
+                    stroke="#6b7280"
+                  />
+                  <YAxis 
+                    tick={{ fontSize: 12 }}
+                    stroke="#6b7280"
+                  />
+                  <Tooltip 
+                    contentStyle={{
+                      backgroundColor: 'white',
+                      border: '1px solid #e5e7eb',
+                      borderRadius: '8px',
+                    }}
+                  />
+                  <Legend />
+                  <Bar dataKey="planned" fill="#93c5fd" name="Planned" />
+                  <Bar dataKey="completed" fill="#3b82f6" name="Completed" />
+                </BarChart>
+              </ResponsiveContainer>
+              <div className="mt-4 p-3 bg-purple-50 rounded-lg">
+                <p className="text-sm text-purple-900">
+                  <TrendingUp className="w-4 h-4 inline mr-1" />
+                  Average velocity: {avgVelocity} story points
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* 4. Task Distribution by Member */}
+          <Card className="border-0 shadow-lg">
+            <CardHeader>
+              <CardTitle>👥 Task Distribution by Member</CardTitle>
+              <CardDescription>
+                Team workload overview
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={memberDistribution} layout="vertical">
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                  <XAxis type="number" tick={{ fontSize: 12 }} stroke="#6b7280" />
+                  <YAxis 
+                    dataKey="name" 
+                    type="category" 
+                    tick={{ fontSize: 12 }}
+                    stroke="#6b7280"
+                    width={100}
+                  />
+                  <Tooltip 
+                    contentStyle={{
+                      backgroundColor: 'white',
+                      border: '1px solid #e5e7eb',
+                      borderRadius: '8px',
+                    }}
+                  />
+                  <Legend />
+                  <Bar dataKey="done" stackId="a" fill="#10b981" name="Done" />
+                  <Bar dataKey="inProgress" stackId="a" fill="#f59e0b" name="In Progress" />
+                  <Bar dataKey="todo" stackId="a" fill="#3b82f6" name="Todo" />
+                </BarChart>
+              </ResponsiveContainer>
+              <div className="mt-4 p-3 bg-green-50 rounded-lg">
+                <p className="text-sm text-green-900">
+                  <Users className="w-4 h-4 inline mr-1" />
+                  Team completed {teamStats.totalCompleted} tasks, {teamStats.totalInProgress} in progress
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Additional Insights */}
+        <Card className="border-0 shadow-lg">
+          <CardHeader>
+            <CardTitle>💡 Sprint Insights</CardTitle>
+            <CardDescription>Key takeaways and recommendations</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+                <h4 className="font-medium text-blue-900 mb-2">🎯 On Track</h4>
+                <p className="text-sm text-blue-700">
+                  Sprint velocity is consistent with previous sprints. Team is maintaining steady progress.
+                </p>
+              </div>
+              <div className="p-4 bg-yellow-50 rounded-lg border border-yellow-200">
+                <h4 className="font-medium text-yellow-900 mb-2">⚠️ Watch Out</h4>
+                <p className="text-sm text-yellow-700">
+                  12 tasks still in progress. Consider daily standups to identify blockers.
+                </p>
+              </div>
+              <div className="p-4 bg-green-50 rounded-lg border border-green-200">
+                <h4 className="font-medium text-green-900 mb-2">✅ Success</h4>
+                <p className="text-sm text-green-700">
+                  {completionRate}% completion rate is above the team average of 65%.
+                </p>
+              </div>
+              <div className="p-4 bg-purple-50 rounded-lg border border-purple-200">
+                <h4 className="font-medium text-purple-900 mb-2">📈 Recommendation</h4>
+                <p className="text-sm text-purple-700">
+                  Based on current velocity, plan for {Math.round(Number(avgVelocity))} story points next sprint.
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }

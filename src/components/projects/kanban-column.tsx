@@ -5,6 +5,7 @@ import { ScrollArea } from '../ui/scroll-area';
 import { Button } from '../ui/button';
 import { Plus } from 'lucide-react';
 import { TaskCard } from './task-card';
+import { AssignToMemberModal } from './assign-to-member-modal';
 
 type KanbanColumnProps = {
   column: {
@@ -69,6 +70,14 @@ export function KanbanColumn({
           </SortableContext>
         </ScrollArea>
       </div>
+      
+        {/* <AssignToMemberModal
+          open={isAssignMemberOpen}
+          onOpenChange={setIsAssignMemberOpen}
+          taskId={task._id}
+          taskTitle={task.title}
+          currentAssignees={task.assigneeIds || []}
+        /> */}
     </div>
   );
 }

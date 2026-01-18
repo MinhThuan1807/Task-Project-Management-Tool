@@ -89,7 +89,6 @@ export default function ProjectPage() {
         projectId={projectId}
         open={isCreateSprintOpen}
         onOpenChange={setIsCreateSprintOpen}
-        onCreate={handleCreateSprint}
       />
     </>
   );
