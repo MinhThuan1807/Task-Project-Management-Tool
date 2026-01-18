@@ -115,10 +115,11 @@ export const projectApi = {
    */
   inviteMember: async (data: InviteMemberRequest): Promise<ProjectResponse> => {
     const response = await axiosInstance.post<ProjectResponse>(
-      `/projects/${data.projectId}/invite`,
+      `/projects/invite`,
       {
         email: data.email,
         role: data.role,
+        projectId: data.projectId,
       }
     );
     return response.data;

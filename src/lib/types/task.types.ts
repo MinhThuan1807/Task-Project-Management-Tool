@@ -29,8 +29,8 @@ export type Task = {
   boardColumnId: string;
   title: string;
   description?: string;
-  labels?: ('task' | 'bug' | 'feature' | 'story')[];
-  priority?: 'low' | 'medium' | 'high' | 'critical';
+  labels?: string[];
+  priority?: 'low' | 'medium' | 'high' | 'critical' | string;
   storyPoint?: number;
   dueDate?: string | Date;
   assigneeIds?: string[];
@@ -45,7 +45,7 @@ export type Task = {
  */
 export type CreateTaskRequest = {
   sprintId: string;
-  boardColumnId: string;
+  boardColumnId?: string;
   title: string;
   description?: string;
   labels?: Task['labels'];

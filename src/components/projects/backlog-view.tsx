@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Project, Sprint, User } from '../../lib/types';
+import { use, useState } from 'react';
+import { Project, Sprint, Task, User } from '../../lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
@@ -18,6 +18,7 @@ import {
   Search,
   Edit2,
   Trash2,
+  Loader2,
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -37,9 +38,14 @@ import {
   AlertDialogTitle,
 } from '../ui/alert-dialog';
 import { Input } from '../ui/input';
-import { formatDate, getPriorityColor } from '../../lib/utils';
+import { cn, formatDate, getPriorityColor } from '../../lib/utils';
 import { CreateTaskModal } from './create-task-modal';
+import { useTasksBySprint } from '@/lib/hooks/useTasks';
+import { useSuspenseQuery } from '@tanstack/react-query';
+import { toast } from 'sonner';
 import { AssignToSprintModal } from './assign-to-sprint-modal';
+import { EditTaskModal } from './edit-task-modal';
+import { AssignToMemberModal } from './assign-to-member-modal';
 
 type BacklogViewProps = {
   project: Project;
@@ -47,50 +53,6 @@ type BacklogViewProps = {
   onCreateSprint: () => void;
   onStartSprint: (sprint: Sprint) => void;
 };
-
-// Mock backlog tasks
-const mockBacklogTasks = [
-  {
-    id: 'task-1',
-    title: 'User Authentication System',
-    description: 'Implement login, register, and forgot password functionality',
-    priority: 'high' as const,
-    storyPoint: 8,
-    labels: ['backend', 'security'],
-  },
-  {
-    id: 'task-2',
-    title: 'Dashboard Analytics',
-    description: 'Create analytics dashboard with charts and metrics',
-    priority: 'medium' as const,
-    storyPoint: 5,
-    labels: ['frontend', 'analytics'],
-  },
-  {
-    id: 'task-3',
-    title: 'Email Notification Service',
-    description: 'Send email notifications for important events',
-    priority: 'low' as const,
-    storyPoint: 3,
-    labels: ['backend', 'notifications'],
-  },
-  {
-    id: 'task-4',
-    title: 'Mobile Responsive Design',
-    description: 'Make all pages mobile responsive',
-    priority: 'critical' as const,
-    storyPoint: 13,
-    labels: ['frontend', 'ui/ux'],
-  },
-  {
-    id: 'task-5',
-    title: 'API Documentation',
-    description: 'Document all API endpoints with examples',
-    priority: 'medium' as const,
-    storyPoint: 5,
-    labels: ['documentation'],
-  },
-];
 
 export function BacklogView({
   project,
@@ -100,49 +62,62 @@ export function BacklogView({
 }: BacklogViewProps) {
   const [searchQuery, setSearchQuery] = useState('');
   
-  const [selectedSprint, setSelectedSprint] = useState<string | null>(null);
   const [isCreateTaskOpen, setIsCreateTaskOpen] = useState(false);
-  const [isEditTaskOpen, setIsEditTaskOpen] = useState(false);
-  const [isAssignSprintOpen, setIsAssignSprintOpen] = useState(false);
   const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState(false);
-  const [selectedTask, setSelectedTask] = useState<typeof mockBacklogTasks[0] | null>(null);
 
-  const activeSprints = sprints.filter((s) => new Date(s.endDate) > new Date());
-  const upcomingSprints = sprints.filter((s) => new Date(s.startDate) > new Date());
+  const activeSprints = sprints.map((s) => s.status === 'active' ? s : null).filter(Boolean) as Sprint[];
+  const upcomingSprints = sprints.map((s) => s.status === 'planned' ? s : null).filter(Boolean) as Sprint[];
+  const sprintIdUpcomming = sprints.filter((s) => s.status === 'planned').map((s) => s._id);
+  
+  const { data: tasks, isLoading, isError } =  useTasksBySprint(upcomingSprints[0]?._id || '')
+  const [isAssignSprintOpen, setIsAssignSprintOpen] = useState(false);
+  const [isAssignMemberOpen, setIsAssignMemberOpen] = useState(false);
+  const [selectedTask, setSelectedTask] = useState<Task>();
+  const [isEditTaskOpen, setIsEditTaskOpen] = useState(false);
 
-  const filteredTasks = mockBacklogTasks.filter((task) =>
+
+  if (isError) {
+    return (
+      <div className="h-full flex items-center justify-center">
+        <div className="text-center">
+          <AlertCircle className="w-8 h-8 text-red-600 mx-auto mb-4" />
+          <p className="text-gray-600">Failed to load tasks</p>
+        </div>
+      </div>
+    );
+  }
+
+  const filteredTasks = tasks?.filter((task) =>
     task.title.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  ) || [];
 
   const handleCreateTask = (task: any) => {
     console.log('Creating task:', task);
     // TODO: Implement actual task creation
   };
 
-  const handleEditTask = (task: typeof mockBacklogTasks[0]) => {
-    setSelectedTask(task);
-    setIsEditTaskOpen(true);
+  const handleEditTask = () => {
+    // setSelectedTask(task);
+    // setIsEditTaskOpen(true);
   };
 
-  const handleAssignToSprint = (task: typeof mockBacklogTasks[0]) => {
-    setSelectedTask(task);
-    setIsAssignSprintOpen(true);
+  const handleAssignToSprint = () => {
+    // setSelectedTask(task);
+    // setIsAssignSprintOpen(true);
   };
 
-  const handleDeleteTask = (task: typeof mockBacklogTasks[0]) => {
-    setSelectedTask(task);
-    setIsDeleteAlertOpen(true);
+  const handleDeleteTask = () => {
+    // setSelectedTask(task);
+    // setIsDeleteAlertOpen(true);
   };
 
   const confirmDelete = () => {
-    console.log('Deleting task:', selectedTask);
     // TODO: Implement actual task deletion
-    setIsDeleteAlertOpen(false);
-    setSelectedTask(null);
+    // setIsDeleteAlertOpen(false);
+    // setSelectedTask(null);
   };
 
   const handleAssignConfirm = (sprintId: string) => {
-    console.log('Assigning task to sprint:', selectedTask, sprintId);
     // TODO: Implement actual assignment
   };
 
@@ -151,19 +126,31 @@ export function BacklogView({
       {/* Main Backlog Area */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Header */}
-        <div className="p-6 bg-white border-b border-gray-200">
+        <div className="p-6 bg-white border-b border-gray-200 shrink-0">
           <div className="flex items-center justify-between mb-4">
             <div>
               <h2 className="text-2xl text-gray-900">Product Backlog</h2>
               <p className="text-sm text-gray-600 mt-1">
-                {filteredTasks.length} tasks • {filteredTasks.reduce((sum, t) => sum + t.storyPoint, 0)} story points
+                {filteredTasks?.length} tasks • {filteredTasks?.reduce((sum, t) => sum + (t.storyPoint || 0), 0)} story points
               </p>
             </div>
             <div className="flex items-center gap-2">
               <Button variant="outline" size="icon">
                 <Filter className="w-4 h-4" />
               </Button>
-              <Button onClick={() => setIsCreateTaskOpen(true)} className="bg-gradient-to-r from-blue-600 to-purple-600">
+              <Button 
+                onClick={() => {
+                  if(sprints.length === 0){
+                    toast.error('Please create a sprint first!')
+                    setTimeout(() => {
+                      onCreateSprint()
+                    }, 300)
+                  }
+                  else
+                    setIsCreateTaskOpen(true)
+                }}
+                className="bg-gradient-to-r from-blue-600 to-purple-600"
+              >
                 <Plus className="w-4 h-4 mr-2" />
                 Create Task
               </Button>
@@ -184,9 +171,9 @@ export function BacklogView({
         </div>
 
         {/* Backlog Tasks */}
-        <ScrollArea className="flex-1 p-6">
-          <div className="space-y-3 max-w-4xl">
-            {filteredTasks.length === 0 ? (
+        <ScrollArea className="flex-1 overflow-auto">
+          <div className="p-6 space-y-3 max-w-4xl">
+            {filteredTasks?.length === 0 ? (
               <Card className="border-0 shadow-lg">
                 <CardContent className="text-center py-12">
                   <AlertCircle className="w-16 h-16 text-gray-400 mx-auto mb-4" />
@@ -195,7 +182,19 @@ export function BacklogView({
                     {searchQuery ? 'Try a different search term' : 'Create your first task to get started'}
                   </p>
                   {!searchQuery && (
-                    <Button onClick={() => setIsCreateTaskOpen(true)}>
+                    <Button  
+                      onClick={() => {
+                        if(sprints.length === 0){
+                          toast.error('Please create a sprint first!')
+                          setTimeout(() => {
+                            onCreateSprint()
+                          },300)
+                        }
+                        else
+                          setIsCreateTaskOpen(true)
+                      }}
+                      className="bg-gradient-to-r from-blue-600 to-purple-600"
+                    >
                       <Plus className="w-4 h-4 mr-2" />
                       Create Task
                     </Button>
@@ -203,8 +202,8 @@ export function BacklogView({
                 </CardContent>
               </Card>
             ) : (
-              filteredTasks.map((task) => (
-                <Card key={task.id} className="border-0 shadow-md hover:shadow-lg transition-shadow group cursor-pointer">
+              filteredTasks?.map((task) => (
+                <Card key={task._id} className="border-0 shadow-md hover:shadow-lg transition-shadow group cursor-pointer">
                   <CardContent className="p-4">
                     <div className="flex items-start gap-3">
                       <div className="mt-1 cursor-grab active:cursor-grabbing opacity-0 group-hover:opacity-100 transition-opacity">
@@ -214,6 +213,7 @@ export function BacklogView({
                         <div className="flex items-start justify-between gap-3 mb-2">
                           <h3 className="text-base text-gray-900 group-hover:text-blue-600 transition-colors">
                             {task.title}
+                            <Badge className={cn(getPriorityColor(task.priority), 'ml-2')}>{sprints.map((s) => s._id === task.sprintId ? s.name : "")}</Badge>
                           </h3>
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
@@ -222,22 +222,25 @@ export function BacklogView({
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
-                              <DropdownMenuItem onClick={() => handleEditTask(task)}>Edit Task</DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => handleAssignToSprint(task)}>Assign to Sprint</DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => {
+                                setSelectedTask(task);
+                                setIsEditTaskOpen(true);
+                              }}>Edit Task</DropdownMenuItem>
                               <DropdownMenuSeparator />
                               <DropdownMenuItem className="text-red-600" onClick={() => handleDeleteTask(task)}>
                                 Delete Task
                               </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
+
                         </div>
-                        <p className="text-sm text-gray-600 mb-3 line-clamp-2">{task.description}</p>
+                        <p className="text-sm text-gray-600 mb-3 line-clamp-2">{task?.description}</p>
                         <div className="flex items-center gap-2 flex-wrap">
                           <Badge className={getPriorityColor(task.priority)}>{task.priority}</Badge>
                           <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
                             {task.storyPoint} SP
                           </Badge>
-                          {task.labels.map((label) => (
+                         {Array.isArray(task.labels) && task.labels.map((label) => (
                             <Badge key={label} variant="outline" className="text-xs">
                               {label}
                             </Badge>
@@ -247,6 +250,7 @@ export function BacklogView({
                     </div>
                   </CardContent>
                 </Card>
+
               ))
             )}
           </div>
@@ -260,16 +264,17 @@ export function BacklogView({
           <p className="text-sm text-gray-600">Manage and plan sprints</p>
         </div>
 
-        <ScrollArea className="flex-1 p-6">
+        <ScrollArea className="flex-1 p-6 overflow-auto">
           <div className="space-y-6">
             {/* Create Sprint Button */}
             <Button
               onClick={onCreateSprint}
               variant="outline"
               className="w-full border-dashed border-2 h-auto py-4"
+              disabled={sprints.some((s) => s.status === 'planned')}
             >
               <Plus className="w-5 h-5 mr-2" />
-              Create New Sprint
+              {sprints.some((s) => s.status === 'planned') ? 'Sprint in Planning' : 'Create New Sprint'}
             </Button>
 
             <Separator />
@@ -284,7 +289,7 @@ export function BacklogView({
                 <div className="space-y-3">
                   {activeSprints.map((sprint) => (
                     <Card
-                      key={sprint.id}
+                      key={sprint._id}
                       className="border shadow-sm cursor-pointer hover:shadow-md transition-shadow"
                       onClick={() => onStartSprint(sprint)}
                     >
@@ -304,7 +309,7 @@ export function BacklogView({
                             </div>
                             <div className="flex items-center gap-1">
                               <TrendingUp className="w-3 h-3" />
-                              <span>{sprint.storyPoint} SP</span>
+                              <span>{sprint.maxStoryPoint} SP</span>
                             </div>
                           </div>
                         </div>
@@ -325,7 +330,7 @@ export function BacklogView({
                 <div className="space-y-3">
                   {upcomingSprints.map((sprint) => (
                     <Card
-                      key={sprint.id}
+                      key={sprint._id}
                       className="border shadow-sm cursor-pointer hover:shadow-md transition-shadow"
                     >
                       <CardContent className="p-4">
@@ -344,7 +349,7 @@ export function BacklogView({
                             </div>
                             <div className="flex items-center gap-1">
                               <TrendingUp className="w-3 h-3" />
-                              <span>{sprint.storyPoint} SP</span>
+                              <span>{sprint.maxStoryPoint} SP</span>
                             </div>
                           </div>
                           <Button
@@ -381,37 +386,25 @@ export function BacklogView({
       {/* Modals */}
       <CreateTaskModal
         open={isCreateTaskOpen}
-        onOpenChange={setIsCreateTaskOpen}
-        projectId={project.id}
-        onSave={handleCreateTask}
+        onClose={() => setIsCreateTaskOpen(false)}
+        sprintId={sprintIdUpcomming[0] || ''}
+        projectId={project._id}
       />
-
-      {selectedTask && (
-        <>
-          <CreateTaskModal
-            open={isEditTaskOpen}
-            onOpenChange={setIsEditTaskOpen}
-            projectId={project.id}
-            onSave={handleCreateTask}
-          />
-
-          <AssignToSprintModal
-            open={isAssignSprintOpen}
-            onOpenChange={setIsAssignSprintOpen}
-            taskTitle={selectedTask.title}
-            sprints={sprints}
-            onAssign={handleAssignConfirm}
-          />
-        </>
-      )}
-
+      <EditTaskModal
+        open={isEditTaskOpen}
+        onClose={() => setIsEditTaskOpen(false)}
+        task={selectedTask!}
+        onSave={() => setIsEditTaskOpen(false)}
+      />
       {/* Delete Confirmation Alert */}
       <AlertDialog open={isDeleteAlertOpen} onOpenChange={setIsDeleteAlertOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Task</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete &quot;{selectedTask?.title}&quot;? This action cannot be undone.
+              Are you sure you want to delete &quot;
+              {selectedTask?.title}
+              &quot;? This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -425,6 +418,17 @@ export function BacklogView({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      {/* Assign to Member Modal */}
+      {selectedTask && (
+        <AssignToMemberModal
+          open={isAssignMemberOpen}
+          onOpenChange={setIsAssignMemberOpen}
+          taskId={selectedTask._id}
+          taskTitle={selectedTask.title}
+          project={project}
+          currentAssignees={selectedTask.assigneeIds || []}
+        />
+      )}         
     </div>
   );
 }

@@ -28,6 +28,7 @@ import {
   Search,
   SlidersHorizontal
 } from 'lucide-react'
+
 import { formatDate } from '@/lib/utils'
 import { KanbanColumn } from './kanban-column'
 import { TaskCard } from './task-card'
@@ -174,29 +175,22 @@ export function SprintBoardDnd({
 
   // Task handlers
   const handleEditTask = (taskId: string, taskData: Partial<Task>) => {
-    // updateTaskMutation.mutate(
-    //   { taskId, data: taskData },
-    //   {
-    //     onSuccess: () => {
-    //       setIsEditTaskOpen(false)
-    //       setSelectedTask(null)
-    //     }
-    //   }
-    // )
+    moveTaskMutation.mutate(
+      { taskId, data: taskData },
+      {
+        onSuccess: () => {
+          setIsEditTaskOpen(false)
+          setSelectedTask(null)
+        }
+      }
+    )
   }
 
-  const handleDeleteTask = (taskId: string) => {
-    deleteTaskMutation.mutate(taskId, {
-      onSuccess: () => {
-        setIsEditTaskOpen(false)
-        setSelectedTask(null)
-      }
-    })
-  }
+
 
   const handleTaskClick = (task: Task) => {
-    setSelectedTask(task)
     setIsEditTaskOpen(true)
+    setSelectedTask(task)
   }
 
   const activeTask = tasks.find((t) => t._id === activeId)
@@ -412,6 +406,7 @@ export function SprintBoardDnd({
 
       {canEditTasks && isEditTaskOpen && selectedTask && (
         <EditTaskModal
+          open={isEditTaskOpen}
           task={selectedTask}
           boardColumns={boardColumns}
           onClose={() => {
@@ -419,9 +414,9 @@ export function SprintBoardDnd({
             setSelectedTask(null)
           }}
           onSave={(taskData) => handleEditTask(selectedTask._id, taskData)}
-          onDelete={() => handleDeleteTask(selectedTask._id)}
         />
       )}
+
     </>
   )
 }

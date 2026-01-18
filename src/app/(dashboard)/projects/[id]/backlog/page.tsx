@@ -9,15 +9,16 @@ import { toast } from 'sonner';
 import { useAllProjects } from '@/lib/hooks/useProjects';
 import { useCurrentUser } from '@/lib/hooks/useAuth';
 import { mockSprints } from '@/lib/mock-data';
+import { useSprintsByProject } from '@/lib/hooks/useSprints';
 
 export default function BacklogPage() {
   const params = useParams();
   const router = useRouter();
   const projectId = params.id as string;
-  const [sprints, setSprints] = useState<Sprint[]>(mockSprints);
 
   const { data: allProjects } = useAllProjects();
   const { data: currentUser } = useCurrentUser();
+  const { data: sprints } = useSprintsByProject(projectId);
 
   const [isCreateSprintOpen, setIsCreateSprintOpen] = useState(false);
 
@@ -27,7 +28,7 @@ export default function BacklogPage() {
   }, [sprints]);
 
   const project = allProjects.find((p) => p._id === projectId);
-  const projectSprints = sprints.filter((s) => s.projectId === projectId);
+  const projectSprints = sprints?.filter((s) => s.projectId === projectId) || [];
 
   const handleCreateSprint = (sprintData: Partial<Sprint>) => {
 
@@ -58,7 +59,6 @@ export default function BacklogPage() {
       <BacklogView
         project={project}
         sprints={projectSprints}
-        currentUser={currentUser}
         onStartSprint={handleStartSprint}
         onCreateSprint={() => setIsCreateSprintOpen(true)}
       />
@@ -67,7 +67,6 @@ export default function BacklogPage() {
         projectId={projectId}
         open={isCreateSprintOpen}
         onOpenChange={setIsCreateSprintOpen}
-        onCreate={handleCreateSprint}
       />
     </>
   );

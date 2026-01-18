@@ -34,7 +34,7 @@ export function formatRelativeTime(timestamp: string): string {
   return date.toLocaleDateString();
 }
 
-export function getPriorityColor(priority: string): string {
+export function getPriorityColor(priority: string | undefined): string | undefined {
   switch (priority) {
     case 'critical':
       return 'bg-red-100 text-red-700 border-red-200';

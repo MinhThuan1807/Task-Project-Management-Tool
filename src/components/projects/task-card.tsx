@@ -1,3 +1,4 @@
+'use client'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { Task } from '@/lib/types'
@@ -20,15 +21,25 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger
 } from '../ui/dropdown-menu'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '../ui/alert-dialog';
 import { cn, formatDate, getPriorityColor } from '@/lib/utils'
+import { useState } from 'react'
+import { useDeleteTask } from '@/lib/hooks/useTasks'
 
 type TaskCardProps = {
   task: Task
   onClick?: () => void
   isDragging?: boolean
   onEdit?: (task: Task) => void
-  onDelete?: (taskId: string) => void
-  onMove?: (taskId: string) => void
   onDuplicate?: (task: Task) => void
   canEdit?: boolean // Add permission prop
 }
@@ -38,8 +49,6 @@ export function TaskCard({
   onClick,
   isDragging = false,
   onEdit,
-  onDelete,
-  onMove,
   onDuplicate,
   canEdit = true // Default to true for backward compatibility
 }: TaskCardProps) {
@@ -68,7 +77,19 @@ export function TaskCard({
   // Check if task is overdue
   const isOverdue = task.dueDate ? new Date(task.dueDate) < new Date() : false
 
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const deleteTaskMutation = useDeleteTask();
+
+   const handleDeleteTask = (taskId: string) => {
+    deleteTaskMutation.mutate(taskId, {
+      onSuccess: () => {
+        setShowDeleteDialog(false)
+      }
+    })
+  }
+
   return (
+    <>
     <Card
       ref={setNodeRef}
       style={style}
@@ -112,16 +133,13 @@ export function TaskCard({
                 <DropdownMenuItem onClick={() => onEdit?.(task)}>
                   Edit Task
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => onMove?.(task._id)}>
-                  Move to...
-                </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => onDuplicate?.(task)}>
                   Duplicate
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
                   className="text-red-600"
-                  onClick={() => onDelete?.(task._id)}
+                  onClick={() => setShowDeleteDialog(true)}
                 >
                   Delete Task
                 </DropdownMenuItem>
@@ -159,7 +177,7 @@ export function TaskCard({
               {task.storyPoint} SP
             </Badge>
           )}
-         {task.labels?.slice(0, 2).map((label) => (
+         {Array.isArray(task.labels) && task.labels.slice(0, 2).map((label) => (
             <Badge
               key={label}
               variant="outline"
@@ -241,5 +259,28 @@ export function TaskCard({
         </div>
       </CardContent>
     </Card>
+          {/* Delete Confirmation Dialog */}
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Task</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete &quot;{task.title}&quot;? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                handleDeleteTask(task._id);
+              }}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+  </>
   )
 }

@@ -36,6 +36,7 @@ import { useDispatch } from 'react-redux';
 import { openCreateModal } from '@/lib/features/project/projectSlice';
 import { useParams, useSearchParams } from 'next/dist/client/components/navigation';
 import { useRouter } from 'next/navigation';
+import { useSprintsByProject } from '@/lib/hooks/useSprints';
 
 
 
@@ -46,8 +47,16 @@ export function AppSidebar() {
   const { data: user } = useCurrentUser();
   const { ownedProjects, joinedProjects } = useAllProjects();
   const param = useParams();
-
   const selectedProjectId = param.id as string;
+
+  const { data: sprints } = useSprintsByProject(selectedProjectId);
+  const sprintActiveId = sprints?.find((s) => s.status === 'active')?._id;
+  let sprintLink  = () => {
+    if (sprintActiveId) {
+      return `sprint/${sprintActiveId}`;
+    }
+    return `backlog`;
+  }
   
   const isProjectSelected = (project: Project): boolean => {
     return selectedProjectId === project._id;
@@ -153,7 +162,7 @@ export function AppSidebar() {
                             </SidebarMenuSubItem>
                             <SidebarMenuSubItem>
                               <SidebarMenuSubButton asChild>
-                                <Link href={`/projects/${project._id}/sprint`}>
+                                <Link href={`/projects/${project._id}/${sprintLink()}`}>
                                   <FolderKanban className="w-4 h-4" />
                                   <span>Sprint Board</span>
                                 </Link>
@@ -222,9 +231,17 @@ export function AppSidebar() {
                                 </SidebarMenuSubItem>
                                 <SidebarMenuSubItem>
                                   <SidebarMenuSubButton asChild>
-                                    <Link href={`/projects/${project._id}/board`}>
+                                    <Link href={`/projects/${project._id}/${sprintLink()}`}>
                                       <FolderKanban className="w-4 h-4" />
                                       <span>Sprint Board</span>
+                                    </Link>
+                                  </SidebarMenuSubButton>
+                                </SidebarMenuSubItem>
+                                <SidebarMenuSubItem>
+                                  <SidebarMenuSubButton asChild>
+                                    <Link href={`/projects/${project._id}/report`}>
+                                      <BarChart2 className="w-4 h-4" />
+                                      <span>Reports</span>
                                     </Link>
                                   </SidebarMenuSubButton>
                                 </SidebarMenuSubItem>
@@ -247,7 +264,7 @@ export function AppSidebar() {
             <SidebarMenuItem>
               <SidebarMenuButton size="lg" tooltip={user?.displayName}>
                 <Avatar className="w-8 h-8">
-                  <AvatarImage src={user?.avatarUrl} />
+                  <AvatarImage src={user?.avatar} />
                   <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white">
                     {user?.displayName?.substring(0, 2).toUpperCase()}
                   </AvatarFallback>
