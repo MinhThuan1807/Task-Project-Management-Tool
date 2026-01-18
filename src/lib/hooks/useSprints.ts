@@ -66,12 +66,12 @@ export function useCreateSprint() {
       if (previousSprints) {
         queryClient.setQueryData<Sprint[]>(
           sprintKeys.byProject(newSprint.projectId),
-          [...previousSprints, { 
-            ...newSprint, 
+          [...previousSprints, {
+            ...newSprint,
             _id: 'temp-' + Date.now(),
             status: 'planned' as const,
             createdAt: Date.now(),
-          } as Sprint]
+          } as unknown as Sprint]
         );
       }
       return { previousSprints };
@@ -90,7 +90,6 @@ export function useCreateSprint() {
       queryClient.invalidateQueries({
         queryKey: sprintKeys.byProject(variables.projectId)
       });
-      toast.success('Sprint created successfully!');
     },
   });
 }
@@ -114,19 +113,17 @@ export function useUpdateSprint(sprintId: string) {
       }
       return { previousSprint };
     },
-    onError: (error, variables, context) => {
+    onError: (variables, context) => {
       if (context?.previousSprint) {
         queryClient.setQueryData(
           sprintKeys.detail(sprintId),
           context.previousSprint
         );
       }
-      toast.error(getErrorMessage(error) || 'Failed to update sprint');
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: sprintKeys.detail(sprintId) });
       queryClient.invalidateQueries({ queryKey: sprintKeys.all });
-      toast.success('Sprint updated successfully!');
     },
   });
 }
@@ -145,61 +142,3 @@ export function useDeleteSprint(sprintId: string) {
     },
   });
 }
-
-// // Hook lấy sprints theo projectId
-// export function useSprintsByProject(projectId: string) {
-//   return useQuery({
-//     queryKey: sprintKeys.byProject(projectId),
-//     queryFn: async () => {
-//       const res = await sprintApi.getAllByProjectId(projectId);
-//       return res.data || res;
-//     },
-//   });
-// }
-
-// // Hook lấy chi tiết sprint theo sprintId
-// export function useSprintDetail(sprintId: string) {
-//   return useQuery({
-//     queryKey: sprintKeys.detail(sprintId),
-//     queryFn: async () => {
-//       const res = await sprintApi.getById(sprintId);
-//       return res.data || res;
-//     },
-//   });
-// }
-
-// //Hook tạo sprint mới
-// export function useCreateSprint() {
-//   const queryClient = useQueryClient();
-//   return useMutation({
-//     mutationFn: sprintApi.create,
-//     onSuccess:() => {
-//       queryClient.invalidateQueries({ queryKey: sprintKeys.all });
-//     },
-//     onError: (error) => {
-//       toast.error(getErrorMessage(error) || 'Failed to create sprint');
-//     }
-//   })
-// }
-// // Hook cập nhật sprint
-// export function useUpdateSprint(sprintId: string) {
-//   const queryClient = useQueryClient();
-//   return useMutation({
-//     mutationFn: (data: UpdateSprintRequest) => sprintApi.update(sprintId, data),
-//     onSuccess: () => {
-//       queryClient.invalidateQueries({ queryKey: sprintKeys.detail(sprintId) });
-//       queryClient.invalidateQueries({ queryKey: sprintKeys.all });
-//     } 
-//   });
-// }
-
-// // Hook xóa sprint
-// export function useDeleteSprint(sprintId: string) {
-//   const queryClient = useQueryClient();
-//   return useMutation({
-//     mutationFn: () => sprintApi.delete(sprintId),
-//     onSuccess: () => {
-//       queryClient.invalidateQueries({ queryKey: sprintKeys.all });
-//     }
-//   });
-// }

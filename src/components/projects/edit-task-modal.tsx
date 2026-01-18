@@ -25,11 +25,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { X, Trash2, Clock } from 'lucide-react';
 import { formatDate } from '@/lib/utils';
-import { AssignToSprintModal } from './assign-to-sprint-modal';
 import { AssignToMemberModal } from './assign-to-member-modal';
-import { useSprintsByProject } from '@/lib/hooks/useSprints';
 import { useAllProjects } from '@/lib/hooks/useProjects';
 import { useParams } from 'next/navigation';
+
+import { useForm, Controller } from 'react-hook-form';
+import { z } from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
 
 type EditTaskModalProps = {
   open?: boolean;
@@ -40,10 +42,10 @@ type EditTaskModalProps = {
 };
 
 const priorityOptions = [
-  { value: 'low', label: 'Low', color: 'bg-gray-100 text-gray-700' },
-  { value: 'medium', label: 'Medium', color: 'bg-blue-100 text-blue-700' },
-  { value: 'high', label: 'High', color: 'bg-orange-100 text-orange-700' },
-  { value: 'critical', label: 'Critical', color: 'bg-red-100 text-red-700' },
+  { value: 'low', label: 'Low', color: 'bg-gray-500 text-gray-700' },
+  { value: 'medium', label: 'Medium', color: 'bg-blue-500 text-blue-700' },
+  { value: 'high', label: 'High', color: 'bg-orange-500 text-orange-700' },
+  { value: 'critical', label: 'Critical', color: 'bg-red-500 text-red-700' },
 ];
 
 // Mock comments
@@ -64,54 +66,91 @@ const mockComments = [
   },
 ];
 
+const schema = z.object({
+  title: z.string().min(1, 'Title is required'),
+  description: z.string().nullable().optional().default(''),
+  priority: z.enum(['low', 'medium', 'high', 'critical']).default('medium'),
+  boardColumnId: z.string().nullable().default(''),
+  storyPoint: z.number().min(0).default(0),
+  dueDate: z.preprocess((arg) => {
+    if (typeof arg === 'string' && arg !== '') {
+      const d = new Date(arg);
+      return isNaN(d.getTime()) ? undefined : d;
+    }
+    if (arg instanceof Date) return arg;
+    return undefined;
+  }, z.date().optional()),
+  labels: z.array(z.string()).default([]),
+});
+
+type FormValues = z.infer<typeof schema>;
+
 export function EditTaskModal({ open, task, boardColumns, onClose, onSave }: EditTaskModalProps) {
-  const [formData, setFormData] = useState({
-    title: task?.title,
-    description: task?.description || '',
-    priority: task?.priority || 'medium',
-    boardColumnId: task?.boardColumnId || '',
-    storyPoint: task?.storyPoint || 0,
-    dueDate: task?.dueDate || '',
-    labels: task?.labels || [],
-  });
   const [labelInput, setLabelInput] = useState('');
   const [commentInput, setCommentInput] = useState('');
-  const [selectedSprint, setSelectedSprint] = useState<string | null>(null);
-  const [isEditTaskOpen, setIsEditTaskOpen] = useState(false);
-  const [isAssignSprintOpen, setIsAssignSprintOpen] = useState(false);
   const [isAssignMemberOpen, setIsAssignMemberOpen] = useState(false);
-  // const { data: project } = useAllProjects();
   const param = useParams();
   const projectId = param?.id as string;
-  const { data: sprints } = useSprintsByProject(projectId);
 
   const { data: projects } = useAllProjects();
   const project = projects?.find((p) => p._id === projectId);
 
-  const handleAssignConfirm = (sprintId: string) => {
-    setSelectedSprint(sprintId);
-    setIsAssignSprintOpen(false);
-  }
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onSave(formData);
+  const formatDateForInput = (date?: Date | string | null) => {
+    if (!date) return '';
+    const d = typeof date === 'string' ? new Date(date) : date;
+    if (!(d instanceof Date) || isNaN(d.getTime())) return '';
+    return d.toISOString().slice(0, 10);
+  };
+
+  const {
+    control,
+    handleSubmit,
+    getValues,
+    setValue,
+    watch,
+    formState: { errors },
+  } = useForm<FormValues>({
+    resolver: zodResolver(schema),
+    defaultValues: {
+      title: task?.title ?? '',
+      description: task?.description ?? '',
+      priority: (task?.priority as FormValues['priority']) ?? 'medium',
+      boardColumnId: task?.boardColumnId ?? '',
+      storyPoint: task?.storyPoint ?? 0,
+      dueDate: task?.dueDate ? new Date(task.dueDate) : undefined,
+      labels: task?.labels ?? [],
+    },
+  });
+
+  const watchLabels = watch('labels');
+
+  const onSubmit = (data: FormValues) => {
+    // Ensure types align with Task partial
+    const payload: Partial<Task> = {
+      title: data.title,
+      description: data.description ?? '',
+      priority: data.priority,
+      boardColumnId: data.boardColumnId || '',
+      storyPoint: data.storyPoint,
+      dueDate: data.dueDate ? new Date(data.dueDate) : undefined,
+      labels: data.labels,
+    };
+    onSave(payload);
   };
 
   const handleAddLabel = () => {
-    if (labelInput.trim() && !formData.labels.includes(labelInput.trim())) {
-      setFormData({
-        ...formData,
-        labels: [...formData.labels, labelInput.trim()],
-      });
-      setLabelInput('');
+    const trimmed = labelInput.trim();
+    if (!trimmed) return;
+    const current = getValues('labels') || [];
+    if (!current.includes(trimmed)) {
+      setValue('labels', [...current, trimmed]);
     }
+    setLabelInput('');
   };
 
   const handleRemoveLabel = (label: string) => {
-    setFormData({
-      ...formData,
-      labels: formData.labels.filter((l) => l !== label),
-    });
+    const current = getValues('labels') || [];
+    setValue('labels', current.filter((l) => l !== label));
   };
 
   const getRelativeTime = (timestamp: string) => {
@@ -144,28 +183,30 @@ export function EditTaskModal({ open, task, boardColumns, onClose, onSave }: Edi
             </TabsList>
 
             <TabsContent value="details">
-              <form onSubmit={handleSubmit} className="space-y-6">
+              <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
                 {/* Title */}
                 <div className="space-y-2">
                   <Label htmlFor="title">
                     Task Title <span className="text-red-500">*</span>
                   </Label>
-                  <Input
-                    id="title"
-                    value={formData.title}
-                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                    required
+                  <Controller
+                    control={control}
+                    name="title"
+                    render={({ field }) => (
+                      <Input id="title" {...field} />
+                    )}
                   />
                 </div>
 
                 {/* Description */}
                 <div className="space-y-2">
                   <Label htmlFor="description">Description</Label>
-                  <Textarea
-                    id="description"
-                    value={formData.description}
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    rows={4}
+                  <Controller
+                    control={control}
+                    name="description"
+                    render={({ field }) => (
+                      <Textarea id="description" {...field} rows={4} />
+                    )}
                   />
                 </div>
 
@@ -173,39 +214,44 @@ export function EditTaskModal({ open, task, boardColumns, onClose, onSave }: Edi
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="priority">Priority</Label>
-                    <Select
-                      value={formData.priority}
-                      onValueChange={(value) =>
-                        setFormData({ ...formData, priority: value as Task['priority'] })
-                      }
-                    >
-                      <SelectTrigger id="priority">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {priorityOptions.map((option) => (
-                          <SelectItem key={option.value} value={option.value}>
-                            <div className="flex items-center gap-2">
-                              <div className={`w-2 h-2 rounded-full ${option.color}`} />
-                              {option.label}
-                            </div>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <Controller
+                      control={control}
+                      name="priority"
+                      render={({ field }) => (
+                        <Select value={field.value} onValueChange={field.onChange}>
+                          <SelectTrigger id="priority">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {priorityOptions.map((option) => (
+                              <SelectItem key={option.value} value={option.value}>
+                                <div className="flex items-center gap-2">
+                                  <div className={`w-2 h-2 rounded-full ${option.color}`} />
+                                  {option.label}
+                                </div>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      )}
+                    />
                   </div>
 
                   <div className="space-y-2">
                     <Label htmlFor="storyPoint">Story Points</Label>
-                    <Input
-                      id="storyPoint"
-                      type="number"
-                      min="0"
-                      max="100"
-                      value={formData.storyPoint}
-                      onChange={(e) =>
-                        setFormData({ ...formData, storyPoint: parseInt(e.target.value) || 0 })
-                      }
+                    <Controller
+                      control={control}
+                      name="storyPoint"
+                      render={({ field }) => (
+                        <Input
+                          id="storyPoint"
+                          type="number"
+                          min={0}
+                          max={100}
+                          value={field.value}
+                          onChange={(e) => field.onChange(parseInt(e.target.value || '0', 10))}
+                        />
+                      )}
                     />
                   </div>
                 </div>
@@ -214,30 +260,39 @@ export function EditTaskModal({ open, task, boardColumns, onClose, onSave }: Edi
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="column">Status</Label>
-                    <Select
-                      value={formData.boardColumnId}
-                      onValueChange={(value) => setFormData({ ...formData, boardColumnId: value })}
-                    >
-                      <SelectTrigger id="column">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {boardColumns?.map((column) => (
-                          <SelectItem key={column._id} value={column._id}>
-                            {column.title}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <Controller
+                      control={control}
+                      name="boardColumnId"
+                      render={({ field }) => (
+                        <Select value={field.value} onValueChange={field.onChange}>
+                          <SelectTrigger id="column">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {boardColumns?.map((column) => (
+                              <SelectItem key={column._id} value={column._id}>
+                                {column.title}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      )}
+                    />
                   </div>
 
                   <div className="space-y-2">
                     <Label htmlFor="dueDate">Due Date</Label>
-                    <Input
-                      id="dueDate"
-                      type="date"
-                      value={formData.dueDate}
-                      onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
+                    <Controller
+                      control={control}
+                      name="dueDate"
+                      render={({ field }) => (
+                        <Input
+                          id="dueDate"
+                          type="date"
+                          value={formatDateForInput(field.value)}
+                          onChange={(e) => field.onChange(e.target.value ? new Date(e.target.value) : undefined)}
+                        />
+                      )}
                     />
                   </div>
                 </div>
@@ -262,18 +317,18 @@ export function EditTaskModal({ open, task, boardColumns, onClose, onSave }: Edi
                       Add
                     </Button>
                   </div>
-                       {Array.isArray(formData.labels) && formData.labels.map((label) => (
-                          <Badge key={label} variant="outline" className="gap-1">
-                            {label}
-                            <button
-                              type="button"
-                              onClick={() => handleRemoveLabel(label)}
-                              className="ml-1 hover:bg-gray-200 rounded-full p-0.5"
-                            >
-                              <X className="w-3 h-3" />
-                            </button>
-                          </Badge>
-                       ))}              
+                  {Array.isArray(watchLabels) && watchLabels.map((label) => (
+                    <Badge key={label} variant="outline" className="gap-1">
+                      {label}
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveLabel(label)}
+                        className="ml-1 hover:bg-gray-200 rounded-full p-0.5"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </Badge>
+                  ))}
                 </div>
 
                 {/* Assignees */}
@@ -375,11 +430,11 @@ export function EditTaskModal({ open, task, boardColumns, onClose, onSave }: Edi
 
             <TabsContent value="activity">
               <div className="space-y-4">
-                {[
+                {([
                   { action: 'created this task', time: task?.createdAt },
                   { action: 'moved to In Progress', time: new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString() },
                   { action: 'changed priority to High', time: new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString() },
-                ].map((activity, index) => (
+                ]).map((activity, index) => (
                   <div key={index} className="flex gap-3">
                     <Avatar className="w-8 h-8">
                       <AvatarImage src="https://api.dicebear.com/7.x/avataaars/svg?seed=user" />

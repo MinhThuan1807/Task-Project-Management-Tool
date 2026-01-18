@@ -11,7 +11,7 @@ import { Checkbox } from '../ui/checkbox';
 import { Project } from '../../lib/types';
 import { useUpdateTask } from '@/lib/hooks/useTasks';
 import { toast } from 'sonner';
-import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from '../ui/select';
+import { Popover, PopoverTrigger, PopoverContent } from '../ui/popover';
 
 type AssignToMemberModalProps = {
   open: boolean;
@@ -111,81 +111,77 @@ export function AssignToMemberModal({
             </Badge>
           </div>
 
-          {/* Multi-select dropdown for members */}
+          {/* Multi-select using Popover (replaces Select to allow checkbox interaction) */}
           <div>
-            <Select>
-              <SelectTrigger className="w-full text-left">
-                <SelectValue placeholder={selectedDisplay} />
-              </SelectTrigger>
-              <SelectContent>
-                {/* Owner section */}
-                {owner && (
-                  <>
-                    <div className="px-2 py-1.5 text-xs text-gray-500 font-medium">Project Owner</div>
-                    <SelectItem
-                      value={owner.memberId}
-                      onClick={(e) => {
-                        e.preventDefault();
-                        handleToggleMember(owner.memberId);
-                      }}
-                      className={`flex items-center gap-3 p-2 ${selectedMemberIds.includes(owner.memberId) ? 'bg-blue-50' : ''}`}
-                    >
-                      <Checkbox
-                        checked={selectedMemberIds.includes(owner.memberId)}
-                        onCheckedChange={() => handleToggleMember(owner.memberId)}
-                        className="pointer-events-none"
-                      />
-                      <Avatar className="w-8 h-8">
-                        <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${owner.email}`} />
-                        <AvatarFallback className="bg-gradient-to-br from-yellow-500 to-orange-500 text-white">
-                          {owner.email.substring(0, 2).toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="flex-1 text-left">
-                        <p className="text-sm font-medium text-gray-900">{owner.email}</p>
-                        <Badge className={`${getRoleBadgeColor(owner.role)} text-xs mt-1`}>👑 {owner.role}</Badge>
-                      </div>
-                      {selectedMemberIds.includes(owner.memberId) && <CheckCircle2 className="w-4 h-4 text-blue-600" />}
-                    </SelectItem>
-                  </>
-                )}
-
-                {/* Team members */}
-                {otherMembers.length > 0 && (
-                  <>
-                    <div className="px-2 py-1.5 text-xs text-gray-500 font-medium mt-2">Team Members</div>
-                    {otherMembers.map(member => (
-                      <SelectItem
-                        key={member.memberId}
-                        value={member.memberId}
-                        onClick={(e) => {
-                          e.preventDefault();
-                          handleToggleMember(member.memberId);
-                        }}
-                        className={`flex items-center gap-3 p-2 ${selectedMemberIds.includes(member.memberId) ? 'bg-blue-50' : ''}`}
+            <Popover>
+              <PopoverTrigger asChild>
+                <button className="w-full text-left rounded-md border border-gray-200 px-3 py-2 bg-white flex items-center justify-between">
+                  <span className="text-sm text-gray-700">{selectedDisplay}</span>
+                  <span className="text-xs text-gray-400">▾</span>
+                </button>
+              </PopoverTrigger>
+              <PopoverContent className="w-full p-0">
+                <ScrollArea className="max-h-60">
+                  {/* Owner */}
+                  {owner && (
+                    <>
+                      <div className="px-2 py-1.5 text-xs text-gray-500 font-medium">Project Owner</div>
+                      <div
+                        key={owner.memberId}
+                        onClick={() => handleToggleMember(owner.memberId)}
+                        className={`flex items-center gap-3 p-2 cursor-pointer ${selectedMemberIds.includes(owner.memberId) ? 'bg-blue-50' : ''}`}
                       >
                         <Checkbox
-                          checked={selectedMemberIds.includes(member.memberId)}
-                          onCheckedChange={() => handleToggleMember(member.memberId)}
-                          className="pointer-events-none"
+                          checked={selectedMemberIds.includes(owner.memberId)}
+                          onCheckedChange={() => handleToggleMember(owner.memberId)}
                         />
                         <Avatar className="w-8 h-8">
-                          <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${member.email}`} />
-                          <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white">
-                            {member.email.substring(0, 2).toUpperCase()}
+                          <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${owner.email}`} />
+                          <AvatarFallback className="bg-gradient-to-br from-yellow-500 to-orange-500 text-white">
+                            {owner.email.substring(0, 2).toUpperCase()}
                           </AvatarFallback>
                         </Avatar>
                         <div className="flex-1 text-left">
-                          <p className="text-sm font-medium text-gray-900">{member.email}</p>
-                          <Badge className={`${getRoleBadgeColor(member.role)} text-xs mt-1`}>{member.role}</Badge>
+                          <p className="text-sm font-medium text-gray-900">{owner.email}</p>
+                          <Badge className={`${getRoleBadgeColor(owner.role)} text-xs mt-1`}>👑 {owner.role}</Badge>
                         </div>
-                        {selectedMemberIds.includes(member.memberId) && <CheckCircle2 className="w-4 h-4 text-blue-600" />}
-                      </SelectItem>
-                    ))}
-                  </>
-                )}
-              </SelectContent>
-            </Select>
+                        {selectedMemberIds.includes(owner.memberId) && <CheckCircle2 className="w-4 h-4 text-blue-600" />}
+                      </div>
+                    </>
+                  )}
+
+                  {/* Team members */}
+                  {otherMembers.length > 0 && (
+                    <>
+                      <div className="px-2 py-1.5 text-xs text-gray-500 font-medium mt-2">Team Members</div>
+                      {otherMembers.map(member => (
+                        <div
+                          key={member.memberId}
+                          onClick={() => handleToggleMember(member.memberId)}
+                          className={`flex items-center gap-3 p-2 cursor-pointer ${selectedMemberIds.includes(member.memberId) ? 'bg-blue-50' : ''}`}
+                        >
+                          <Checkbox
+                            checked={selectedMemberIds.includes(member.memberId)}
+                            onCheckedChange={() => handleToggleMember(member.memberId)}
+                          />
+                          <Avatar className="w-8 h-8">
+                            <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${member.email}`} />
+                            <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white">
+                              {member.email.substring(0, 2).toUpperCase()}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1 text-left">
+                            <p className="text-sm font-medium text-gray-900">{member.email}</p>
+                            <Badge className={`${getRoleBadgeColor(member.role)} text-xs mt-1`}>{member.role}</Badge>
+                          </div>
+                          {selectedMemberIds.includes(member.memberId) && <CheckCircle2 className="w-4 h-4 text-blue-600" />}
+                        </div>
+                      ))}
+                    </>
+                  )}
+                </ScrollArea>
+              </PopoverContent>
+            </Popover>
           </div>
 
           {selectedMemberIds.length > 0 && (
