@@ -77,8 +77,6 @@ export function SprintBoardDnd({
 
   // Mutations
   const moveTaskMutation = useMoveTask()
-  const updateTaskMutation = useUpdateTask(sprint._id)
-  const deleteTaskMutation = useDeleteTask()
 
   // Check user permission
   const currentMember = project.members.find(m => m.memberId === currentUser?._id);
@@ -185,8 +183,6 @@ export function SprintBoardDnd({
       }
     )
   }
-
-
 
   const handleTaskClick = (task: Task) => {
     setIsEditTaskOpen(true)

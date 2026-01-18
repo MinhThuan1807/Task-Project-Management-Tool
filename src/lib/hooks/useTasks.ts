@@ -152,10 +152,9 @@ export function useUpdateTask(taskId: string) {
       }
       toast.error(getErrorMessage(error) || 'Failed to update task');
     },
-    onSuccess: (data) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: taskKeys.detail(taskId) });
       queryClient.invalidateQueries({ queryKey: taskKeys.all });
-      toast.success('Task updated successfully!');
     },
   });
 }

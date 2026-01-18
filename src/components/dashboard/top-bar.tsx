@@ -22,7 +22,7 @@ export function TopBar() {
   const { data: allProjects, isLoading: projectsLoading } = useAllProjects();
   const selectedProjectId = param.get('projectId');
   const selectedProject = allProjects.find(
-    (p) => p.id === selectedProjectId || p._id === selectedProjectId
+    (p) => p._id === selectedProjectId || p._id === selectedProjectId
   );
   const getViewTitle = () => {
     switch (param.get('view')) {
@@ -101,7 +101,7 @@ export function TopBar() {
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="gap-2 h-auto py-2 px-3">
               <Avatar className="w-8 h-8">
-                <AvatarImage src={user?.avatarUrl} />
+                <AvatarImage src={user?.avatar} />
                 <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white">
                   {user?.displayName.substring(0, 2).toUpperCase()}
                 </AvatarFallback>

@@ -70,14 +70,6 @@ export function KanbanColumn({
           </SortableContext>
         </ScrollArea>
       </div>
-      
-        {/* <AssignToMemberModal
-          open={isAssignMemberOpen}
-          onOpenChange={setIsAssignMemberOpen}
-          taskId={task._id}
-          taskTitle={task.title}
-          currentAssignees={task.assigneeIds || []}
-        /> */}
     </div>
   );
 }

@@ -40,12 +40,12 @@ import {
 import { Input } from '../ui/input';
 import { cn, formatDate, getPriorityColor } from '../../lib/utils';
 import { CreateTaskModal } from './create-task-modal';
-import { useTasksBySprint } from '@/lib/hooks/useTasks';
+import { useMoveTask, useTasksBySprint } from '@/lib/hooks/useTasks';
 import { useSuspenseQuery } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { AssignToSprintModal } from './assign-to-sprint-modal';
 import { EditTaskModal } from './edit-task-modal';
 import { AssignToMemberModal } from './assign-to-member-modal';
+import { set } from 'zod';
 
 type BacklogViewProps = {
   project: Project;
@@ -69,12 +69,11 @@ export function BacklogView({
   const upcomingSprints = sprints.map((s) => s.status === 'planned' ? s : null).filter(Boolean) as Sprint[];
   const sprintIdUpcomming = sprints.filter((s) => s.status === 'planned').map((s) => s._id);
   
-  const { data: tasks, isLoading, isError } =  useTasksBySprint(upcomingSprints[0]?._id || '')
-  const [isAssignSprintOpen, setIsAssignSprintOpen] = useState(false);
-  const [isAssignMemberOpen, setIsAssignMemberOpen] = useState(false);
+  const { data: tasks, isError } =  useTasksBySprint(upcomingSprints[0]?._id || '')
   const [selectedTask, setSelectedTask] = useState<Task>();
   const [isEditTaskOpen, setIsEditTaskOpen] = useState(false);
 
+  const moveTaskMutation = useMoveTask();
 
   if (isError) {
     return (
@@ -91,36 +90,28 @@ export function BacklogView({
     task.title.toLowerCase().includes(searchQuery.toLowerCase())
   ) || [];
 
-  const handleCreateTask = (task: any) => {
-    console.log('Creating task:', task);
-    // TODO: Implement actual task creation
-  };
-
-  const handleEditTask = () => {
-    // setSelectedTask(task);
-    // setIsEditTaskOpen(true);
-  };
-
-  const handleAssignToSprint = () => {
-    // setSelectedTask(task);
-    // setIsAssignSprintOpen(true);
-  };
-
-  const handleDeleteTask = () => {
-    // setSelectedTask(task);
-    // setIsDeleteAlertOpen(true);
+  const handleDeleteTask = (task: Task) => {
+    setSelectedTask(task);
+    setIsDeleteAlertOpen(true);
   };
 
   const confirmDelete = () => {
     // TODO: Implement actual task deletion
-    // setIsDeleteAlertOpen(false);
-    // setSelectedTask(null);
+    setIsDeleteAlertOpen(false);
+    setSelectedTask(undefined);
   };
 
-  const handleAssignConfirm = (sprintId: string) => {
-    // TODO: Implement actual assignment
-  };
-
+   const handleEditTask = (taskId: string, taskData: Partial<Task>) => {
+    moveTaskMutation.mutate(
+      { taskId, data: taskData },
+      {
+        onSuccess: () => {
+          setIsEditTaskOpen(false)
+          setSelectedTask(undefined)
+        }
+      }
+    )
+  }
   return (
     <div className="h-full flex bg-gray-50">
       {/* Main Backlog Area */}
@@ -140,14 +131,18 @@ export function BacklogView({
               </Button>
               <Button 
                 onClick={() => {
-                  if(sprints.length === 0){
+                  if (sprints.length === 0){
                     toast.error('Please create a sprint first!')
                     setTimeout(() => {
                       onCreateSprint()
                     }, 300)
-                  }
-                  else
+                  } else if (sprintIdUpcomming.length === 0){
+                    toast.error('Please create a sprint in planning first!')
+                    onCreateSprint()
+                  } 
+                  else 
                     setIsCreateTaskOpen(true)
+
                 }}
                 className="bg-gradient-to-r from-blue-600 to-purple-600"
               >
@@ -184,15 +179,14 @@ export function BacklogView({
                   {!searchQuery && (
                     <Button  
                       onClick={() => {
-                        if(sprints.length === 0){
+                        if (sprints.length === 0){
                           toast.error('Please create a sprint first!')
                           setTimeout(() => {
                             onCreateSprint()
                           },300)
+                        } else setIsCreateTaskOpen(true)
                         }
-                        else
-                          setIsCreateTaskOpen(true)
-                      }}
+                      } 
                       className="bg-gradient-to-r from-blue-600 to-purple-600"
                     >
                       <Plus className="w-4 h-4 mr-2" />
@@ -203,7 +197,14 @@ export function BacklogView({
               </Card>
             ) : (
               filteredTasks?.map((task) => (
-                <Card key={task._id} className="border-0 shadow-md hover:shadow-lg transition-shadow group cursor-pointer">
+                <Card 
+                  key={task._id} className="border-0 shadow-md hover:shadow-lg transition-shadow group cursor-pointer"
+                  onClick={() => {
+                    setSelectedTask(task)
+                    setIsEditTaskOpen(true)
+                  }
+                  }
+                >
                   <CardContent className="p-4">
                     <div className="flex items-start gap-3">
                       <div className="mt-1 cursor-grab active:cursor-grabbing opacity-0 group-hover:opacity-100 transition-opacity">
@@ -213,7 +214,11 @@ export function BacklogView({
                         <div className="flex items-start justify-between gap-3 mb-2">
                           <h3 className="text-base text-gray-900 group-hover:text-blue-600 transition-colors">
                             {task.title}
-                            <Badge className={cn(getPriorityColor(task.priority), 'ml-2')}>{sprints.map((s) => s._id === task.sprintId ? s.name : "")}</Badge>
+                            <Badge 
+                              className={cn(getPriorityColor(task.priority), 'ml-2')}
+                            >
+                              {sprints.map((s) => s._id === task.sprintId ? s.name : "")}
+                            </Badge>
                           </h3>
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
@@ -223,11 +228,15 @@ export function BacklogView({
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
                               <DropdownMenuItem onClick={() => {
-                                setSelectedTask(task);
                                 setIsEditTaskOpen(true);
                               }}>Edit Task</DropdownMenuItem>
                               <DropdownMenuSeparator />
-                              <DropdownMenuItem className="text-red-600" onClick={() => handleDeleteTask(task)}>
+                              <DropdownMenuItem 
+                                className="text-red-600" 
+                                onClick={() =>{
+                                  handleDeleteTask(task)
+                                }}
+                              >
                                 Delete Task
                               </DropdownMenuItem>
                             </DropdownMenuContent>
@@ -390,12 +399,7 @@ export function BacklogView({
         sprintId={sprintIdUpcomming[0] || ''}
         projectId={project._id}
       />
-      <EditTaskModal
-        open={isEditTaskOpen}
-        onClose={() => setIsEditTaskOpen(false)}
-        task={selectedTask!}
-        onSave={() => setIsEditTaskOpen(false)}
-      />
+   
       {/* Delete Confirmation Alert */}
       <AlertDialog open={isDeleteAlertOpen} onOpenChange={setIsDeleteAlertOpen}>
         <AlertDialogContent>
@@ -419,15 +423,13 @@ export function BacklogView({
         </AlertDialogContent>
       </AlertDialog>
       {/* Assign to Member Modal */}
-      {selectedTask && (
-        <AssignToMemberModal
-          open={isAssignMemberOpen}
-          onOpenChange={setIsAssignMemberOpen}
-          taskId={selectedTask._id}
-          taskTitle={selectedTask.title}
-          project={project}
-          currentAssignees={selectedTask.assigneeIds || []}
-        />
+      {(selectedTask) && (
+        <EditTaskModal
+              open={isEditTaskOpen}
+              onClose={() => setIsEditTaskOpen(false)}
+              task={selectedTask!}
+              onSave={(taskData) => handleEditTask(selectedTask!._id, taskData)}
+          />
       )}         
     </div>
   );
