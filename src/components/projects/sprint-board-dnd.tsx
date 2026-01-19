@@ -35,14 +35,15 @@ import { TaskCard } from './task-card'
 import { SprintListView } from './sprint-list-view'
 import { SprintCalendarView } from './sprint-calendar-view'
 import { CreateTaskModal } from './create-task-modal'
-import { EditTaskModal } from './edit-task-modal'
 import { FilterSortPanel } from './filter-sort-panel'
 import { Input } from '../ui/input'
 import { useTasksBySprint } from '@/lib/hooks/useTasks'
 import { useBoardColumnsBySprint } from '@/lib/hooks/useBoardColumns'
-import { useMoveTask, useUpdateTask, useDeleteTask } from '@/lib/hooks/useTasks'
+import { useMoveTask } from '@/lib/hooks/useTasks'
 import { toast } from 'sonner'
 import { useCurrentUser } from '@/lib/hooks/useAuth'
+import { useUpdateSprint } from '@/lib/hooks/useSprints'
+import { useRouter } from 'next/navigation'
 
 type SprintBoardDndProps = {
   project: Project
@@ -60,14 +61,9 @@ export function SprintBoardDnd({
   )
   const [activeId, setActiveId] = useState<string | null>(null)
   const [isCreateTaskOpen, setIsCreateTaskOpen] = useState(false)
-  const [isEditTaskOpen, setIsEditTaskOpen] = useState(false)
   const [isFilterOpen, setIsFilterOpen] = useState(false)
-  const [selectedTask, setSelectedTask] = useState<Task | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
-  const [filters, setFilters] = useState({
-    priority: [] as string[],
-    assigneeIds: [] as string[]
-  })
+
 
   // Fetch data from API
   const { data: tasks = [], isLoading: tasksLoading } = useTasksBySprint(sprint._id)
@@ -75,9 +71,19 @@ export function SprintBoardDnd({
     useBoardColumnsBySprint(sprint._id)
   const { data: currentUser } = useCurrentUser();
 
+  // Filter state
+  const [filters, setFilters] = useState<{
+    priority: Task['priority'][]
+    assigneeIds: Task['assigneeIds'][]
+  }>({
+    priority: [],
+    assigneeIds: []
+  })
+
   // Mutations
   const moveTaskMutation = useMoveTask()
-
+  const updateSprintMutation = useUpdateSprint(sprint._id);
+  const router = useRouter();
   // Check user permission
   const currentMember = project.members.find(m => m.memberId === currentUser?._id);
   const canEditTasks = currentMember?.role === 'owner' || currentMember?.role === 'member';
@@ -171,22 +177,8 @@ export function SprintBoardDnd({
     }
   }
 
-  // Task handlers
-  const handleEditTask = (taskId: string, taskData: Partial<Task>) => {
-    moveTaskMutation.mutate(
-      { taskId, data: taskData },
-      {
-        onSuccess: () => {
-          setIsEditTaskOpen(false)
-          setSelectedTask(null)
-        }
-      }
-    )
-  }
-
-  const handleTaskClick = (task: Task) => {
-    setIsEditTaskOpen(true)
-    setSelectedTask(task)
+  const handleTaskClick = () => {
+    true
   }
 
   const activeTask = tasks.find((t) => t._id === activeId)
@@ -205,6 +197,17 @@ export function SprintBoardDnd({
         </div>
       </div>
     )
+  }
+
+  const handleUpdateStatusSprint = () => {
+    if (sprint.status === 'planned') {
+      updateSprintMutation.mutate({ status: 'active' });
+      toast.success('Sprint activated successfully!');
+      return;
+    }
+    updateSprintMutation.mutate({ status: 'completed' });
+    router.push(`/projects/${project._id}`);
+    toast.success('Sprint completed successfully!');
   }
 
   return (
@@ -231,22 +234,44 @@ export function SprintBoardDnd({
                 <p className="text-sm text-gray-600">{sprint.goal}</p>
               )}
             </div>
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => setIsFilterOpen(!isFilterOpen)}
-              >
-                <SlidersHorizontal className="w-4 h-4" />
+            <div className="flex items-center flex-col gap-2">
+             <div>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => setIsFilterOpen(!isFilterOpen)}
+                >
+                  <SlidersHorizontal className="w-4 h-4" />
+                </Button>
+                <Button
+                  onClick={() => setIsCreateTaskOpen(true)}
+                  className="ml-3 bg-gradient-to-r from-blue-600 to-purple-600"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Task
+                </Button>
+             </div>
+             <div>
+               <Button
+                  onClick={handleUpdateStatusSprint}
+                  className="bg-gradient-to-r"
+                  variant='outline'
+                >
+                {sprint.status === 'planned' ? (
+                  <>
+                    <CheckCircle2 className="w-4 h-4 mr-2" />
+                    Active Sprint
+                  </>
+                ): (
+                  <>
+                    <CheckCircle2 className="w-4 h-4 mr-2" />
+                    Complete Sprint
+                  </>
+                )}
+                
               </Button>
-              <Button
-                onClick={() => setIsCreateTaskOpen(true)}
-                className="bg-gradient-to-r from-blue-600 to-purple-600"
-                disabled={!isActiveSprint}
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Add Task
-              </Button>
+             </div>
+
             </div>
           </div>
 
@@ -320,13 +345,13 @@ export function SprintBoardDnd({
         </div>
 
         {/* Filter Panel */}
-        {/* {isFilterOpen && (
+        {isFilterOpen && (
           <FilterSortPanel
             filters={filters}
             onFiltersChange={setFilters}
             projectMembers={project.members}
           />
-        )} */}
+        )}
 
         {/* Board View */}
         {viewMode === 'board' && (
@@ -338,7 +363,7 @@ export function SprintBoardDnd({
               onDragOver={handleDragOver}
               onDragEnd={handleDragEnd}
             >
-              <div className="flex gap-4 h-full min-w-max">
+              <div className="flex gap-4 h-full min-w-max overflow-auto">
                 {boardColumns
                   .sort((a, b) => a.position - b.position)
                   .map((column) => {
@@ -353,8 +378,11 @@ export function SprintBoardDnd({
                           title: column.title,
                           color: getColumnColor(column.title)
                         }}
+                        boardColumn={column}
                         tasks={columnTasks}
                         onTaskClick={handleTaskClick}
+                        sprint={sprint}
+                        project={project}
                       />
                     )
                   })}
@@ -399,20 +427,6 @@ export function SprintBoardDnd({
           boardColumns={boardColumns}
         />
       )}
-
-      {canEditTasks && isEditTaskOpen && selectedTask && (
-        <EditTaskModal
-          open={isEditTaskOpen}
-          task={selectedTask}
-          boardColumns={boardColumns}
-          onClose={() => {
-            setIsEditTaskOpen(false)
-            setSelectedTask(null)
-          }}
-          onSave={(taskData) => handleEditTask(selectedTask._id, taskData)}
-        />
-      )}
-
     </>
   )
 }

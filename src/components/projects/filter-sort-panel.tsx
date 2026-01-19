@@ -4,14 +4,16 @@ import { Label } from '../ui/label';
 import { Separator } from '../ui/separator';
 import { Badge } from '../ui/badge';
 import { motion } from 'motion/react';
+import { ProjectMember, Task } from '@/lib/types';
 
 type FilterSortPanelProps = {
   filters: {
-    priority: string[];
-    assignees: string[];
-  };
-  onFiltersChange: (filters: { priority: string[]; assignees: string[] }) => void;
-  projectMembers: string[];
+    priority: Task['priority'][]
+    assigneeIds: Task['assigneeIds'][]
+  }
+
+  onFiltersChange: (filters: { priority: Task['priority'][]; assigneeIds: Task['assigneeIds'][] }) => void;
+  projectMembers: ProjectMember[];
 };
 
 const priorityOptions = [
@@ -21,12 +23,6 @@ const priorityOptions = [
   { value: 'low', label: 'Low', color: 'bg-gray-100 text-gray-700' },
 ];
 
-const mockMemberNames: Record<string, string> = {
-  'user-1': 'Alice Johnson',
-  'user-2': 'Bob Smith',
-  'user-3': 'Charlie Wilson',
-};
-
 export function FilterSortPanel({ filters, onFiltersChange, projectMembers }: FilterSortPanelProps) {
   const handlePriorityToggle = (priority: string) => {
     const newPriorities = filters.priority.includes(priority)
@@ -35,18 +31,18 @@ export function FilterSortPanel({ filters, onFiltersChange, projectMembers }: Fi
     onFiltersChange({ ...filters, priority: newPriorities });
   };
 
-  const handleAssigneeToggle = (assignee: string) => {
-    const newAssignees = filters.assignees.includes(assignee)
-      ? filters.assignees.filter((a) => a !== assignee)
-      : [...filters.assignees, assignee];
-    onFiltersChange({ ...filters, assignees: newAssignees });
+  const handleAssigneeToggle = (assignee: string[]) => {
+    const newAssignees = filters.assigneeIds.includes(assignee)
+      ? filters.assigneeIds.filter((a) => a !== assignee)
+      : [...filters.assigneeIds, assignee];
+    onFiltersChange({ ...filters, assigneeIds: newAssignees });
   };
 
   const handleClearAll = () => {
-    onFiltersChange({ priority: [], assignees: [] });
+    onFiltersChange({ priority: [], assigneeIds: [] });
   };
 
-  const activeFilterCount = filters.priority.length + filters.assignees.length;
+  const activeFilterCount = filters.priority.length + filters.assigneeIds.length;
 
   return (
     <motion.div
@@ -108,17 +104,17 @@ export function FilterSortPanel({ filters, onFiltersChange, projectMembers }: Fi
               <Label className="text-sm text-gray-700">Assignees</Label>
               <div className="space-y-2">
                 {projectMembers.slice(0, 4).map((member) => (
-                  <div key={member} className="flex items-center gap-2">
+                  <div key={member.memberId} className="flex items-center gap-2">
                     <Checkbox
-                      id={`assignee-${member}`}
-                      checked={filters.assignees.includes(member)}
-                      onCheckedChange={() => handleAssigneeToggle(member)}
+                      id={`assignee-${member.email}`}
+                      checked={filters.assigneeIds.includes(member.email)}
+                      onCheckedChange={() => handleAssigneeToggle(member.email)}
                     />
                     <Label
-                      htmlFor={`assignee-${member}`}
+                      htmlFor={`assignee-${member.email}`}
                       className="text-sm cursor-pointer"
                     >
-                      {mockMemberNames[member] || 'Team Member'}
+                      {member.email || 'Team Member'}
                     </Label>
                   </div>
                 ))}
@@ -144,7 +140,7 @@ export function FilterSortPanel({ filters, onFiltersChange, projectMembers }: Fi
                   onClick={() =>
                     onFiltersChange({
                       priority: [],
-                      assignees: projectMembers,
+                      assigneeIds: projectMembers.map(member => member.email),
                     })
                   }
                 >
@@ -156,7 +152,7 @@ export function FilterSortPanel({ filters, onFiltersChange, projectMembers }: Fi
                   onClick={() =>
                     onFiltersChange({
                       priority: [],
-                      assignees: [],
+                      assigneeIds: [],
                     })
                   }
                 >

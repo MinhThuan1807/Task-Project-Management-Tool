@@ -1,4 +1,4 @@
-import { Project, Sprint, User } from '../../lib/types'
+import { Sprint } from '../../lib/types'
 import {
   Card,
   CardContent,
@@ -8,7 +8,6 @@ import {
 } from '../ui/card'
 import { Button } from '../ui/button'
 import { Badge } from '../ui/badge'
-import { Progress } from '../ui/progress'
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs'
 import { useState, useMemo } from 'react'
@@ -20,7 +19,6 @@ import {
   MoreVertical,
   Edit,
   Trash2,
-  Settings,
   TrendingUp,
   AlertCircle,
   Plus,
@@ -39,14 +37,7 @@ import { InviteTeamModal, InvitationData } from './invite-team-modal'
 import { useCurrentUser } from '@/lib/hooks/useAuth'
 import { useAllProjects } from '@/lib/hooks/useProjects'
 import { useParams, useRouter } from 'next/navigation'
-
-interface ProjectMember {
-  memberId: string
-  email: string
-  role: 'owner' | 'member' | 'viewer'
-  status: 'active' | 'left'
-  joinAt: Date
-}
+import  SprintCard  from '@/app/(dashboard)/projects/[id]/sprint/components/SprintCard'
 
 type ProjectOverviewProps = {
   sprints: Sprint[]
@@ -59,10 +50,11 @@ export function ProjectOverview({
   onNavigateToBacklog,
   onEditProject
 }: ProjectOverviewProps) {
+  
   const { data: user } = useCurrentUser()
   const { data: allProjects, isLoading: projectsLoading } = useAllProjects()
+
   const params = useParams()
-  const router = useRouter()
 
   // Modal states
   const [isInviteTeamOpen, setIsInviteTeamOpen] = useState(false)
@@ -292,70 +284,9 @@ export function ProjectOverview({
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    {sprints.map((sprint) => {
-                      const isActive = new Date(sprint.endDate) > new Date()
-                      const progress = Math.random() * 100 // Mock progress
-
-                      return (
-                        <Card key={sprint._id} className="border shadow-sm">
-                          <CardContent className="pt-6">
-                            <div className="flex items-start justify-between mb-4">
-                              <div className="flex-1">
-                                <div className="flex items-center gap-2 mb-2">
-                                  <h3 className="text-lg text-gray-900">
-                                    {sprint.name}
-                                  </h3>
-                                  <Badge
-                                    variant={isActive ? 'default' : 'outline'}
-                                  >
-                                    {sprint.status ||
-                                      (isActive ? 'Active' : 'Completed')}
-                                  </Badge>
-                                </div>
-                                <p className="text-sm text-gray-600 mb-3">
-                                  {sprint.goal}
-                                </p>
-                                <div className="flex items-center gap-4 text-sm text-gray-500">
-                                  <div className="flex items-center gap-1">
-                                    <Calendar className="w-4 h-4" />
-                                    <span>
-                                      {formatDate(sprint.startDate)} -{' '}
-                                      {formatDate(sprint.endDate)}
-                                    </span>
-                                  </div>
-                                  <div className="flex items-center gap-1">
-                                    <TrendingUp className="w-4 h-4" />
-                                    <span>
-                                      {sprint.maxStoryPoint} story points
-                                    </span>
-                                  </div>
-                                </div>
-                              </div>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() =>
-                                  router.push(
-                                    `/projects/${projectId}/sprint/${sprint._id}`
-                                  )
-                                }
-                              >
-                                View Board
-                              </Button>
-                            </div>
-                            <div className="space-y-2">
-                              <div className="flex items-center justify-between text-sm">
-                                <span className="text-gray-600">Progress</span>
-                                <span className="text-gray-900">
-                                  {Math.round(progress)}%
-                                </span>
-                              </div>
-                              <Progress value={progress} />
-                            </div>
-                          </CardContent>
-                        </Card>
-                      )
-                    })}
+                  { sprints.map((sprint) => (
+                    <SprintCard key={sprint._id} sprint={sprint} projectId={projectId} />
+                  ))}
                   </div>
                 )}
               </CardContent>
