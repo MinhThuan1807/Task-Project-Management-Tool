@@ -33,22 +33,27 @@ import {
 } from '../ui/alert-dialog';
 import { cn, formatDate, getPriorityColor } from '@/lib/utils'
 import { useState } from 'react'
-import { useDeleteTask } from '@/lib/hooks/useTasks'
+import { useDeleteTask, useMoveTask, useUpdateTask } from '@/lib/hooks/useTasks'
+import { EditTaskModal } from './edit-task-modal'
+import { useParams } from 'next/navigation'
+import { set } from 'zod'
+import { toast } from 'sonner'
+import { CreateTaskModal } from './create-task-modal'
+import { Tooltip, TooltipTrigger } from '../ui/tooltip'
+import { TooltipContent } from '@radix-ui/react-tooltip'
 
 type TaskCardProps = {
   task: Task
-  onClick?: () => void
+  Click?: () => void
   isDragging?: boolean
-  onEdit?: (task: Task) => void
   onDuplicate?: (task: Task) => void
   canEdit?: boolean // Add permission prop
 }
 
 export function TaskCard({
   task,
-  onClick,
+  Click,
   isDragging = false,
-  onEdit,
   onDuplicate,
   canEdit = true // Default to true for backward compatibility
 }: TaskCardProps) {
@@ -76,14 +81,30 @@ export function TaskCard({
 
   // Check if task is overdue
   const isOverdue = task.dueDate ? new Date(task.dueDate) < new Date() : false
+  const param = useParams();
+  const sprintId = param.id as string;
 
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [isEditTaskOpen, setIsEditTaskOpen] = useState(false);
+  const [isSelectedTask, setIsSelectedTask] = useState<Task | null>(null);
   const deleteTaskMutation = useDeleteTask();
+  const updateTaskMutation = useMoveTask();
 
    const handleDeleteTask = (taskId: string) => {
     deleteTaskMutation.mutate(taskId, {
       onSuccess: () => {
         setShowDeleteDialog(false)
+      }
+    })
+  }
+
+  const handleEditTask = (taskId: string, taskData: Partial<Task>) => {
+    updateTaskMutation.mutate(
+      { taskId, data:taskData }, {
+      onSuccess: () => {
+        setIsEditTaskOpen(false)
+        setIsSelectedTask(null)
+        toast.success('Task updated successfully!');
       }
     })
   }
@@ -99,7 +120,10 @@ export function TaskCard({
         isOverdue && 'border-red-200 bg-red-50/30',
         !canEdit && 'opacity-75' // Visual indicator for read-only
       )}
-      onClick={onClick}
+      onClick={() => {
+        Click?.()
+        setIsSelectedTask(task)
+      }}
     >
       <CardContent className="p-4">
         {/* Header with drag handle */}
@@ -113,11 +137,10 @@ export function TaskCard({
               <GripVertical className="w-4 h-4 text-gray-400" />
             </div>
           )}
-
-          <h4 className="text-sm font-medium text-gray-900 flex-1 group-hover:text-blue-600 transition-colors line-clamp-2">
-            {task.title}
-          </h4>
-
+            <h4 className="text-sm font-medium text-gray-900 flex-1 group-hover:text-blue-600 transition-colors line-clamp-1">
+              {task.title}
+            </h4>
+    
           {canEdit && ( // Only show dropdown menu if can edit
             <DropdownMenu>
               <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
@@ -130,7 +153,9 @@ export function TaskCard({
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
-                <DropdownMenuItem onClick={() => onEdit?.(task)}>
+                <DropdownMenuItem onClick={() => 
+                  setIsEditTaskOpen(true)
+                }>
                   Edit Task
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => onDuplicate?.(task)}>
@@ -281,6 +306,20 @@ export function TaskCard({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      {/* Edit task modal */}
+      {(isSelectedTask || isEditTaskOpen) && (
+      <EditTaskModal
+                open={isEditTaskOpen || Boolean(Click)}
+                task={task}
+                // boardColumns={task?.boardColumnId}
+                onClose={() => {
+                  setIsEditTaskOpen(false)
+                  setIsSelectedTask(null)
+                }}
+                onSave={(taskData) => handleEditTask(task._id, taskData)}
+              />
+      )}
+ 
   </>
   )
 }

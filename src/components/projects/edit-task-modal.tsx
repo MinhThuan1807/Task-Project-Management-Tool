@@ -28,6 +28,7 @@ import { formatDate } from '@/lib/utils';
 import { AssignToMemberModal } from './assign-to-member-modal';
 import { useAllProjects } from '@/lib/hooks/useProjects';
 import { useParams } from 'next/navigation';
+import { useBoardColumnsBySprint } from '@/lib/hooks/useBoardColumns';
 
 import { useForm, Controller } from 'react-hook-form';
 import { z } from 'zod';
@@ -162,6 +163,9 @@ export function EditTaskModal({ open, task, boardColumns, onClose, onSave }: Edi
     return `${days}d ago`;
   };
 
+  const { data: fetchedColumns } = useBoardColumnsBySprint(task?.sprintId ?? '');
+  const columns = boardColumns ?? fetchedColumns ?? [];
+
   return (
     <>
       <Dialog open={open} onOpenChange={onClose}>
@@ -259,21 +263,25 @@ export function EditTaskModal({ open, task, boardColumns, onClose, onSave }: Edi
                 {/* Status & Due Date */}
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="column">Status</Label>
+                    <Label htmlFor="boardColumnId">Status</Label>
                     <Controller
                       control={control}
                       name="boardColumnId"
                       render={({ field }) => (
                         <Select value={field.value} onValueChange={field.onChange}>
-                          <SelectTrigger id="column">
+                          <SelectTrigger id="boardColumnId">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            {boardColumns?.map((column) => (
-                              <SelectItem key={column._id} value={column._id}>
-                                {column.title}
-                              </SelectItem>
-                            ))}
+                            {columns.length > 0 ? (
+                              columns.map((column) => (
+                                <SelectItem key={column._id} value={column._id}>
+                                  {column.title}
+                                </SelectItem>
+                              ))
+                            ) : (
+                              <SelectItem value="">{task?.boardColumnId ? 'Unknown column' : 'No columns'}</SelectItem>
+                            )}
                           </SelectContent>
                         </Select>
                       )}

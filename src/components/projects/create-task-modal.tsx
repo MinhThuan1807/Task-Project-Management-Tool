@@ -51,6 +51,7 @@ type CreateTaskModalProps = {
   projectId: string;
   sprintId: string;
   boardColumns?: BoardColumn[];
+  boardColumn?: BoardColumn;
 };
 
 export function CreateTaskModal({
@@ -59,13 +60,14 @@ export function CreateTaskModal({
   projectId,  
   sprintId,
   boardColumns,
+  boardColumn,
 }: CreateTaskModalProps) {
   const [labels, setLabels] = useState<string[]>([]);
   const [labelInput, setLabelInput] = useState('');
 
   // Get default column (first column or "To Do")
   const defaultColumn =
-    boardColumns?.find((col) => col.title.toLowerCase() === 'todo') ||
+    boardColumn || boardColumns?.find((col) => col.title.toLowerCase() === 'todo') ||
     boardColumns?.[0];
 
   const {
@@ -271,16 +273,22 @@ export function CreateTaskModal({
               disabled={createTaskMutation.isPending}
             >
               <SelectTrigger id="boardColumn">
-                <SelectValue placeholder="Select a column" />
+                <SelectValue placeholder="Select a column " />
               </SelectTrigger>
               <SelectContent>
-                {boardColumns?.
-                  sort((a, b) => a.position - b.position)
-                  .map((column) => (
-                    <SelectItem key={column._id} value={column._id}>
-                      {column.title}
+                {boardColumn ? (
+                  <SelectItem key={boardColumn._id} value={boardColumn._id}>
+                    {boardColumn.title}
+                  </SelectItem>
+                ) : (
+                  boardColumns?.
+                    sort((a, b) => a.position - b.position)
+                    .map((column) => (
+                      <SelectItem key={column._id} value={column._id}>
+                        {column.title}
                     </SelectItem>
-                  ))}
+                  ))
+                )}
               </SelectContent>
             </Select>
             {errors.boardColumnId && (

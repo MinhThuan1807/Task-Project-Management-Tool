@@ -31,7 +31,7 @@ export function SprintListView({ tasks, columns, onTaskClick }: SprintListViewPr
   const getAttachmentCount = () => Math.floor(Math.random() * 5);
 
   return (
-    <ScrollArea className="flex-1 p-6">
+    <ScrollArea className="flex-1 p-6 overflow-auto">
       <div className="max-w-6xl mx-auto space-y-3">
         {tasks.length === 0 ? (
           <Card className="border-0 shadow-lg">
@@ -92,7 +92,7 @@ export function SprintListView({ tasks, columns, onTaskClick }: SprintListViewPr
                       {/* Badges & Info */}
                       <div className="flex items-center gap-2 flex-wrap">
                         <Badge variant="outline" className="bg-gray-50">
-                          {columns.find((c) => c.id === task.columnId)?.title || task.columnId}
+                          {columns.find((c) => c.id === task.boardColumnId)?.title || task.boardColumnId}
                         </Badge>
                         <Badge className={getPriorityColor(task.priority)}>
                           {task.priority}
@@ -141,7 +141,7 @@ export function SprintListView({ tasks, columns, onTaskClick }: SprintListViewPr
 
                     {/* Assignees */}
                     <div className="flex -space-x-2 shrink-0">
-                      {task.assignees?.map((assignee) => (
+                      {task.assigneeIds?.map((assignee) => (
                         <Avatar key={assignee} className="w-8 h-8 border-2 border-white">
                           <AvatarImage
                             src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${assignee}`}
@@ -149,7 +149,7 @@ export function SprintListView({ tasks, columns, onTaskClick }: SprintListViewPr
                           <AvatarFallback>U</AvatarFallback>
                         </Avatar>
                       ))}
-                      {(!task.assignees || task.assignees.length === 0) && (
+                      {(!task.assigneeIds || task.assigneeIds.length === 0) && (
                         <Avatar className="w-8 h-8 border-2 border-white">
                           <AvatarFallback className="bg-gray-200">?</AvatarFallback>
                         </Avatar>
