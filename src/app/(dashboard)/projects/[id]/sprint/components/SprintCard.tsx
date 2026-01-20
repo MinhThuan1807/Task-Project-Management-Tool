@@ -1,3 +1,4 @@
+'use client';
 import { useTasksBySprint } from '@/lib/hooks/useTasks';
 import { useBoardColumnsBySprint } from '@/lib/hooks/useBoardColumns'
 import { Sprint } from '@/lib/types';

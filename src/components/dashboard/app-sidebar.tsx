@@ -263,18 +263,20 @@ export function AppSidebar() {
           <SidebarMenu>
             <SidebarMenuItem>
               <SidebarMenuButton size="lg" tooltip={user?.displayName}>
-                <Avatar className="w-8 h-8">
-                  <AvatarImage src={user?.avatar} />
-                  <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white">
-                    {user?.displayName?.substring(0, 2).toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="flex-1 text-left min-w-0">
-                  <p className="text-sm truncate">{user?.displayName}</p>
-                  <p className="text-xs text-sidebar-foreground/60 truncate">
-                    {user?.email}
-                  </p>
-                </div>
+                    <Link href={'/profile'} className="flex items-center gap-2 w-full">
+                      <Avatar className="w-8 h-8">
+                          <AvatarImage src={user?.avatar} />
+                          <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white">
+                            {user?.displayName?.substring(0, 2).toUpperCase()}
+                          </AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1 text-left min-w-0">
+                          <p className="text-sm truncate">{user?.displayName}</p>
+                          <p className="text-xs text-sidebar-foreground/60 truncate">
+                            {user?.email}
+                          </p>
+                       </div>
+                    </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>

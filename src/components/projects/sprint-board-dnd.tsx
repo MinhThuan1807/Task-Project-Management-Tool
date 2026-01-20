@@ -1,4 +1,9 @@
+'use client'
 import { useState } from 'react'
+import { useParams } from 'next/navigation'
+import { FolderKanban, Loader2 } from 'lucide-react'
+import { useAllProjects } from '@/lib/hooks/useProjects'
+import { useSprintsByProject } from '@/lib/hooks/useSprints'
 import {
   DndContext,
   DragOverlay,
@@ -45,17 +50,7 @@ import { useCurrentUser } from '@/lib/hooks/useAuth'
 import { useUpdateSprint } from '@/lib/hooks/useSprints'
 import { useRouter } from 'next/navigation'
 
-type SprintBoardDndProps = {
-  project: Project
-  sprint: Sprint
-  onBack: () => void
-}
-
-export function SprintBoardDnd({
-  project,
-  sprint,
-  onBack
-}: SprintBoardDndProps) {
+const SprintBoardDnd = () => {
   const [viewMode, setViewMode] = useState<'board' | 'list' | 'calendar'>(
     'board'
   )
@@ -64,11 +59,20 @@ export function SprintBoardDnd({
   const [isFilterOpen, setIsFilterOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
 
+  const params = useParams()
+  const router = useRouter()
+  const projectId = params.id as string
+  const sprintId = params.sprintId as string
+
+  const { data: allProjects = [] } = useAllProjects();
+  const { data: sprints = [] } = useSprintsByProject(projectId);
+
+  const project = allProjects.find((p) => p._id === projectId);
+  const sprint = sprints.find((s: Sprint) => s._id === sprintId);
 
   // Fetch data from API
-  const { data: tasks = [], isLoading: tasksLoading } = useTasksBySprint(sprint._id)
-  const { data: boardColumns = [], isLoading: columnsLoading } =
-    useBoardColumnsBySprint(sprint._id)
+  const { data: tasks = [], isLoading: tasksLoading } = useTasksBySprint(sprint?._id);
+  const { data: boardColumns = [], isLoading: columnsLoading } = useBoardColumnsBySprint(sprint?._id);
   const { data: currentUser } = useCurrentUser();
 
   // Filter state
@@ -82,10 +86,9 @@ export function SprintBoardDnd({
 
   // Mutations
   const moveTaskMutation = useMoveTask()
-  const updateSprintMutation = useUpdateSprint(sprint._id);
-  const router = useRouter();
+  const updateSprintMutation = useUpdateSprint(sprint?._id);
   // Check user permission
-  const currentMember = project.members.find(m => m.memberId === currentUser?._id);
+  const currentMember = project?.members.find(m => m.memberId === currentUser?._id);
   const canEditTasks = currentMember?.role === 'owner' || currentMember?.role === 'member';
 
   // Disable sensors if user doesn't have permission
@@ -123,7 +126,7 @@ export function SprintBoardDnd({
   const progress = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0
 
   const daysLeft = Math.ceil(
-    (new Date(sprint.endDate).getTime() - new Date().getTime()) /
+    (new Date(sprint?.endDate).getTime() - new Date().getTime()) /
       (1000 * 60 * 60 * 24)
   )
 
@@ -177,36 +180,39 @@ export function SprintBoardDnd({
     }
   }
 
-  const handleTaskClick = () => {
-    true
-  }
+  const handleTaskClick = () => { true }
 
   const activeTask = tasks.find((t) => t._id === activeId)
 
   // Check sprint status
-  const sprintStatus = sprint.status
+  const sprintStatus = sprint?.status
   const isActiveSprint = sprintStatus === 'active'
 
-  // Loading state
-  if (tasksLoading || columnsLoading) {
-    return (
-      <div className="h-full flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading sprint board...</p>
-        </div>
+ if (
+  tasksLoading ||
+  columnsLoading ||
+  !project ||
+  !sprint ||
+  !currentUser
+) {
+  return (
+    <div className="h-full flex items-center justify-center">
+      <div className="text-center">
+        <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+        <p className="text-gray-600">Loading sprint board...</p>
       </div>
-    )
-  }
+    </div>
+  );
+}
 
   const handleUpdateStatusSprint = () => {
-    if (sprint.status === 'planned') {
+    if (sprint?.status === 'planned') {
       updateSprintMutation.mutate({ status: 'active' });
       toast.success('Sprint activated successfully!');
       return;
     }
     updateSprintMutation.mutate({ status: 'completed' });
-    router.push(`/projects/${project._id}`);
+    router.push(`/projects/${projectId}`);
     toast.success('Sprint completed successfully!');
   }
 
@@ -216,22 +222,22 @@ export function SprintBoardDnd({
         {/* Header */}
         <div className="p-6 bg-white border-b border-gray-200 shadow-sm">
           <div className="flex items-center gap-4 mb-4">
-            <Button variant="ghost" size="icon" onClick={onBack}>
+            <Button variant="ghost" size="icon" onClick={() => router.push(`/projects/${projectId}/backlog`)}>
               <ArrowLeft className="w-5 h-5" />
             </Button>
             <div className="flex-1">
               <div className="flex items-center gap-3 mb-1">
-                <h2 className="text-2xl text-gray-900">{sprint.name}</h2>
+                <h2 className="text-2xl text-gray-900">{sprint?.name}</h2>
                 <Badge
                   variant={isActiveSprint ? 'default' : 'outline'}
                   className={isActiveSprint ? 'bg-green-600' : ''}
                 >
-                  {sprint.status.charAt(0).toUpperCase() +
-                    sprint.status.slice(1)}
+                  {sprint?.status.charAt(0).toUpperCase() +
+                    sprint?.status.slice(1)}
                 </Badge>
               </div>
-              {sprint.goal && (
-                <p className="text-sm text-gray-600">{sprint.goal}</p>
+              {sprint?.goal && (
+                <p className="text-sm text-gray-600">{sprint?.goal}</p>
               )}
             </div>
             <div className="flex items-center flex-col gap-2">
@@ -257,7 +263,7 @@ export function SprintBoardDnd({
                   className="bg-gradient-to-r"
                   variant='outline'
                 >
-                {sprint.status === 'planned' ? (
+                {sprint?.status === 'planned' ? (
                   <>
                     <CheckCircle2 className="w-4 h-4 mr-2" />
                     Active Sprint
@@ -291,7 +297,7 @@ export function SprintBoardDnd({
               <div className="flex items-center gap-2">
                 <Calendar className="w-4 h-4" />
                 <span>
-                  {formatDate(sprint.startDate)} - {formatDate(sprint.endDate)}
+                  {formatDate(sprint?.startDate)} - {formatDate(sprint?.endDate)}
                 </span>
               </div>
               <div className="flex items-center gap-2">
@@ -349,7 +355,7 @@ export function SprintBoardDnd({
           <FilterSortPanel
             filters={filters}
             onFiltersChange={setFilters}
-            projectMembers={project.members}
+            projectMembers={project?.members}
           />
         )}
 
@@ -380,7 +386,7 @@ export function SprintBoardDnd({
                         }}
                         boardColumn={column}
                         tasks={columnTasks}
-                        onTaskClick={handleTaskClick}
+                        onTaskClick={(handleTaskClick)}
                         sprint={sprint}
                         project={project}
                       />
@@ -430,6 +436,7 @@ export function SprintBoardDnd({
     </>
   )
 }
+export default SprintBoardDnd;
 
 // Helper function to get column color based on status
 function getColumnColor(status: string): string {

@@ -96,7 +96,6 @@ export function BacklogView({
   };
 
   const confirmDelete = () => {
-    // TODO: Implement actual task deletion
     setIsDeleteAlertOpen(false);
     setSelectedTask(undefined);
   };

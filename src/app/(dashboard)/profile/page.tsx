@@ -20,21 +20,19 @@ import {
   CheckCircle2,
   Users as UsersIcon,
 } from 'lucide-react';
+import { useCurrentUser } from '@/lib/hooks/useAuth';
 
 export default function ProfilePage() {
+  const { data: currentUser } = useCurrentUser();
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
-    displayName: 'John Doe',
+    displayName: currentUser?.displayName || 'John Doe',
     email: 'john.doe@example.com',
     phone: '+1 (555) 123-4567',
     location: 'San Francisco, CA',
     title: 'Product Manager',
     bio: 'Passionate about building great products and leading amazing teams. I love solving complex problems and creating user-centric solutions.',
   });
-
-  const currentUser = {
-    avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=John',
-  };
 
   const recentActivity = [
     {
@@ -80,7 +78,7 @@ export default function ProfilePage() {
                   {/* Avatar */}
                   <div className="relative group">
                     <Avatar className="w-32 h-32 ring-4 ring-blue-100">
-                      <AvatarImage src={currentUser.avatarUrl} />
+                      <AvatarImage src={currentUser?.avatar} />
                       <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-3xl">
                         {formData.displayName.substring(0, 2).toUpperCase()}
                       </AvatarFallback>
@@ -91,7 +89,7 @@ export default function ProfilePage() {
                   </div>
 
                   <h2 className="text-xl font-semibold text-gray-900 mt-4">
-                    {formData.displayName}
+                    {currentUser?.displayName}
                   </h2>
                   <p className="text-sm text-gray-600 mt-1">{formData.title}</p>
 
