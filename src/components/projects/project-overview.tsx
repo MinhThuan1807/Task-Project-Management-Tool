@@ -1,4 +1,5 @@
-import { Sprint } from '../../lib/types'
+'use client';
+
 import {
   Card,
   CardContent,
@@ -29,7 +30,6 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger
 } from '../ui/dropdown-menu'
 import { formatDate, getStatusColor } from '../../lib/utils'
@@ -38,29 +38,25 @@ import { useCurrentUser } from '@/lib/hooks/useAuth'
 import { useAllProjects } from '@/lib/hooks/useProjects'
 import { useParams, useRouter } from 'next/navigation'
 import  SprintCard  from '@/app/(dashboard)/projects/[id]/sprint/components/SprintCard'
-
-type ProjectOverviewProps = {
-  sprints: Sprint[]
-  onNavigateToBacklog: () => void
-  onEditProject: () => void
-}
-
-export function ProjectOverview({
-  sprints = [], // Default empty array
-  onNavigateToBacklog,
-  onEditProject
-}: ProjectOverviewProps) {
+import { useSprintsByProject } from '@/lib/hooks/useSprints'
+import { EditProjectModal } from '../EditProjectModal'
+import { CreateSprintModal } from '../CreateSprintModal'
+import { toast } from 'sonner'
+const ProjectOverview = () => {
   
   const { data: user } = useCurrentUser()
   const { data: allProjects, isLoading: projectsLoading } = useAllProjects()
-
   const params = useParams()
+  const projectId = params.id as string
+  const project = allProjects?.find((p) => p._id === projectId)
+  const { data: sprints } = useSprintsByProject(projectId);
+
+  const router = useRouter()
 
   // Modal states
   const [isInviteTeamOpen, setIsInviteTeamOpen] = useState(false)
-
-  const projectId = params.id as string
-  const project = allProjects?.find((p) => p._id === projectId)
+  const [isEditProjectOpen, setIsEditProjectOpen] = useState(false);
+  const [isCreateSprintOpen, setIsCreateSprintOpen] = useState(false);
 
   // Computed values với safe checks
   const { activeSprints, completedSprints, totalSprints, isOwner } =
@@ -89,7 +85,10 @@ export function ProjectOverview({
       </div>
     )
   }
-
+  const handleEditProject = (projectId: string, projectData: Partial<Project>) => {
+    // TODO: Implement với useMutation để update project qua API
+    toast.success('Project updated successfully');
+  };
   return (
     <div className="h-full overflow-auto bg-gradient-to-br from-gray-50 to-blue-50/30">
       <div className="p-8 max-w-7xl mx-auto space-y-6">
@@ -139,14 +138,9 @@ export function ProjectOverview({
             <DropdownMenuContent align="end">
               {isOwner && (
                 <>
-                  <DropdownMenuItem onClick={onEditProject}>
+                  <DropdownMenuItem onClick={() => setIsEditProjectOpen(true)}>
                     <Edit className="w-4 h-4 mr-2" />
                     Edit Details
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem className="text-red-600">
-                    <Trash2 className="w-4 h-4 mr-2" />
-                    Delete Project
                   </DropdownMenuItem>
                 </>
               )}
@@ -184,7 +178,7 @@ export function ProjectOverview({
             <CardContent>
               <div className="flex items-center justify-between">
                 <div className="text-3xl text-gray-900">
-                  {activeSprints.length}
+                  {activeSprints?.length}
                 </div>
                 <Clock className="w-8 h-8 text-orange-500" />
               </div>
@@ -197,7 +191,7 @@ export function ProjectOverview({
             </CardHeader>
             <CardContent>
               <div className="flex items-center justify-between">
-                <div className="text-3xl text-gray-900">{completedSprints.length}</div>
+                <div className="text-3xl text-gray-900">{completedSprints?.length}</div>
                 <CheckCircle2 className="w-8 h-8 text-green-500" />
               </div>
             </CardContent>
@@ -211,7 +205,7 @@ export function ProjectOverview({
               <div className="flex items-center justify-between">
                 <div className="text-3xl text-gray-900">
                   {totalSprints > 0
-                    ? Math.round((completedSprints.length / totalSprints) * 100)
+                    ? Math.round((completedSprints?.length / totalSprints) * 100)
                     : 0}
                   %
                 </div>
@@ -230,7 +224,7 @@ export function ProjectOverview({
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <Button
-                onClick={onNavigateToBacklog}
+                onClick={() => router.push(`/projects/${projectId}/backlog`)}
                 className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
               >
                 <CheckCircle2 className="w-4 h-4 mr-2" />
@@ -238,7 +232,7 @@ export function ProjectOverview({
               </Button>
               <Button
                 variant="outline"
-                onClick={onNavigateToBacklog}
+                onClick={() => router.push(`/projects/${projectId}/backlog`)}
               >
                 <Plus className="w-4 h-4 mr-2" />
                 Create New Sprint
@@ -278,7 +272,7 @@ export function ProjectOverview({
                     <p className="text-gray-600 mb-4">
                       Create your first sprint to get started
                     </p>
-                    <Button onClick={onNavigateToBacklog}>
+                    <Button onClick={() => router.push(`/projects/${projectId}/backlog`)}>
                       Go to Product Backlog
                     </Button>
                   </div>
@@ -436,6 +430,18 @@ export function ProjectOverview({
         onOpenChange={setIsInviteTeamOpen}
         projectId={project._id}
       />
+
+        <EditProjectModal
+              open={isEditProjectOpen}
+              onOpenChange={setIsEditProjectOpen}
+              onSave={handleEditProject}
+        />
+              <CreateSprintModal
+        projectId={projectId}
+        open={isCreateSprintOpen}
+        onOpenChange={setIsCreateSprintOpen}
+      />
     </div>
   )
 }
+export default ProjectOverview

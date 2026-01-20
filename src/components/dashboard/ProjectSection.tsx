@@ -1,3 +1,4 @@
+'use client';
 import { useDispatch } from 'react-redux';
 import { Plus } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,12 +9,10 @@ import { useAllProjects } from '@/lib/hooks/useProjects';
 import { Project } from '@/lib/types';
 import { ProjectCard } from '@/app/(dashboard)/projects/components/ProjectCard';
 import { openCreateModal } from '@/lib/features/project/projectSlice';
-import { useRouter } from 'next/navigation';
 
 function ProjectSection() {
   const [activeTab, setActiveTab] = useState('all');
   const { data: projects, ownedProjects, joinedProjects } = useAllProjects();
-  const router = useRouter();
   const dispatch = useDispatch();
 
   return (

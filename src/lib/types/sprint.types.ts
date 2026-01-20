@@ -21,8 +21,8 @@ export type CreateSprintRequest = {
   name: string;
   goal: string;
   maxStoryPoint?: number;
-  startDate: string;
-  endDate: string;
+  startDate: Date;
+  endDate: Date;
 };
 
 /**
@@ -32,8 +32,8 @@ export type UpdateSprintRequest = {
   name?: string;
   goal?: string;
   maxStoryPoint?: number;
-  startDate?: string;
-  endDate?: string;
+  startDate?: Date;
+  endDate?: Date;
   status?: 'planned' | 'active' | 'completed';
 };
 
@@ -60,8 +60,8 @@ export type SprintFormData = {
   name: string;
   goal: string;
   maxStoryPoint: number;
-  startDate: string;
-  endDate: string;
+  startDate: Date;
+  endDate: Date;
   status: 'planned' | 'active' | 'completed';
 };
 
@@ -71,8 +71,8 @@ export type SprintFormData = {
 export type SprintFilters = {
   projectId?: string;
   status?: 'planned' | 'active' | 'completed';
-  startDate?: string;
-  endDate?: string;
+  startDate?: Date;
+  endDate?: Date;
 };
 
 /**

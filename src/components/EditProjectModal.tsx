@@ -1,4 +1,5 @@
-import { useState } from 'react';
+'use client';
+import {  useState } from 'react';
 import { Upload, Trash2 } from 'lucide-react';
 import { Project } from '../lib/types';
 import {
@@ -25,34 +26,33 @@ import { Textarea } from './ui/textarea';
 import { Label } from './ui/label';
 import { Badge } from './ui/badge';
 import { useCurrentUser } from '@/lib/hooks/useAuth';
-import { useAllProjects } from '@/lib/hooks/useProjects';
-import { useParams } from 'next/navigation';
+import { useAllProjects, useDeleteProject } from '@/lib/hooks/useProjects';
+import { useParams, useRouter } from 'next/navigation';
 
 type EditProjectModalProps = {
-  // project: Project;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSave: (projectId: string, updates: Partial<Project>) => void;
-  onDelete: (projectId: string) => void;
-  // currentUserId: string;
 };
 
 export function EditProjectModal({  
   open, 
   onOpenChange, 
   onSave, 
-  onDelete,
 }: EditProjectModalProps) {
   const { data: user } = useCurrentUser();
   const { data: allProjects, isLoading: projectsLoading } = useAllProjects();
   const params = useParams();
   const projectId = params.id as string;
   const project = allProjects.find((p) => p._id === projectId);
-  const isOwner = project.ownerId === user?._id;
+  const isOwner = project?.ownerId === user?._id;
+  const router = useRouter();
 
-  const [name, setName] = useState(project.name);
-  const [description, setDescription] = useState(project.description || '');
-  const [status, setStatus] = useState<'active' | 'archived' | 'completed'>(project.status);
+  const deleteProject = useDeleteProject();
+
+  const [name, setName] = useState(project?.name);
+  const [description, setDescription] = useState(project?.description || '');
+  const [status, setStatus] = useState<'active' | 'archived' | 'completed'>(project?.status);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   
   const handleSubmit = (e: React.FormEvent) => {
@@ -66,9 +66,11 @@ export function EditProjectModal({
   };
 
   const handleDelete = () => {
-    // onDelete(project.id);
-    // setShowDeleteDialog(false);
-    // onOpenChange(false);
+    deleteProject.mutate(projectId, {
+      onSuccess: () => {
+        router.push('/dashboard');
+      }
+    });
   };
 
   const handleClose = () => {
@@ -162,7 +164,7 @@ export function EditProjectModal({
               <div className="space-y-2">
                 <Label>Project Image</Label>
                 <div className="flex items-center gap-4">
-                  {project.imageUrl && (
+                  {project?.imageUrl && (
                     <img
                       src={project.imageUrl}
                       alt={project.name}
@@ -184,12 +186,12 @@ export function EditProjectModal({
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-gray-600">Created:</span>
                   <span className="text-sm text-gray-900">
-                    {new Date(project.createdAt).toLocaleDateString()}
+                    {project?.createdAt}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-gray-600">Team Members:</span>
-                  <Badge variant="outline">{project.members.length} members</Badge>
+                  <Badge variant="outline">{project?.members.length} members</Badge>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-gray-600">Your Role:</span>
@@ -232,7 +234,7 @@ export function EditProjectModal({
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Project</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete "{project.name}"? This action cannot be undone and will permanently delete:
+              Are you sure you want to delete "{project?.name}"? This action cannot be undone and will permanently delete:
               <ul className="list-disc list-inside mt-2 space-y-1">
                 <li>All sprints and tasks</li>
                 <li>All chat messages</li>
