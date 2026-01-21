@@ -108,7 +108,7 @@ export function CreateSprintModal({
       endDate: new Date(data.startDate)
     }
 
-   console.log('📤 Sending payload:', payload);
+    console.log('📤 Sending payload:', payload)
     createSprintMutation.mutate(payload, {
       onSuccess: () => {
         toast.success('Sprint created successfully!')

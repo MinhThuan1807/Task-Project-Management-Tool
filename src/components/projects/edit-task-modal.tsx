@@ -27,20 +27,20 @@ import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { X, Trash2, Clock } from 'lucide-react';
 import { formatDate } from '@/lib/utils';
 import { AssignToMemberModal } from './assign-to-member-modal';
-import { useAllProjects } from '@/lib/hooks/useProjects';
+import { useAllProjects, useProjectDetail } from '@/lib/hooks/useProjects';
 import { useParams } from 'next/navigation';
 import { useBoardColumnsBySprint } from '@/lib/hooks/useBoardColumns';
 
 import { useForm, Controller } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useMoveTask } from '@/lib/hooks/useTasks';
 
 type EditTaskModalProps = {
   open?: boolean;
   task: Task;
   boardColumns?: BoardColumn[];
   onClose: () => void;
-  onSave: (taskData: Partial<Task>) => void;
 };
 
 const priorityOptions = [
@@ -92,15 +92,17 @@ const schema = z.object({
 
 type FormValues = z.infer<typeof schema>;
 
-export function EditTaskModal({ open, task, boardColumns, onClose, onSave }: EditTaskModalProps) {
+export function EditTaskModal({ open, task, boardColumns, onClose }: EditTaskModalProps) {
+
   const [labelInput, setLabelInput] = useState('');
   const [commentInput, setCommentInput] = useState('');
   const [isAssignMemberOpen, setIsAssignMemberOpen] = useState(false);
+
   const param = useParams();
   const projectId = param?.id as string;
+  const { data: project } = useProjectDetail(projectId);
 
-  const { data: projects } = useAllProjects();
-  const project = projects?.find((p) => p._id === projectId);
+  const moveTaskMutation = useMoveTask();
 
   const formatDateForInput = (date?: Date | string | null) => {
     if (!date) return '';
@@ -143,6 +145,9 @@ export function EditTaskModal({ open, task, boardColumns, onClose, onSave }: Edi
       labels: data.labels,
     };
     onSave(payload);
+    moveTaskMutation.mutate(
+      { taskId: task._id, data: payload },
+    )
   };
 
   const handleAddLabel = () => {
@@ -286,7 +291,9 @@ export function EditTaskModal({ open, task, boardColumns, onClose, onSave }: Edi
                                 </SelectItem>
                               ))
                             ) : (
-                              <SelectItem value="">{task?.boardColumnId ? 'Unknown column' : 'No columns'}</SelectItem>
+                              <SelectItem value={`${task.boardColumnId}`}>
+                                {task.title}
+                              </SelectItem>
                             )}
                           </SelectContent>
                         </Select>
