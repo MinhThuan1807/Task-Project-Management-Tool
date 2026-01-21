@@ -62,7 +62,7 @@ export default function InvitePage() {
           projectId,
         });
 
-        setProjectName(response.name || 'the project');
+        setProjectName(response.data.name || 'the project');
         setStatus('success');
         toast.success('Successfully joined the project!');
 

@@ -29,7 +29,7 @@ const reducers = combineReducers({
 // Process persist Reducer
 const persistedReducer = persistReducer(rootPersistConfig, reducers)
 
-export const store = () => configureStore({
+export const store = configureStore({
   reducer: persistedReducer,
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
@@ -40,10 +40,10 @@ export const store = () => configureStore({
   devTools: process.env.NODE_ENV !== 'production'
 })
 
-export const persistor = persistStore(store())
+export const persistor = persistStore(store)
 
-export type AppStore = ReturnType<typeof store>
+export type AppStore = typeof store
 export type RootState = ReturnType<AppStore['getState']>
 export type AppDispatch = AppStore['dispatch']
 
-export default store()
+export default store

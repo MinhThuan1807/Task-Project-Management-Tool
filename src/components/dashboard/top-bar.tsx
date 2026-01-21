@@ -1,5 +1,4 @@
-'use client';
-import { Bell, Search, Settings, User as UserIcon, LogOut } from 'lucide-react';
+import { Bell, Search, User as UserIcon, LogOut } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import {
@@ -10,49 +9,18 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '../ui/dropdown-menu';
-import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
-import { Badge } from '../ui/badge';
-import { useCurrentUser } from '@/lib/hooks/useAuth';
-import { useAllProjects } from '@/lib/hooks/useProjects';
-import { useSearchParams } from 'next/navigation';
+import { Suspense } from 'react';
+import { UserMenu } from './UserMenu';
+import TitleTopBar from './TitleTopBar';
 
 export function TopBar() {
-  const param = useSearchParams();
-  const { data: user } = useCurrentUser();
-  const { data: allProjects, isLoading: projectsLoading } = useAllProjects();
-  const selectedProjectId = param.get('projectId');
-  const selectedProject = allProjects.find(
-    (p) => p._id === selectedProjectId || p._id === selectedProjectId
-  );
-  const getViewTitle = () => {
-    switch (param.get('view')) {
-      case 'dashboard':
-        return 'Dashboard';
-      case 'chat':
-        return 'Chat';
-      case 'backlog':
-        return 'Product Backlog';
-      case 'sprint':
-        return 'Sprint Board';
-      case 'profile':
-        return 'Profile';
-      case 'security':
-        return 'Security';
-      default:
-        return selectedProject?.name || 'Sprintos';
-    }
-  };
+
   return (
     <div className="flex items-center gap-4 flex-1">
       {/* Title */}
-      <div className="flex items-center gap-3">
-        <h2 className="text-xl text-gray-900">{getViewTitle()}</h2>
-        {selectedProject && (
-          <Badge variant="outline" className="text-xs">
-            {selectedProject.status}
-          </Badge>
-        )}
-      </div>
+      <Suspense fallback={<div>Loading...</div>}>
+        <TitleTopBar />
+      </Suspense>
 
       {/* Search */}
       <div className="flex-1 max-w-md ml-auto">
@@ -97,37 +65,12 @@ export function TopBar() {
         </DropdownMenu>
 
         {/* User Menu */}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="gap-2 h-auto py-2 px-3">
-              <Avatar className="w-8 h-8">
-                <AvatarImage src={user?.avatar} />
-                <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white">
-                  {user?.displayName.substring(0, 2).toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
-              <span className="text-sm text-gray-700">{user?.displayName}</span>
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56">
-            <DropdownMenuLabel>My Account</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem>
-              <UserIcon className="w-4 h-4 mr-2" />
-              <span>Profile</span>
-            </DropdownMenuItem>
-            <DropdownMenuItem>
-              <Settings className="w-4 h-4 mr-2" />
-              <span>Settings</span>
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem className="text-red-600">
-              <LogOut className="w-4 h-4 mr-2" />
-              <span>Log out</span>
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <Suspense fallback={<div>Loading...</div>}>
+          <UserMenu />
+        </Suspense>
+
       </div>
     </div>
   );
 }
+

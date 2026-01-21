@@ -4,20 +4,24 @@ import { Plus } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useState } from 'react';
+import {  useState } from 'react';
 import { useAllProjects } from '@/lib/hooks/useProjects';
-import { Project } from '@/lib/types';
-import { ProjectCard } from '@/app/(dashboard)/projects/components/ProjectCard';
 import { openCreateModal } from '@/lib/features/project/projectSlice';
+import { useRouter } from 'next/navigation';
+import ProjectCardGrid from '../projects/ProjectCardGrid';
+
 
 function ProjectSection() {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState('all');
   const { data: projects, ownedProjects, joinedProjects } = useAllProjects();
   const dispatch = useDispatch();
-
-  return (
-    <div>
-              <Card className="border-0 shadow-lg mb-8">
+  const handleDirect = (projectId: string) => {
+    router.push(`/projects/${projectId}`);
+  }
+  return (  
+    <div> 
+      <Card className="border-0 shadow-lg mb-8">
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>
@@ -44,27 +48,15 @@ function ProjectSection() {
               </TabsList>
 
               <TabsContent value="all" className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {projects.map((project: Project) => (
-                    <ProjectCard key={project._id} project={project}/>
-                  ))}
-                </div>
+                <ProjectCardGrid projects={projects} handleDirect={handleDirect} />
               </TabsContent>
 
               <TabsContent value="my" className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {ownedProjects.map((project: Project) => (
-                    <ProjectCard key={project._id} project={project}/>
-                  ))}
-                </div>
+                <ProjectCardGrid projects={ownedProjects} handleDirect={handleDirect} />
               </TabsContent>
 
               <TabsContent value="participating" className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {joinedProjects.map((project: Project) => (
-                    <ProjectCard key={project._id} project={project}/>
-                  ))}
-                </div>
+                <ProjectCardGrid projects={joinedProjects} handleDirect={handleDirect} />
               </TabsContent>
             </Tabs>
           </CardContent>

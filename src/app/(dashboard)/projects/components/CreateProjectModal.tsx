@@ -31,6 +31,7 @@ import { toast } from 'sonner'
 import { useDispatch, useSelector } from 'react-redux'
 import { closeCreateModal } from '@/lib/features/project/projectSlice'
 import { RootState } from '@/lib/store'
+import Image from 'next/image'
 
 // Storage key for saved emails
 const SAVED_EMAILS_KEY = 'sprintos_invited_emails'
@@ -168,10 +169,18 @@ export function CreateProjectModal() {
   }
 
   const onSubmit = async (data: CreateProjectFormData) => {
+    //Only allow "member" and "viewer" roles in payload
+    const filteredMembers = invitedMembers
+      .filter((m) => m.role === 'member' || m.role === 'viewer')
+      .map((m) => ({
+        email: m.email,
+        role: m.role as 'member' | 'viewer',
+    }));
+
     const payload = {
       name: data.name,
       description: data.description,
-      members: invitedMembers.length > 0 ? invitedMembers : undefined,
+      members: filteredMembers.length > 0 ? filteredMembers : undefined,
       imageUrl: imageFile || undefined
     }
 
@@ -268,10 +277,12 @@ export function CreateProjectModal() {
               <div className="flex items-start gap-4">
                 {imagePreview ? (
                   <div className="relative">
-                    <img
+                    <Image
                       src={imagePreview}
                       alt="Project preview"
                       className="w-24 h-24 rounded-lg object-cover border border-gray-200"
+                      width={96}
+                      height={96}
                     />
                     <button
                       type="button"

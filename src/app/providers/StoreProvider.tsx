@@ -11,7 +11,7 @@ export default function StoreProvider({
   children: React.ReactNode
 }) {
   return (
-    <Provider store={store()}>
+    <Provider store={store}>
       <PersistGate
         loading={
           <div className="flex min-h-screen w-full items-center justify-center">

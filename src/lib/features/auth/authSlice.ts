@@ -12,7 +12,6 @@ interface User {
 }
 
 interface AuthState {
-  user: User | null
   isAuthenticated: boolean
   isLoading: boolean
   error: string | null
@@ -25,7 +24,6 @@ interface SignInFormData {
 }
 
 const initialState: AuthState = {
-  user: null,
   isAuthenticated: false,
   isLoading: false,
   error: null,

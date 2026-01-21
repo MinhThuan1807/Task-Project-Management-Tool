@@ -70,19 +70,24 @@ const mockComments = [
 
 const schema = z.object({
   title: z.string().min(1, 'Title is required'),
-  description: z.string().nullable().optional().default(''),
-  priority: z.enum(['low', 'medium', 'high', 'critical']).default('medium'),
-  boardColumnId: z.string().nullable().default(''),
-  storyPoint: z.number().min(0).default(0),
-  dueDate: z.preprocess((arg) => {
-    if (typeof arg === 'string' && arg !== '') {
-      const d = new Date(arg);
-      return isNaN(d.getTime()) ? undefined : d;
-    }
-    if (arg instanceof Date) return arg;
-    return undefined;
-  }, z.date().optional()),
-  labels: z.array(z.string()).default([]),
+  description: z.string().nullable(),
+  priority: z.enum(['low', 'medium', 'high', 'critical']),
+  boardColumnId: z.string().nullable(),
+  storyPoint: z.number().min(0),
+  dueDate: z
+    .preprocess(
+      (arg) => {
+        if (typeof arg === 'string' && arg !== '') {
+          const d = new Date(arg);
+          return isNaN(d.getTime()) ? undefined : d;
+        }
+        if (arg instanceof Date) return arg;
+        return undefined;
+      },
+      z.union([z.date(), z.undefined()])
+    )
+    .optional(),
+  labels: z.array(z.string()),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -117,7 +122,7 @@ export function EditTaskModal({ open, task, boardColumns, onClose, onSave }: Edi
       title: task?.title ?? '',
       description: task?.description ?? '',
       priority: (task?.priority as FormValues['priority']) ?? 'medium',
-      boardColumnId: task?.boardColumnId ?? '',
+      boardColumnId: task?.boardColumnId ?? null, 
       storyPoint: task?.storyPoint ?? 0,
       dueDate: task?.dueDate ? new Date(task.dueDate) : undefined,
       labels: task?.labels ?? [],
