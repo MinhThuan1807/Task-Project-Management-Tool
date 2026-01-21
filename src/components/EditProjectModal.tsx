@@ -1,15 +1,15 @@
-'use client';
-import {  useState } from 'react';
-import { Upload, Trash2 } from 'lucide-react';
-import { Project } from '../lib/types';
+'use client'
+import { useState } from 'react'
+import { Upload, Trash2 } from 'lucide-react'
+import { Project } from '../lib/types'
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
-  DialogTitle,
-} from './ui/dialog';
+  DialogTitle
+} from './ui/dialog'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -18,45 +18,45 @@ import {
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
-  AlertDialogTitle,
-} from './ui/alert-dialog';
-import { Button } from './ui/button';
-import { Input } from './ui/input';
-import { Textarea } from './ui/textarea';
-import { Label } from './ui/label';
-import { Badge } from './ui/badge';
-import { useCurrentUser } from '@/lib/hooks/useAuth';
-import { useAllProjects, useDeleteProject } from '@/lib/hooks/useProjects';
-import { useParams, useRouter } from 'next/navigation';
-import { formatDate } from '@/lib/utils';
-import Image from 'next/image';
+  AlertDialogTitle
+} from './ui/alert-dialog'
+import { Button } from './ui/button'
+import { Input } from './ui/input'
+import { Textarea } from './ui/textarea'
+import { Label } from './ui/label'
+import { Badge } from './ui/badge'
+import { useCurrentUser } from '@/lib/hooks/useAuth'
+import { useAllProjects, useDeleteProject } from '@/lib/hooks/useProjects'
+import { useParams, useRouter } from 'next/navigation'
+import { formatDate } from '@/lib/utils'
+import Image from 'next/image'
 
 type EditProjectModalProps = {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  onSave: (projectId: string, updates: Partial<Project>) => void;
-};
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  onSave: (projectId: string, updates: Partial<Project>) => void
+}
 
-export function EditProjectModal({  
-  open, 
-  onOpenChange, 
-  onSave, 
+export function EditProjectModal({
+  open,
+  onOpenChange,
+  onSave
 }: EditProjectModalProps) {
-  const { data: user } = useCurrentUser();
-  const { data: allProjects, isLoading: projectsLoading } = useAllProjects();
-  const params = useParams();
-  const projectId = params.id as string;
-  const project = allProjects.find((p) => p._id === projectId);
-  const isOwner = project?.ownerId === user?._id;
-  const router = useRouter();
+  const { data: user } = useCurrentUser()
+  const { data: allProjects, isLoading: projectsLoading } = useAllProjects()
+  const params = useParams()
+  const projectId = params.id as string
+  const project = allProjects.find((p) => p._id === projectId)
+  const isOwner = project?.ownerId === user?._id
+  const router = useRouter()
 
-  const deleteProject = useDeleteProject();
+  const deleteProject = useDeleteProject()
 
-  const [name, setName] = useState(project?.name || '');
-  const [description, setDescription] = useState(project?.description || '');
+  const [name, setName] = useState(project?.name || '')
+  const [description, setDescription] = useState(project?.description || '')
   // const [status, setStatus] = useState<'active' | 'archived' | 'completed'>(project?.status);
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+
   const handleSubmit = (e: React.FormEvent) => {
     // e.preventDefault();
     // onSave(project.id, {
@@ -65,15 +65,15 @@ export function EditProjectModal({
     //   status,
     // });
     // onOpenChange(false);
-  };
+  }
 
   const handleDelete = () => {
     deleteProject.mutate(projectId, {
       onSuccess: () => {
-        router.push('/dashboard');
+        router.push('/dashboard')
       }
-    });
-  };
+    })
+  }
 
   const handleClose = () => {
     // Reset form to original values when closing
@@ -81,7 +81,7 @@ export function EditProjectModal({
     // setDescription(project.description || '');
     // setStatus(project.status);
     // onOpenChange(false);
-  };
+  }
 
   return (
     <>
@@ -92,7 +92,9 @@ export function EditProjectModal({
               <div className="flex-1">
                 <DialogTitle>Edit Project</DialogTitle>
                 <DialogDescription>
-                  Update project details and settings. {!isOwner && 'You can only view this information as you are not the project owner.'}
+                  Update project details and settings.{' '}
+                  {!isOwner &&
+                    'You can only view this information as you are not the project owner.'}
                 </DialogDescription>
               </div>
               {isOwner && (
@@ -178,8 +180,12 @@ export function EditProjectModal({
                   <div className="flex-1">
                     <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-400 transition-colors cursor-pointer">
                       <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                      <p className="text-sm text-gray-600">Click to upload or drag and drop</p>
-                      <p className="text-xs text-gray-500 mt-1">PNG, JPG up to 10MB</p>
+                      <p className="text-sm text-gray-600">
+                        Click to upload or drag and drop
+                      </p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        PNG, JPG up to 10MB
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -195,11 +201,19 @@ export function EditProjectModal({
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-gray-600">Team Members:</span>
-                  <Badge variant="outline">{project?.members.length} members</Badge>
+                  <Badge variant="outline">
+                    {project?.members.length} members
+                  </Badge>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-gray-600">Your Role:</span>
-                  <Badge className={isOwner ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'}>
+                  <Badge
+                    className={
+                      isOwner
+                        ? 'bg-purple-100 text-purple-700'
+                        : 'bg-blue-100 text-blue-700'
+                    }
+                  >
                     {isOwner ? 'Owner (PM)' : 'Member'}
                   </Badge>
                 </div>
@@ -208,7 +222,8 @@ export function EditProjectModal({
               {!isOwner && (
                 <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
                   <p className="text-sm text-yellow-800">
-                    ℹ️ Only the project owner can edit project settings. Contact the project owner to make changes.
+                    ℹ️ Only the project owner can edit project settings. Contact
+                    the project owner to make changes.
                   </p>
                 </div>
               )}
@@ -219,9 +234,9 @@ export function EditProjectModal({
                 {isOwner ? 'Cancel' : 'Close'}
               </Button>
               {isOwner && (
-                <Button 
-                  type="submit" 
-                  disabled={!name.trim()} 
+                <Button
+                  type="submit"
+                  disabled={!name.trim()}
                   className="bg-gradient-to-r from-blue-600 to-purple-600"
                 >
                   Save Changes
@@ -238,7 +253,8 @@ export function EditProjectModal({
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Project</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete "{project?.name}"? This action cannot be undone and will permanently delete:
+              Are you sure you want to delete "{project?.name}"? This action
+              cannot be undone and will permanently delete:
               <ul className="list-disc list-inside mt-2 space-y-1">
                 <li>All sprints and tasks</li>
                 <li>All chat messages</li>
@@ -258,5 +274,5 @@ export function EditProjectModal({
         </AlertDialogContent>
       </AlertDialog>
     </>
-  );
+  )
 }
