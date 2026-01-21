@@ -104,8 +104,8 @@ export function CreateSprintModal({
       name: data.name,
       goal: data.goal || '',
       maxStoryPoint: data.maxStoryPoint,
-      startDate: data.startDate,
-      endDate: data.endDate
+      startDate: new Date(data.startDate),
+      endDate: new Date(data.startDate)
     }
 
    console.log('📤 Sending payload:', payload);

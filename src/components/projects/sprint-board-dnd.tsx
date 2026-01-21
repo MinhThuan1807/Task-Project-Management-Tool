@@ -63,7 +63,7 @@ const SprintBoardDnd = () => {
   const router = useRouter()
   const projectId = params.id as string
   const sprintId = params.sprintId as string
-
+  
   const { data: allProjects = [] } = useAllProjects();
   const { data: sprints = [] } = useSprintsByProject(projectId);
 

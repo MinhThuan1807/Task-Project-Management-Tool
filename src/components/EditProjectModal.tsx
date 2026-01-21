@@ -28,6 +28,8 @@ import { Badge } from './ui/badge';
 import { useCurrentUser } from '@/lib/hooks/useAuth';
 import { useAllProjects, useDeleteProject } from '@/lib/hooks/useProjects';
 import { useParams, useRouter } from 'next/navigation';
+import { formatDate } from '@/lib/utils';
+import Image from 'next/image';
 
 type EditProjectModalProps = {
   open: boolean;
@@ -50,9 +52,9 @@ export function EditProjectModal({
 
   const deleteProject = useDeleteProject();
 
-  const [name, setName] = useState(project?.name);
+  const [name, setName] = useState(project?.name || '');
   const [description, setDescription] = useState(project?.description || '');
-  const [status, setStatus] = useState<'active' | 'archived' | 'completed'>(project?.status);
+  // const [status, setStatus] = useState<'active' | 'archived' | 'completed'>(project?.status);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   
   const handleSubmit = (e: React.FormEvent) => {
@@ -116,7 +118,7 @@ export function EditProjectModal({
                 <Input
                   id="name"
                   type="text"
-                  value={name}
+                  value={name ?? ''}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="Enter project name"
                   required
@@ -141,7 +143,7 @@ export function EditProjectModal({
               <div className="space-y-2">
                 <Label htmlFor="status">Project Status</Label>
                 <div className="flex gap-2">
-                  {(['active', 'completed', 'archived'] as const).map((statusOption) => (
+                  {/* {(['active', 'completed', 'archived'] as const).map((statusOption) => (
                     <Button
                       key={statusOption}
                       type="button"
@@ -156,7 +158,7 @@ export function EditProjectModal({
                     >
                       {statusOption.charAt(0).toUpperCase() + statusOption.slice(1)}
                     </Button>
-                  ))}
+                  ))} */}
                 </div>
               </div>
 
@@ -165,10 +167,12 @@ export function EditProjectModal({
                 <Label>Project Image</Label>
                 <div className="flex items-center gap-4">
                   {project?.imageUrl && (
-                    <img
+                    <Image
                       src={project.imageUrl}
                       alt={project.name}
                       className="w-20 h-20 rounded-lg object-cover border border-gray-200"
+                      width={80}
+                      height={80}
                     />
                   )}
                   <div className="flex-1">
@@ -186,7 +190,7 @@ export function EditProjectModal({
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-gray-600">Created:</span>
                   <span className="text-sm text-gray-900">
-                    {project?.createdAt}
+                    {project?.createdAt ? formatDate(project.createdAt) : ''}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">

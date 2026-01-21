@@ -1,4 +1,3 @@
-'use client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -11,14 +10,13 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Project } from '@/lib/types';
-import { useRouter } from 'next/navigation';
 
 interface ProjectCardProps {
   project: Project;
+  handleDirect?: () => void;
 }
 
-export function ProjectCard({ project}: ProjectCardProps) {
-  const router = useRouter();
+const ProjectCard = ({ project, handleDirect }: ProjectCardProps) => {
 
   return (
     <Card className="hover:shadow-xl transition-all cursor-pointer group border-0 shadow-md hover:-translate-y-1">
@@ -89,7 +87,7 @@ export function ProjectCard({ project}: ProjectCardProps) {
             variant="ghost"
             size="sm"
             className="text-blue-600 hover:text-blue-700"
-            onClick={() => router.push(`/projects/${project._id}`)}
+            onClick={handleDirect}
           >
             View Details
             <ArrowUpRight className="w-4 h-4 ml-1" />
@@ -99,3 +97,4 @@ export function ProjectCard({ project}: ProjectCardProps) {
     </Card>
   );
 }
+export default ProjectCard;
