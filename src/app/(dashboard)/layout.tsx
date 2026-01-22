@@ -1,7 +1,8 @@
-import { AppSidebar } from '@/components/dashboard/app-sidebar';
-import { TopBar } from '@/components/dashboard/top-bar';
+
 import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
 import { Separator } from '@/components/ui/separator';
+import { AppSidebar } from '@/components/dashboard/AppSideBar';
+import TopBar from '@/components/dashboard/TopBar';
 
 export default function DashboardLayout({
   children,

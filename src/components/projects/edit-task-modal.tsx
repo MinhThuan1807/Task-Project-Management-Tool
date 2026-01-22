@@ -1,54 +1,55 @@
-'use client';
-import { useState } from 'react';
-import { Task, BoardColumn } from '@/lib/types';
+'use client'
+import { useState } from 'react'
+import { Task, BoardColumn, UpdateTaskRequest } from '@/lib/types'
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
-  DialogTitle,
-} from '../ui/dialog';
-import { Button } from '../ui/button';
-import { Input } from '../ui/input';
-import { Label } from '../ui/label';
-import { Textarea } from '../ui/textarea';
+  DialogTitle
+} from '../ui/dialog'
+import { Button } from '../ui/button'
+import { Input } from '../ui/input'
+import { Label } from '../ui/label'
+import { Textarea } from '../ui/textarea'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
-} from '../ui/select';
-import { Badge } from '../ui/badge';
-import { Separator } from '../ui/separator';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
-import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
-import { X, Trash2, Clock } from 'lucide-react';
-import { formatDate } from '@/lib/utils';
-import { AssignToMemberModal } from './assign-to-member-modal';
-import { useAllProjects, useProjectDetail } from '@/lib/hooks/useProjects';
-import { useParams } from 'next/navigation';
-import { useBoardColumnsBySprint } from '@/lib/hooks/useBoardColumns';
+  SelectValue
+} from '../ui/select'
+import { Badge } from '../ui/badge'
+import { Separator } from '../ui/separator'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs'
+import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar'
+import { X, Clock } from 'lucide-react'
+import { formatDate } from '@/lib/utils'
+import { AssignToMemberModal } from './assign-to-member-modal'
+import { useProjectDetail } from '@/lib/hooks/useProjects'
+import { useParams } from 'next/navigation'
+import { useBoardColumnsBySprint } from '@/lib/hooks/useBoardColumns'
 
-import { useForm, Controller } from 'react-hook-form';
-import { z } from 'zod';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useMoveTask } from '@/lib/hooks/useTasks';
+import { useForm, Controller } from 'react-hook-form'
+import { z } from 'zod'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { useMoveTask } from '@/lib/hooks/useTasks'
 
 type EditTaskModalProps = {
-  open?: boolean;
-  task: Task;
-  boardColumns?: BoardColumn[];
-  onClose: () => void;
-};
+  open?: boolean
+  task: Task
+  boardColumns?: BoardColumn[]
+  onClose: () => void
+  onSave?: (updatedTask: UpdateTaskRequest) => void
+}
 
 const priorityOptions = [
   { value: 'low', label: 'Low', color: 'bg-gray-500 text-gray-700' },
   { value: 'medium', label: 'Medium', color: 'bg-blue-500 text-blue-700' },
   { value: 'high', label: 'High', color: 'bg-orange-500 text-orange-700' },
-  { value: 'critical', label: 'Critical', color: 'bg-red-500 text-red-700' },
-];
+  { value: 'critical', label: 'Critical', color: 'bg-red-500 text-red-700' }
+]
 
 // Mock comments
 const mockComments = [
@@ -57,59 +58,68 @@ const mockComments = [
     userId: 'user-1',
     userName: 'Alice Johnson',
     content: 'This looks great! Can we add more test coverage?',
-    timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+    timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString()
   },
   {
     id: 'comment-2',
     userId: 'user-2',
     userName: 'Bob Smith',
-    content: 'I\'ve started working on this. Should be done by tomorrow.',
-    timestamp: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(),
-  },
-];
+    content: "I've started working on this. Should be done by tomorrow.",
+    timestamp: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString()
+  }
+]
 
-const schema = z.object({
-  title: z.string().min(1, 'Title is required'),
-  description: z.string().nullable(),
-  priority: z.enum(['low', 'medium', 'high', 'critical']),
-  boardColumnId: z.string().nullable(),
-  storyPoint: z.number().min(0),
+export const updateTaskSchema = z.object({
+  title: z.string().min(1).optional(),
+
+  description: z.string().optional(),
+
+  boardColumnId: z.string().optional(),
+
+  priority: z.enum(['low', 'medium', 'high', 'critical']).optional(),
+
+  storyPoint: z.number().min(0).optional(),
+
   dueDate: z
-    .preprocess(
-      (arg) => {
-        if (typeof arg === 'string' && arg !== '') {
-          const d = new Date(arg);
-          return isNaN(d.getTime()) ? undefined : d;
-        }
-        if (arg instanceof Date) return arg;
-        return undefined;
-      },
-      z.union([z.date(), z.undefined()])
-    )
+    .preprocess((arg) => {
+      if (!arg) return undefined
+      if (typeof arg === 'string') {
+        const d = new Date(arg)
+        return isNaN(d.getTime()) ? undefined : d
+      }
+      if (arg instanceof Date) return arg
+      return undefined
+    }, z.date())
     .optional(),
-  labels: z.array(z.string()),
-});
 
-type FormValues = z.infer<typeof schema>;
+  labels: z.array(z.string()).optional(),
 
-export function EditTaskModal({ open, task, boardColumns, onClose }: EditTaskModalProps) {
+  assigneeIds: z.array(z.string()).optional()
+})
 
-  const [labelInput, setLabelInput] = useState('');
-  const [commentInput, setCommentInput] = useState('');
-  const [isAssignMemberOpen, setIsAssignMemberOpen] = useState(false);
+type UpdateTaskForm = z.infer<typeof updateTaskSchema>
 
-  const param = useParams();
-  const projectId = param?.id as string;
-  const { data: project } = useProjectDetail(projectId);
+export function EditTaskModal({
+  open,
+  task,
+  boardColumns,
+  onClose,
+  onSave
+}: EditTaskModalProps) {
+  const [labelInput, setLabelInput] = useState('')
+  const [commentInput, setCommentInput] = useState('')
+  const [isAssignMemberOpen, setIsAssignMemberOpen] = useState(false)
 
-  const moveTaskMutation = useMoveTask();
+  const param = useParams()
+  const projectId = param?.id as string
+  const { data: project } = useProjectDetail(projectId)
 
   const formatDateForInput = (date?: Date | string | null) => {
-    if (!date) return '';
-    const d = typeof date === 'string' ? new Date(date) : date;
-    if (!(d instanceof Date) || isNaN(d.getTime())) return '';
-    return d.toISOString().slice(0, 10);
-  };
+    if (!date) return ''
+    const d = typeof date === 'string' ? new Date(date) : date
+    if (!(d instanceof Date) || isNaN(d.getTime())) return ''
+    return d.toISOString().slice(0, 10)
+  }
 
   const {
     control,
@@ -117,25 +127,25 @@ export function EditTaskModal({ open, task, boardColumns, onClose }: EditTaskMod
     getValues,
     setValue,
     watch,
-    formState: { errors },
-  } = useForm<FormValues>({
-    resolver: zodResolver(schema),
+    formState: { errors }
+  } = useForm<UpdateTaskForm>({
+    resolver: zodResolver(updateTaskSchema),
     defaultValues: {
-      title: task?.title ?? '',
-      description: task?.description ?? '',
-      priority: (task?.priority as FormValues['priority']) ?? 'medium',
-      boardColumnId: task?.boardColumnId ?? null, 
-      storyPoint: task?.storyPoint ?? 0,
+      title: task?.title,
+      description: task?.description,
+      priority: task?.priority as UpdateTaskForm['priority'],
+      boardColumnId: task?.boardColumnId,
+      storyPoint: task?.storyPoint,
       dueDate: task?.dueDate ? new Date(task.dueDate) : undefined,
-      labels: task?.labels ?? [],
-    },
-  });
+      labels: task?.labels,
+      assigneeIds: task?.assigneeIds
+    }
+  })
 
-  const watchLabels = watch('labels');
+  const watchLabels = watch('labels')
 
-  const onSubmit = (data: FormValues) => {
-    // Ensure types align with Task partial
-    const payload: Partial<Task> = {
+  const onSubmit = (data: UpdateTaskForm) => {
+    const payload: UpdateTaskRequest = {
       title: data.title,
       description: data.description ?? '',
       priority: data.priority,
@@ -143,39 +153,45 @@ export function EditTaskModal({ open, task, boardColumns, onClose }: EditTaskMod
       storyPoint: data.storyPoint,
       dueDate: data.dueDate ? new Date(data.dueDate) : undefined,
       labels: data.labels,
-    };
-    onSave(payload);
-    moveTaskMutation.mutate(
-      { taskId: task._id, data: payload },
-    )
-  };
+      assigneeIds: data.assigneeIds
+    }
+    if (onSave) {
+      onSave(payload)
+    }
+  }
 
   const handleAddLabel = () => {
-    const trimmed = labelInput.trim();
-    if (!trimmed) return;
-    const current = getValues('labels') || [];
+    const trimmed = labelInput.trim()
+    if (!trimmed) return
+    const current = getValues('labels') || []
     if (!current.includes(trimmed)) {
-      setValue('labels', [...current, trimmed]);
+      setValue('labels', [...current, trimmed])
     }
-    setLabelInput('');
-  };
+    setLabelInput('')
+  }
 
   const handleRemoveLabel = (label: string) => {
-    const current = getValues('labels') || [];
-    setValue('labels', current.filter((l) => l !== label));
-  };
+    const current = getValues('labels') || []
+    setValue(
+      'labels',
+      current.filter((l) => l !== label)
+    )
+  }
+   const handleAssigneesChange = (newAssigneeIds: string[]) => {
+    setValue('assigneeIds', newAssigneeIds)
+  }
 
   const getRelativeTime = (timestamp: string) => {
-    const diff = Date.now() - new Date(timestamp).getTime();
-    const hours = Math.floor(diff / (1000 * 60 * 60));
-    if (hours < 1) return 'Just now';
-    if (hours < 24) return `${hours}h ago`;
-    const days = Math.floor(hours / 24);
-    return `${days}d ago`;
-  };
+    const diff = Date.now() - new Date(timestamp).getTime()
+    const hours = Math.floor(diff / (1000 * 60 * 60))
+    if (hours < 1) return 'Just now'
+    if (hours < 24) return `${hours}h ago`
+    const days = Math.floor(hours / 24)
+    return `${days}d ago`
+  }
 
-  const { data: fetchedColumns } = useBoardColumnsBySprint(task?.sprintId ?? '');
-  const columns = boardColumns ?? fetchedColumns ?? [];
+  const { data: fetchedColumns } = useBoardColumnsBySprint(task?.sprintId ?? '')
+  const columns = boardColumns ?? fetchedColumns ?? []
 
   return (
     <>
@@ -185,7 +201,9 @@ export function EditTaskModal({ open, task, boardColumns, onClose }: EditTaskMod
             <div className="flex items-start justify-between">
               <div className="flex-1">
                 <DialogTitle>Edit Task</DialogTitle>
-                <DialogDescription>Update task details and track progress</DialogDescription>
+                <DialogDescription>
+                  Update task details and track progress
+                </DialogDescription>
               </div>
             </div>
           </DialogHeader>
@@ -193,7 +211,9 @@ export function EditTaskModal({ open, task, boardColumns, onClose }: EditTaskMod
           <Tabs defaultValue="details" className="space-y-4">
             <TabsList>
               <TabsTrigger value="details">Details</TabsTrigger>
-              <TabsTrigger value="comments">Comments ({mockComments.length})</TabsTrigger>
+              <TabsTrigger value="comments">
+                Comments ({mockComments.length})
+              </TabsTrigger>
               <TabsTrigger value="activity">Activity</TabsTrigger>
             </TabsList>
 
@@ -207,9 +227,7 @@ export function EditTaskModal({ open, task, boardColumns, onClose }: EditTaskMod
                   <Controller
                     control={control}
                     name="title"
-                    render={({ field }) => (
-                      <Input id="title" {...field} />
-                    )}
+                    render={({ field }) => <Input id="title" {...field} />}
                   />
                 </div>
 
@@ -233,15 +251,23 @@ export function EditTaskModal({ open, task, boardColumns, onClose }: EditTaskMod
                       control={control}
                       name="priority"
                       render={({ field }) => (
-                        <Select value={field.value} onValueChange={field.onChange}>
+                        <Select
+                          value={field.value}
+                          onValueChange={field.onChange}
+                        >
                           <SelectTrigger id="priority">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
                             {priorityOptions.map((option) => (
-                              <SelectItem key={option.value} value={option.value}>
+                              <SelectItem
+                                key={option.value}
+                                value={option.value}
+                              >
                                 <div className="flex items-center gap-2">
-                                  <div className={`w-2 h-2 rounded-full ${option.color}`} />
+                                  <div
+                                    className={`w-2 h-2 rounded-full ${option.color}`}
+                                  />
                                   {option.label}
                                 </div>
                               </SelectItem>
@@ -264,7 +290,9 @@ export function EditTaskModal({ open, task, boardColumns, onClose }: EditTaskMod
                           min={0}
                           max={100}
                           value={field.value}
-                          onChange={(e) => field.onChange(parseInt(e.target.value || '0', 10))}
+                          onChange={(e) =>
+                            field.onChange(parseInt(e.target.value || '0', 10))
+                          }
                         />
                       )}
                     />
@@ -279,7 +307,10 @@ export function EditTaskModal({ open, task, boardColumns, onClose }: EditTaskMod
                       control={control}
                       name="boardColumnId"
                       render={({ field }) => (
-                        <Select value={field.value} onValueChange={field.onChange}>
+                        <Select
+                          value={field.value}
+                          onValueChange={field.onChange}
+                        >
                           <SelectTrigger id="boardColumnId">
                             <SelectValue />
                           </SelectTrigger>
@@ -311,7 +342,13 @@ export function EditTaskModal({ open, task, boardColumns, onClose }: EditTaskMod
                           id="dueDate"
                           type="date"
                           value={formatDateForInput(field.value)}
-                          onChange={(e) => field.onChange(e.target.value ? new Date(e.target.value) : undefined)}
+                          onChange={(e) =>
+                            field.onChange(
+                              e.target.value
+                                ? new Date(e.target.value)
+                                : undefined
+                            )
+                          }
                         />
                       )}
                     />
@@ -328,28 +365,33 @@ export function EditTaskModal({ open, task, boardColumns, onClose }: EditTaskMod
                       onChange={(e) => setLabelInput(e.target.value)}
                       onKeyDown={(e) => {
                         if (e.key === 'Enter') {
-                          e.preventDefault();
-                          handleAddLabel();
+                          e.preventDefault()
+                          handleAddLabel()
                         }
                       }}
                       placeholder="Add label..."
                     />
-                    <Button type="button" variant="outline" onClick={handleAddLabel}>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={handleAddLabel}
+                    >
                       Add
                     </Button>
                   </div>
-                  {Array.isArray(watchLabels) && watchLabels.map((label) => (
-                    <Badge key={label} variant="outline" className="gap-1">
-                      {label}
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveLabel(label)}
-                        className="ml-1 hover:bg-gray-200 rounded-full p-0.5"
-                      >
-                        <X className="w-3 h-3" />
-                      </button>
-                    </Badge>
-                  ))}
+                  {Array.isArray(watchLabels) &&
+                    watchLabels.map((label) => (
+                      <Badge key={label} variant="outline" className="gap-1">
+                        {label}
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveLabel(label)}
+                          className="ml-1 hover:bg-gray-200 rounded-full p-0.5"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </Badge>
+                    ))}
                 </div>
 
                 {/* Assignees */}
@@ -357,19 +399,24 @@ export function EditTaskModal({ open, task, boardColumns, onClose }: EditTaskMod
                   <Label>Assignees</Label>
                   <div className="flex -space-x-2">
                     {task?.assigneeIds?.map((assigneeId) => (
-                      <Avatar key={assigneeId} className="w-8 h-8 border-2 border-white">
+                      <Avatar
+                        key={assigneeId}
+                        className="w-8 h-8 border-2 border-white"
+                      >
                         <AvatarImage
                           src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${assigneeId}`}
                         />
                         <AvatarFallback>U</AvatarFallback>
                       </Avatar>
                     ))}
-                    <Button 
-                      variant="outline" size="icon" className="w-8 h-8 rounded-full"
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="w-8 h-8 rounded-full"
                       onClick={(e) => {
-                        e.preventDefault();
-                        setIsAssignMemberOpen(true)}
-                      }
+                        e.preventDefault()
+                        setIsAssignMemberOpen(true)
+                      }}
                     >
                       +
                     </Button>
@@ -413,9 +460,9 @@ export function EditTaskModal({ open, task, boardColumns, onClose }: EditTaskMod
                     placeholder="Add a comment..."
                     onKeyDown={(e) => {
                       if (e.key === 'Enter' && !e.shiftKey) {
-                        e.preventDefault();
+                        e.preventDefault()
                         // Handle comment submission
-                        setCommentInput('');
+                        setCommentInput('')
                       }
                     }}
                   />
@@ -437,7 +484,9 @@ export function EditTaskModal({ open, task, boardColumns, onClose }: EditTaskMod
                     </Avatar>
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
-                        <span className="text-sm font-medium text-gray-900">{comment.userName}</span>
+                        <span className="text-sm font-medium text-gray-900">
+                          {comment.userName}
+                        </span>
                         <span className="text-xs text-gray-500">
                           {getRelativeTime(comment.timestamp)}
                         </span>
@@ -451,11 +500,21 @@ export function EditTaskModal({ open, task, boardColumns, onClose }: EditTaskMod
 
             <TabsContent value="activity">
               <div className="space-y-4">
-                {([
+                {[
                   { action: 'created this task', time: task?.createdAt },
-                  { action: 'moved to In Progress', time: new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString() },
-                  { action: 'changed priority to High', time: new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString() },
-                ]).map((activity, index) => (
+                  {
+                    action: 'moved to In Progress',
+                    time: new Date(
+                      Date.now() - 3 * 60 * 60 * 1000
+                    ).toISOString()
+                  },
+                  {
+                    action: 'changed priority to High',
+                    time: new Date(
+                      Date.now() - 6 * 60 * 60 * 1000
+                    ).toISOString()
+                  }
+                ].map((activity, index) => (
                   <div key={index} className="flex gap-3">
                     <Avatar className="w-8 h-8">
                       <AvatarImage src="https://api.dicebear.com/7.x/avataaars/svg?seed=user" />
@@ -463,9 +522,12 @@ export function EditTaskModal({ open, task, boardColumns, onClose }: EditTaskMod
                     </Avatar>
                     <div className="flex-1">
                       <p className="text-sm text-gray-900">
-                        <span className="font-medium">You</span> {activity.action}
+                        <span className="font-medium">You</span>{' '}
+                        {activity.action}
                       </p>
-                      <p className="text-xs text-gray-500">{getRelativeTime(activity.time)}</p>
+                      <p className="text-xs text-gray-500">
+                        {getRelativeTime(activity.time)}
+                      </p>
                     </div>
                   </div>
                 ))}
@@ -484,8 +546,9 @@ export function EditTaskModal({ open, task, boardColumns, onClose }: EditTaskMod
           taskTitle={task.title}
           project={project}
           currentAssignees={task.assigneeIds || []}
+          onChangeAssignees={handleAssigneesChange}
         />
       )}
     </>
-  );
+  )
 }

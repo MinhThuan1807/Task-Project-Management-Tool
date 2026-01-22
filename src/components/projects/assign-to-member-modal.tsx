@@ -20,6 +20,7 @@ type AssignToMemberModalProps = {
   taskTitle?: string;
   project: Project;
   currentAssignees?: string[];
+  onChangeAssignees?: (newAssigneeIds: string[]) => void;
 };
 
 export function AssignToMemberModal({
@@ -29,6 +30,7 @@ export function AssignToMemberModal({
   taskTitle,
   project,
   currentAssignees = [],
+  onChangeAssignees,
 }: AssignToMemberModalProps) {
   const [selectedMemberIds, setSelectedMemberIds] = useState<string[]>(currentAssignees);
 
@@ -56,6 +58,9 @@ export function AssignToMemberModal({
       });
       toast.success(`Task assigned to ${selectedMemberIds.length} member(s) successfully!`);
       onOpenChange(false);
+      if (onChangeAssignees) {
+        onChangeAssignees(selectedMemberIds);
+      }
     } catch (error) {
       console.error('Failed to assign task:', error);
     }
