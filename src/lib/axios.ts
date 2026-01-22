@@ -17,7 +17,7 @@ export const injectStore = (mainStore: any) => {
 }
 
 const axiosInstance: AxiosInstance = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/v1/',
+  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/v1',
   headers: { 'Content-Type': 'application/json' },
   withCredentials: true,
   timeout: 60000
@@ -26,7 +26,7 @@ const axiosInstance: AxiosInstance = axios.create({
 const refreshToken = async () => {
   const response = await axios.post(
     `${
-      process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/v1/'
+      process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/v1'
     }auth/refresh-token`,
     {},
     {
