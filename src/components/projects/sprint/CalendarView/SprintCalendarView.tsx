@@ -1,10 +1,8 @@
 import { useState } from 'react';
-import { Task, Sprint } from '../../lib/types';
-import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
-import { Button } from '../ui/button';
-import { Badge } from '../ui/badge';
+import { Task, Sprint } from '../../../../lib/types';
+import { Card, CardContent, CardHeader, CardTitle } from '../../../ui/card';
+import { Button } from '../../../ui/button';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { getPriorityColor } from '../../lib/utils';
 
 type SprintCalendarViewProps = {
   tasks: Task[];
@@ -40,10 +38,16 @@ export function SprintCalendarView({ tasks, sprint, onTaskClick }: SprintCalenda
   };
 
   const getTasksForDate = (date: Date | null) => {
-    if (!date) return [];
-    const dateStr = date.toISOString().split('T')[0];
-    return tasks.filter((task) => task.dueDate === dateStr);
-  };
+  if (!date) return [];
+  const dateStr = date.toISOString().split('T')[0];
+  return tasks.filter((task) => {
+    // Đảm bảo so sánh đúng định dạng
+    const taskDueDateStr = typeof task.dueDate === 'string'
+      ? task.dueDate.split('T')[0]
+      : new Date(task.dueDate).toISOString().split('T')[0];
+    return taskDueDateStr === dateStr;
+  });
+};
 
   const navigateMonth = (direction: 'prev' | 'next') => {
     setCurrentDate(
@@ -114,6 +118,7 @@ export function SprintCalendarView({ tasks, sprint, onTaskClick }: SprintCalenda
               const dayTasks = getTasksForDate(date);
               const today = isToday(date);
               const inSprint = isInSprint(date);
+              console.log('date', date, 'inSprint', inSprint, 'dayTasks', dayTasks);
 
               return (
                 <div
@@ -140,7 +145,7 @@ export function SprintCalendarView({ tasks, sprint, onTaskClick }: SprintCalenda
                       <div className="space-y-1">
                         {dayTasks.slice(0, 3).map((task) => (
                           <div
-                            key={task.id}
+                            key={task._id}
                             onClick={(e) => {
                               e.stopPropagation();
                               onTaskClick(task);
@@ -170,6 +175,7 @@ export function SprintCalendarView({ tasks, sprint, onTaskClick }: SprintCalenda
                             +{dayTasks.length - 3} more
                           </div>
                         )}
+                        
                       </div>
                     </>
                   )}

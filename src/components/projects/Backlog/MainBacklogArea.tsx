@@ -7,8 +7,8 @@ import { Input } from '@/components/ui/input'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import BacklogTaskList from './BacklogTaskList'
 import { toast } from 'sonner'
-import { CreateTaskModal } from '../create-task-modal'
-import { EditTaskModal } from '../edit-task-modal'
+import { CreateTaskModal } from '../../modal/CreateTaskModal'
+import { EditTaskModal } from '../../modal/EditTaskModal'
 import {
   AlertDialog,
   AlertDialogAction,

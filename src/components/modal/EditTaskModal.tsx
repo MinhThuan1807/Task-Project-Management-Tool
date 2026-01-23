@@ -26,7 +26,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs'
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar'
 import { X, Clock } from 'lucide-react'
 import { formatDate } from '@/lib/utils'
-import { AssignToMemberModal } from './assign-to-member-modal'
+import { AssignToMemberModal } from './AssignToMemberModal'
 import { useProjectDetail } from '@/lib/hooks/useProjects'
 import { useParams } from 'next/navigation'
 import { useBoardColumnsBySprint } from '@/lib/hooks/useBoardColumns'
@@ -121,26 +121,20 @@ export function EditTaskModal({
     return d.toISOString().slice(0, 10)
   }
 
-  const {
-    control,
-    handleSubmit,
-    getValues,
-    setValue,
-    watch,
-    formState: { errors }
-  } = useForm<UpdateTaskForm>({
-    resolver: zodResolver(updateTaskSchema),
-    defaultValues: {
-      title: task?.title,
-      description: task?.description,
-      priority: task?.priority as UpdateTaskForm['priority'],
-      boardColumnId: task?.boardColumnId,
-      storyPoint: task?.storyPoint,
-      dueDate: task?.dueDate ? new Date(task.dueDate) : undefined,
-      labels: task?.labels,
-      assigneeIds: task?.assigneeIds
-    }
-  })
+  const { control, handleSubmit, getValues, setValue, watch } =
+    useForm<UpdateTaskForm>({
+      resolver: zodResolver(updateTaskSchema),
+      defaultValues: {
+        title: task?.title,
+        description: task?.description,
+        priority: task?.priority as UpdateTaskForm['priority'],
+        boardColumnId: task?.boardColumnId,
+        storyPoint: task?.storyPoint,
+        dueDate: task?.dueDate ? new Date(task.dueDate) : undefined,
+        labels: task?.labels,
+        assigneeIds: task?.assigneeIds
+      }
+    })
 
   const watchLabels = watch('labels')
 
@@ -177,7 +171,7 @@ export function EditTaskModal({
       current.filter((l) => l !== label)
     )
   }
-   const handleAssigneesChange = (newAssigneeIds: string[]) => {
+  const handleAssigneesChange = (newAssigneeIds: string[]) => {
     setValue('assigneeIds', newAssigneeIds)
   }
 
@@ -277,7 +271,7 @@ export function EditTaskModal({
                       )}
                     />
                   </div>
-
+                  {/* Story Points */}
                   <div className="space-y-2">
                     <Label htmlFor="storyPoint">Story Points</Label>
                     <Controller
@@ -331,7 +325,7 @@ export function EditTaskModal({
                       )}
                     />
                   </div>
-
+                  {/* Due Date */}
                   <div className="space-y-2">
                     <Label htmlFor="dueDate">Due Date</Label>
                     <Controller

@@ -88,3 +88,21 @@ export function getErrorMessage(error: any): string {
   // Default message
   return 'An unexpected error occurred';
 }
+
+export function getColumnColor(status: string): string {
+  switch (status.toLowerCase()) {
+    case 'backlog':
+      return 'bg-gray-100'
+    case 'todo':
+      return 'bg-blue-100'
+    case 'in_process':
+    case 'in-progress':
+      return 'bg-yellow-100'
+    case 'review':
+      return 'bg-purple-100'
+    case 'done':
+      return 'bg-green-100'
+    default:
+      return 'bg-gray-100'
+  }
+}

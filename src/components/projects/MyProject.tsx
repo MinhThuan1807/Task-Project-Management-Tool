@@ -1,11 +1,11 @@
 'use client'
-import { Button } from './ui/button'
+import { Button } from '../ui/button'
 import {
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
   SidebarMenu
-} from './ui/sidebar'
+} from '../ui/sidebar'
 import { useDispatch } from 'react-redux'
 import { openCreateModal } from '@/lib/features/project/projectSlice'
 import { Plus } from 'lucide-react'
@@ -14,8 +14,8 @@ import { Project } from '@/lib/types'
 import { useParams, useRouter } from 'next/navigation'
 import { useSprintsByProject } from '@/lib/hooks/useSprints'
 import { Suspense } from 'react'
-import ProjectCollap from './projects/ProjectCollap'
-import ProjectCollapSkeleton from './projects/ProjectCollapSkeleton'
+import ProjectCollap from './ProjectCollap'
+import ProjectCollapSkeleton from './ProjectCollapSkeleton'
 
 function MyProject() {
   const dispatch = useDispatch()

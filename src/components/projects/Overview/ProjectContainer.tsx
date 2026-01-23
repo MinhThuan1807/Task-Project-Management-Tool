@@ -9,7 +9,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { useState, useMemo } from 'react'
 import { CheckCircle2, AlertCircle, Plus, UserPlus } from 'lucide-react'
-import { InviteTeamModal } from '@/components/projects/invite-team-modal'
+import { InviteTeamModal } from '@/components/modal/InviteTeamModal'
 import { useRouter } from 'next/navigation'
 import { EditProjectModal } from '@/components/EditProjectModal'
 import { toast } from 'sonner'

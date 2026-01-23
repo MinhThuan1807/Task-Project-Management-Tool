@@ -3,15 +3,18 @@ import type { NextRequest } from 'next/server';
 
 export function middleware(request: NextRequest) {
   const token = request.cookies.get('accessToken')?.value;
+  const pathname = request.nextUrl.pathname;
 
-  // If logged in and trying to access "/", redirect to "/dashboard"
-  if (request.nextUrl.pathname === '/' && token) {
+  const publicPaths = ['/', '/login', '/register'];
+
+  const isPublic = publicPaths.some(path => pathname === path || pathname.startsWith(path + '/'));
+
+  // Logged in user không vào login/register
+  if (token && (pathname === '/' || pathname === '/login' || pathname === '/register')) {
     return NextResponse.redirect(new URL('/dashboard', request.url));
   }
 
-  // If not logged in, block access to main pages (except /login, /register, /)
-  const publicPaths = ['/', '/login', '/register', '/api', '/_next', '/favicon.ico'];
-  const isPublic = publicPaths.some((path) => request.nextUrl.pathname.startsWith(path));
+  // Chưa login mà vào private route
   if (!token && !isPublic) {
     return NextResponse.redirect(new URL('/login', request.url));
   }
@@ -21,5 +24,11 @@ export function middleware(request: NextRequest) {
 
 // Adjust the matcher as needed to include/exclude specific paths
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico|api).*)'],
+  matcher: [
+    '/((?!_next/static|_next/image|favicon.ico|api).*)',
+    '/dashboard/:path*',
+    '/chat/:path*',
+    '/report/:path*',
+    '/project/:path*',
+  ],
 };
