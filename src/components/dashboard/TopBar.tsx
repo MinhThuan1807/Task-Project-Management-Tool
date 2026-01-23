@@ -1,10 +1,10 @@
-import { Bell, Search, User as UserIcon, LogOut } from 'lucide-react';
-import { Button } from '../ui/button';
-import { Input } from '../ui/input';
-import Notification from '@/components/dashboard/notifications/Notification';
-import { Suspense } from 'react';
-import { UserMenu } from './UserMenu';
-import TitleTopBar from './TitleTopBar';
+import { Bell, Search, User as UserIcon, LogOut } from 'lucide-react'
+import { Button } from '../ui/button'
+import { Input } from '../ui/input'
+import Notification from '@/components/dashboard/notifications/Notification'
+import { Suspense } from 'react'
+import { UserMenu } from './UserMenu'
+import TitleTopBar from './TitleTopBar'
 
 export const TopBar = () => {
 
@@ -39,6 +39,6 @@ export const TopBar = () => {
 
       </div>
     </div>
-  );
+  )
 }
-export default TopBar;
+export default TopBar

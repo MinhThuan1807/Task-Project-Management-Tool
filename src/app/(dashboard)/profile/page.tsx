@@ -1,13 +1,13 @@
-'use client';
+'use client'
 
-import { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
+import { useState } from 'react'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { Badge } from '@/components/ui/badge'
 import {
   Camera,
   Mail,
@@ -18,53 +18,53 @@ import {
   Calendar,
   FolderKanban,
   CheckCircle2,
-  Users as UsersIcon,
-} from 'lucide-react';
-import { useCurrentUser } from '@/lib/hooks/useAuth';
+  Users as UsersIcon
+} from 'lucide-react'
+import { useCurrentUser } from '@/lib/hooks/useAuth'
 
 export default function ProfilePage() {
-  const { data: currentUser } = useCurrentUser();
-  const [isEditing, setIsEditing] = useState(false);
+  const { data: currentUser } = useCurrentUser()
+  const [isEditing, setIsEditing] = useState(false)
   const [formData, setFormData] = useState({
     displayName: currentUser?.displayName || 'John Doe',
     email: 'john.doe@example.com',
     phone: '+1 (555) 123-4567',
     location: 'San Francisco, CA',
     title: 'Product Manager',
-    bio: 'Passionate about building great products and leading amazing teams. I love solving complex problems and creating user-centric solutions.',
-  });
+    bio: 'Passionate about building great products and leading amazing teams. I love solving complex problems and creating user-centric solutions.'
+  })
 
   const recentActivity = [
     {
       action: 'Completed task',
       detail: '"Setup development environment"',
       time: '2 hours ago',
-      color: 'green',
+      color: 'green'
     },
     {
       action: 'Created sprint',
       detail: '"Sprint 3 - Q1 Features"',
       time: '5 hours ago',
-      color: 'blue',
+      color: 'blue'
     },
     {
       action: 'Joined project',
       detail: '"E-commerce Platform"',
       time: '1 day ago',
-      color: 'purple',
+      color: 'purple'
     },
     {
       action: 'Commented on',
       detail: '"Payment integration task"',
       time: '2 days ago',
-      color: 'orange',
-    },
-  ];
+      color: 'orange'
+    }
+  ]
 
   const handleSave = () => {
-    setIsEditing(false);
+    setIsEditing(false)
     // Handle save logic here
-  };
+  }
 
   return (
     <div className="h-full overflow-auto bg-gradient-to-br from-gray-50 to-blue-50/30">
@@ -280,10 +280,10 @@ export default function ProfilePage() {
                           activity.color === 'green'
                             ? 'bg-green-500'
                             : activity.color === 'blue'
-                            ? 'bg-blue-500'
-                            : activity.color === 'purple'
-                            ? 'bg-purple-500'
-                            : 'bg-orange-500'
+                              ? 'bg-blue-500'
+                              : activity.color === 'purple'
+                                ? 'bg-purple-500'
+                                : 'bg-orange-500'
                         }`}
                       />
                       <div className="flex-1">
@@ -302,5 +302,5 @@ export default function ProfilePage() {
         </div>
       </div>
     </div>
-  );
+  )
 }

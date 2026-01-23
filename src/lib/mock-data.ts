@@ -1,4 +1,4 @@
-import { Project, Sprint, User } from './types';
+import { Project, Sprint, User } from './types'
 
 // Mock current user
 // export const mockCurrentUser: User = {
@@ -64,7 +64,7 @@ export const mockSprints: Sprint[] = [
     status: 'active',
     startDate: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
     endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-    createdAt: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000),
+    createdAt: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000)
   },
   {
     _id: 'sprint-2',
@@ -75,7 +75,7 @@ export const mockSprints: Sprint[] = [
     status: 'active',
     startDate: new Date(Date.now() + 8 * 24 * 60 * 60 * 1000),
     endDate: new Date(Date.now() + 21 * 24 * 60 * 60 * 1000),
-    createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+    createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
   },
   {
     _id: 'sprint-3',
@@ -86,6 +86,6 @@ export const mockSprints: Sprint[] = [
     status: 'active',
     startDate: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000),
     endDate: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
-    createdAt: new Date(Date.now() - 21 * 24 * 60 * 60 * 1000),
-  },
-];
+    createdAt: new Date(Date.now() - 21 * 24 * 60 * 60 * 1000)
+  }
+]

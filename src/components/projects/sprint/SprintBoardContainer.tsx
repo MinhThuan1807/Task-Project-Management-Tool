@@ -1,5 +1,5 @@
 'use client'
-import { useMemo, useState, useEffect } from 'react'
+import { useMemo, useState, useEffect, Suspense } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { useAllProjects } from '@/lib/hooks/useProjects'
 import { useSprintsByProject, useUpdateSprint } from '@/lib/hooks/useSprints'
@@ -18,18 +18,39 @@ import { getColumnColor } from '@/lib/utils'
 import dynamic from 'next/dynamic'
 import { toast } from 'sonner'
 import { Task } from '@/lib/types'
+import BoardViewSkeleton from './BoardView/BoardViewSkeleton'
+import SprintHeaderSkeleton from './SprintHeaderSkeleton'
+import SprintListViewSkeleton from './CalendarView/SprintCalendarViewSkeleton'
+import SprintCalendarViewSkeleton from './CalendarView/SprintCalendarViewSkeleton'
 
-const BoardView = dynamic(() => import('./BoardView/BoardView'), { ssr: false })
-const SprintCalendarView = dynamic(() => import('./CalendarView/SprintCalendarView'), { ssr: false })
-const SprintListView = dynamic(() => import('./ListView/SprintListView'), { ssr: false })
+const BoardView = dynamic(() => import('./BoardView/BoardView'), {
+  ssr: false,
+  loading: () => <BoardViewSkeleton />
+})
+const SprintCalendarView = dynamic(
+  () => import('./CalendarView/SprintCalendarView'),
+  {
+    ssr: false,
+    loading: () => <SprintCalendarViewSkeleton />
+  }
+)
+const SprintListView = dynamic(() => import('./ListView/SprintListView'), {
+  ssr: false,
+  loading: () => <SprintListViewSkeleton />
+})
 
 const SprintBoardContainer = () => {
-  const [viewMode, setViewMode] = useState<'board' | 'list' | 'calendar'>('board')
+  const [viewMode, setViewMode] = useState<'board' | 'list' | 'calendar'>(
+    'board'
+  )
   const [activeId, setActiveId] = useState<string | null>(null)
   const [isCreateTaskOpen, setIsCreateTaskOpen] = useState(false)
   const [isFilterOpen, setIsFilterOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
-   const [filters, setFilters] = useState<{ priority: Task['priority'][]; assigneeIds: string[] }>({
+  const [filters, setFilters] = useState<{
+    priority: Task['priority'][]
+    assigneeIds: string[]
+  }>({
     priority: [],
     assigneeIds: []
   })
@@ -37,7 +58,8 @@ const SprintBoardContainer = () => {
   const params = useParams()
   const router = useRouter()
   const projectId = typeof params.id === 'string' ? params.id : undefined
-  const sprintId = typeof params.sprintId === 'string' ? params.sprintId : undefined
+  const sprintId =
+    typeof params.sprintId === 'string' ? params.sprintId : undefined
 
   // Fetch data
   const allProjectsQuery = useAllProjects()
@@ -51,8 +73,14 @@ const SprintBoardContainer = () => {
   const tasks = tasksQuery.data ?? []
   const boardColumns = columnsQuery.data ?? []
 
-  const project = useMemo(() => allProjects.find((p) => p._id === projectId), [allProjects, projectId])
-  const sprint = useMemo(() => sprints.find((s) => s._id === sprintId), [sprints, sprintId])
+  const project = useMemo(
+    () => allProjects.find((p) => p._id === projectId),
+    [allProjects, projectId]
+  )
+  const sprint = useMemo(
+    () => sprints.find((s) => s._id === sprintId),
+    [sprints, sprintId]
+  )
 
   // Reset state khi projectId/sprintId thay đổi
   useEffect(() => {
@@ -74,22 +102,20 @@ const SprintBoardContainer = () => {
     }
   }, [sprints, sprintId, projectId, sprintsQuery.isLoading, router])
 
-    // Mutations
+  // Mutations
   const moveTaskMutation = useMoveTask()
-  const updateSprintMutation = sprintId ? useUpdateSprint(sprintId) : undefined
+  const updateSprintMutation = sprintId ? useUpdateSprint(sprintId, projectId!) : undefined
 
   // Loading state
   if (
     !projectId ||
     !sprintId ||
     allProjectsQuery.isLoading ||
-    sprintsQuery.isLoading ||
-    tasksQuery.isLoading ||
-    columnsQuery.isLoading
+    sprintsQuery.isLoading
   ) {
     return (
-      <div className="h-full flex items-center justify-center">
-        <p>Loading...</p>
+      <div className="h-full flex flex-col bg-gray-50">
+        <SprintHeaderSkeleton />
       </div>
     )
   }
@@ -98,30 +124,42 @@ const SprintBoardContainer = () => {
   if (!project) return <div className="p-6">Project not found</div>
   if (!sprint) return <div className="p-6">Sprint not found</div>
 
-
-
-  const canEditTasks = project?.ownerId === currentUser?._id
-
   // Filter tasks
   const filteredTasks = tasks.filter((task) => {
-    const matchesSearch = task.title.toLowerCase().includes(searchQuery.toLowerCase())
+    const matchesSearch = task.title
+      .toLowerCase()
+      .includes(searchQuery.toLowerCase())
     const matchesPriority =
-      filters.priority.length === 0 || (task.priority && filters.priority.includes(task.priority))
+      filters.priority.length === 0 ||
+      (task.priority && filters.priority.includes(task.priority))
     const matchesAssignee =
-      filters.assigneeIds.length === 0 || task.assigneeIds?.some((id) => filters.assigneeIds.includes(id))
+      filters.assigneeIds.length === 0 ||
+      task.assigneeIds?.some((id) => filters.assigneeIds.includes(id))
     return matchesSearch && matchesPriority && matchesAssignee
   })
 
+  const canEditTasks =
+    project?.ownerId === currentUser?._id ||
+    project?.members?.some(
+      (member) =>
+        member.memberId === currentUser?._id && member.role === 'member'
+    )
+
   // Stats
   const totalTasks = filteredTasks.length
-  const doneColumn = boardColumns.find((col) => col.title.toLowerCase() === 'done')
+  const doneColumn = boardColumns.find(
+    (col) => col.title.toLowerCase() === 'done'
+  )
   const completedTasks = doneColumn
     ? filteredTasks.filter((t) => t.boardColumnId === doneColumn._id).length
     : 0
   const progress = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0
 
   const daysLeft = sprint?.endDate
-    ? Math.ceil((new Date(sprint.endDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))
+    ? Math.ceil(
+      (new Date(sprint.endDate).getTime() - new Date().getTime()) /
+          (1000 * 60 * 60 * 24)
+    )
     : 0
 
   // Drag handlers
@@ -158,20 +196,21 @@ const SprintBoardContainer = () => {
   }
 
   const handleTaskClick = () => true
+
   const activeTask = tasks.find((t) => t._id === activeId)
   const isActiveSprint = sprint?.status === 'active'
 
   const handleUpdateStatusSprint = () => {
-  if (!updateSprintMutation) return
-  if (sprint?.status === 'planned') {
-    updateSprintMutation.mutate({ status: 'active' })
-    toast.success('Sprint activated successfully!')
-    return
+    if (!updateSprintMutation) return
+    if (sprint?.status === 'planned') {
+      updateSprintMutation.mutate({ status: 'active' })
+      toast.success('Sprint activated successfully!')
+      return
+    }
+    updateSprintMutation.mutate({ status: 'completed' })
+    router.push(`/projects/${projectId}`)
+    toast.success('Sprint completed successfully!')
   }
-  updateSprintMutation.mutate({ status: 'completed' })
-  router.push(`/projects/${projectId}`)
-  toast.success('Sprint completed successfully!')
-}
 
   return (
     <>
@@ -180,7 +219,9 @@ const SprintBoardContainer = () => {
         <div className="p-6 bg-white border-b border-gray-200 shadow-sm">
           <SprintTitle
             sprint={sprint}
-            onDirectToBacklog={() => router.push(`/projects/${projectId}/backlog`)}
+            onDirectToBacklog={() =>
+              router.push(`/projects/${projectId}/backlog`)
+            }
             isActiveSprint={isActiveSprint}
             setIsFilterOpen={setIsFilterOpen}
             isFilterOpen={isFilterOpen}
@@ -208,7 +249,9 @@ const SprintBoardContainer = () => {
             <ToggleGroup
               type="single"
               value={viewMode}
-              onValueChange={(v) => v && setViewMode(v as any)}
+              onValueChange={(v) =>
+                v && setViewMode(v as 'board' | 'list' | 'calendar')
+              }
             >
               <ToggleGroupItem value="board" aria-label="Board view">
                 <LayoutGrid className="w-4 h-4 mr-2" />

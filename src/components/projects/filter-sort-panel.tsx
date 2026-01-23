@@ -1,18 +1,18 @@
-import { Card, CardContent } from '../ui/card';
-import { Checkbox } from '../ui/checkbox';
-import { Label } from '../ui/label';
-import { Separator } from '../ui/separator';
-import { Badge } from '../ui/badge';
-import { motion } from 'motion/react';
-import { ProjectMember, Task } from '@/lib/types';
+import { Card, CardContent } from '../ui/card'
+import { Checkbox } from '../ui/checkbox'
+import { Label } from '../ui/label'
+import { Separator } from '../ui/separator'
+import { Badge } from '../ui/badge'
+import { motion } from 'motion/react'
+import { ProjectMember, Task } from '@/lib/types'
 
 type FilterSortPanelProps = {
   filters: {
     priority: Task['priority'][]
-    assigneeIds: Task['assigneeIds'][]
+    assigneeIds: string[]
   }
 
-  onFiltersChange: (filters: { priority: Task['priority'][]; assigneeIds: Task['assigneeIds'][] }) => void;
+  onFiltersChange: (filters: { priority: Task['priority'][]; assigneeIds: string[] }) => void;
   projectMembers: ProjectMember[];
 };
 
@@ -20,29 +20,29 @@ const priorityOptions = [
   { value: 'critical', label: 'Critical', color: 'bg-red-100 text-red-700' },
   { value: 'high', label: 'High', color: 'bg-orange-100 text-orange-700' },
   { value: 'medium', label: 'Medium', color: 'bg-blue-100 text-blue-700' },
-  { value: 'low', label: 'Low', color: 'bg-gray-100 text-gray-700' },
-];
+  { value: 'low', label: 'Low', color: 'bg-gray-100 text-gray-700' }
+]
 
 export function FilterSortPanel({ filters, onFiltersChange, projectMembers }: FilterSortPanelProps) {
   const handlePriorityToggle = (priority: string) => {
     const newPriorities = filters.priority.includes(priority)
       ? filters.priority.filter((p) => p !== priority)
-      : [...filters.priority, priority];
-    onFiltersChange({ ...filters, priority: newPriorities });
-  };
+      : [...filters.priority, priority]
+    onFiltersChange({ ...filters, priority: newPriorities })
+  }
 
-  const handleAssigneeToggle = (assignee: string[]) => {
+  const handleAssigneeToggle = (assignee: string) => {
     const newAssignees = filters.assigneeIds.includes(assignee)
       ? filters.assigneeIds.filter((a) => a !== assignee)
-      : [...filters.assigneeIds, assignee];
-    onFiltersChange({ ...filters, assigneeIds: newAssignees });
-  };
+      : [...filters.assigneeIds, assignee]
+    onFiltersChange({ ...filters, assigneeIds: newAssignees })
+  }
 
   const handleClearAll = () => {
-    onFiltersChange({ priority: [], assigneeIds: [] });
-  };
+    onFiltersChange({ priority: [], assigneeIds: [] })
+  }
 
-  const activeFilterCount = filters.priority.length + filters.assigneeIds.length;
+  const activeFilterCount = filters.priority.length + filters.assigneeIds.length
 
   return (
     <motion.div
@@ -140,7 +140,7 @@ export function FilterSortPanel({ filters, onFiltersChange, projectMembers }: Fi
                   onClick={() =>
                     onFiltersChange({
                       priority: [],
-                      assigneeIds: projectMembers.map(member => member.email),
+                      assigneeIds: projectMembers.map(member => member.email)
                     })
                   }
                 >
@@ -152,7 +152,7 @@ export function FilterSortPanel({ filters, onFiltersChange, projectMembers }: Fi
                   onClick={() =>
                     onFiltersChange({
                       priority: [],
-                      assigneeIds: [],
+                      assigneeIds: []
                     })
                   }
                 >
@@ -164,5 +164,5 @@ export function FilterSortPanel({ filters, onFiltersChange, projectMembers }: Fi
         </CardContent>
       </Card>
     </motion.div>
-  );
+  )
 }

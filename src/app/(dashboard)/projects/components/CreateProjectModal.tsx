@@ -32,6 +32,7 @@ import { useDispatch, useSelector } from 'react-redux'
 import { closeCreateModal } from '@/lib/features/project/projectSlice'
 import { RootState } from '@/lib/store'
 import Image from 'next/image'
+import { selectCurrentUser } from '@/lib/features/auth/authSlice'
 
 // Storage key for saved emails
 const SAVED_EMAILS_KEY = 'sprintos_invited_emails'
@@ -174,14 +175,20 @@ export function CreateProjectModal() {
       .filter((m) => m.role === 'member' || m.role === 'viewer')
       .map((m) => ({
         email: m.email,
-        role: m.role as 'member' | 'viewer',
-    }));
+        role: m.role as 'member' | 'viewer'
+      }))
+
+    if (!currentUser?._id) {
+      toast.error('User not found. Please login again.')
+      return
+    }
 
     const payload = {
       name: data.name,
       description: data.description,
       members: filteredMembers.length > 0 ? filteredMembers : undefined,
-      imageUrl: imageFile || undefined
+      imageUrl: imageFile || undefined,
+      ownerId: currentUser._id // Đảm bảo luôn là string
     }
 
     createProject.mutate(payload, {
@@ -205,18 +212,19 @@ export function CreateProjectModal() {
 
   const getRoleColor = (role: MemberRole) => {
     switch (role) {
-      case 'owner':
-        return 'bg-purple-100 text-purple-700'
-      case 'member':
-        return 'bg-blue-100 text-blue-700'
-      case 'viewer':
-        return 'bg-gray-100 text-gray-700'
+    case 'owner':
+      return 'bg-purple-100 text-purple-700'
+    case 'member':
+      return 'bg-blue-100 text-blue-700'
+    case 'viewer':
+      return 'bg-gray-100 text-gray-700'
     }
   }
   const dispatch = useDispatch()
   const open = useSelector(
     (state: RootState) => state.project.isCreateModalOpen
   )
+  const currentUser = useSelector(selectCurrentUser)
 
   const handleOpenChange = (isOpen: boolean) => {
     if (!isOpen) {
@@ -405,27 +413,27 @@ export function CreateProjectModal() {
                     {showSuggestions &&
                       filteredSuggestions.length > 0 &&
                       emailInput && (
-                        <div className="absolute z-10 w-full mt-1 bg-white border rounded-lg shadow-lg max-h-40 overflow-y-auto">
-                          {filteredSuggestions.map((email) => (
-                            <button
-                              key={email}
-                              type="button"
-                              onClick={() => {
-                                setEmailInput(email)
-                                handleAddMember(email)
-                              }}
-                              className="w-full flex items-center gap-2 px-3 py-2 hover:bg-gray-100 text-left"
-                            >
-                              <Avatar className="w-6 h-6">
-                                <AvatarFallback className="bg-gray-200 text-gray-600 text-xs">
-                                  {email.substring(0, 2).toUpperCase()}
-                                </AvatarFallback>
-                              </Avatar>
-                              <span className="text-sm">{email}</span>
-                            </button>
-                          ))}
-                        </div>
-                      )}
+                      <div className="absolute z-10 w-full mt-1 bg-white border rounded-lg shadow-lg max-h-40 overflow-y-auto">
+                        {filteredSuggestions.map((email) => (
+                          <button
+                            key={email}
+                            type="button"
+                            onClick={() => {
+                              setEmailInput(email)
+                              handleAddMember(email)
+                            }}
+                            className="w-full flex items-center gap-2 px-3 py-2 hover:bg-gray-100 text-left"
+                          >
+                            <Avatar className="w-6 h-6">
+                              <AvatarFallback className="bg-gray-200 text-gray-600 text-xs">
+                                {email.substring(0, 2).toUpperCase()}
+                              </AvatarFallback>
+                            </Avatar>
+                            <span className="text-sm">{email}</span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
 
                   <Select

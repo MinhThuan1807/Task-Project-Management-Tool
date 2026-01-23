@@ -16,6 +16,6 @@ const ProjectCardSkeleton = () => (
       <div className="h-6 w-24 bg-gray-100 rounded" />
     </div>
   </div>
-);
+)
 
-export default ProjectCardSkeleton;
+export default ProjectCardSkeleton

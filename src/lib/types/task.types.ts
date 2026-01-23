@@ -37,7 +37,7 @@ export type Task = {
   comments?: Comment[];
   attachments?: Attachment[];
   createdAt: string | Date;
-  updatedAt?: string | Date | null;
+  updatedAt?: string | Date;
 };
 
 /**
@@ -51,7 +51,7 @@ export type CreateTaskRequest = {
   labels?: Task['labels'];
   priority?: Task['priority'];
   storyPoint?: number;
-  dueDate?: string | Date;
+  dueDate?: Date;
   assigneeIds?: string[];
 };
 

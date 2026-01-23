@@ -86,7 +86,7 @@ function SprintTitle({
           </Button>
         </div>
       </div>
-      
+
     </div>
   )
 }

@@ -6,7 +6,11 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { formatDate } from '@/lib/utils'
-
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger
+} from '@/components/ui/tooltip'
 interface BlacklogSprintPlanningProps {
   sprints: Sprint[]
   onCreateSprint: () => void
@@ -18,6 +22,7 @@ function BlacklogSprintPlanning({
   onCreateSprint,
   onStartSprint
 }: BlacklogSprintPlanningProps) {
+  const existSprintActive = sprints.some((s) => s.status === 'active')
   const activeSprints = sprints
     .map((s) => (s.status === 'active' ? s : null))
     .filter(Boolean) as Sprint[]
@@ -125,15 +130,25 @@ function BlacklogSprintPlanning({
                             <span>{sprint.maxStoryPoint} SP</span>
                           </div>
                         </div>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="w-full"
-                          onClick={() => onStartSprint(sprint)}
-                        >
-                          <Play className="w-3 h-3 mr-1" />
-                          Start Sprint
-                        </Button>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="w-full"
+                                onClick={() => onStartSprint(sprint)}
+                                disabled={existSprintActive}
+                              >
+                                <Play className="w-3 h-3 mr-1" />
+                                Start Sprint
+                              </Button>
+                            </span>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            Please complete active sprint
+                          </TooltipContent>
+                        </Tooltip>
                       </div>
                     </CardContent>
                   </Card>

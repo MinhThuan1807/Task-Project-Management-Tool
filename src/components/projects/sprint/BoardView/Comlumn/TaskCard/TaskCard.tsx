@@ -1,7 +1,7 @@
 'use client'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { Task, UpdateTaskRequest } from '@/lib/types'
+import { Sprint, Task, UpdateTaskRequest } from '@/lib/types'
 import { Card, CardContent } from '../../../../../ui/card'
 import { Badge } from '../../../../../ui/badge'
 import { Avatar, AvatarFallback, AvatarImage } from '../../../../../ui/avatar'
@@ -33,18 +33,15 @@ import {
 } from '../../../../../ui/alert-dialog'
 import { cn, formatDate, getPriorityColor } from '@/lib/utils'
 import { useState } from 'react'
-import { useDeleteTask, useMoveTask, useUpdateTask } from '@/lib/hooks/useTasks'
+import { useDeleteTask, useUpdateTask } from '@/lib/hooks/useTasks'
 import { EditTaskModal } from '../../../../../modal/EditTaskModal'
-import { useParams } from 'next/navigation'
-import { set } from 'zod'
 import { toast } from 'sonner'
-import { CreateTaskModal } from '../../../../../modal/CreateTaskModal'
-import { Tooltip, TooltipTrigger } from '../../../../../ui/tooltip'
-import { TooltipContent } from '@radix-ui/react-tooltip'
+
 
 type TaskCardProps = {
   task: Task
   Click?: () => void
+  sprints?: Sprint[]
   isDragging?: boolean
   onDuplicate?: (task: Task) => void
   canEdit?: boolean // Add permission prop
@@ -55,7 +52,8 @@ export function TaskCard({
   Click,
   isDragging = false,
   onDuplicate,
-  canEdit 
+  canEdit,
+  sprints
 }: TaskCardProps) {
   const {
     attributes,
@@ -75,14 +73,14 @@ export function TaskCard({
     opacity: isSortableDragging ? 0.5 : 1
   }
 
+  const sprint = sprints?.find((s) => s._id === task.sprintId)
+
   // Get real counts from task data
   const commentCount = task.comments?.length || 0
   const attachmentCount = task.attachments?.length || 0
 
   // Check if task is overdue
   const isOverdue = task.dueDate ? new Date(task.dueDate) < new Date() : false
-  const param = useParams()
-  const sprintId = param.id as string
 
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [isEditTaskOpen, setIsEditTaskOpen] = useState(false)
@@ -141,9 +139,20 @@ export function TaskCard({
             )}
             <h4 className="text-sm font-medium text-gray-900 flex-1 group-hover:text-blue-600 transition-colors line-clamp-1">
               {task.title}
+              {sprint && (
+                <Badge
+                  className={
+                    sprint.status === 'active'
+                      ? 'bg-green-50 text-green-700 border-green-200 ml-2'
+                      : 'bg-gray-50 text-gray-700 border-gray-200 ml-2'
+                  }
+                >
+                  {sprint.name}
+                </Badge>
+              )}
             </h4>
 
-            {canEdit && ( 
+            {canEdit && (
               <DropdownMenu>
                 <DropdownMenuTrigger
                   asChild
@@ -315,7 +324,7 @@ export function TaskCard({
         </AlertDialogContent>
       </AlertDialog>
       {/* Edit task modal */}
-      {(isSelectedTask || isEditTaskOpen) && (canEdit) && (
+      {(isSelectedTask || isEditTaskOpen) && canEdit && (
         <EditTaskModal
           open={isEditTaskOpen || Boolean(Click)}
           task={task}

@@ -1,85 +1,85 @@
-'use client';
+'use client'
 
-import { useEffect, useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Loader2, CheckCircle2, XCircle, Mail, Shield } from 'lucide-react';
-import { projectApi } from '@/lib/services/project.service';
-import { toast } from 'sonner';
-import { useCurrentUser } from '@/lib/hooks/useAuth';
+import { useEffect, useState } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Loader2, CheckCircle2, XCircle, Mail, Shield } from 'lucide-react'
+import { projectApi } from '@/lib/services/project.service'
+import { toast } from 'sonner'
+import { useCurrentUser } from '@/lib/hooks/useAuth'
 
 export default function InvitePage() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const { data: currentUser, isLoading: userLoading } = useCurrentUser();
-  
-  const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
-  const [errorMessage, setErrorMessage] = useState('');
-  const [projectName, setProjectName] = useState('');
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const { data: currentUser, isLoading: userLoading } = useCurrentUser()
+
+  const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading')
+  const [errorMessage, setErrorMessage] = useState('')
+  const [projectName, setProjectName] = useState('')
 
   useEffect(() => {
     const acceptInvitation = async () => {
       try {
         // Get parameters from URL
-        const email = searchParams.get('email');
-        const token = searchParams.get('token');
-        const projectId = searchParams.get('projectId');
+        const email = searchParams.get('email')
+        const token = searchParams.get('token')
+        const projectId = searchParams.get('projectId')
 
         // Validate parameters
         if (!email || !token || !projectId) {
-          setStatus('error');
-          setErrorMessage('Invalid invitation link. Missing required parameters.');
-          return;
+          setStatus('error')
+          setErrorMessage('Invalid invitation link. Missing required parameters.')
+          return
         }
 
         // Wait for user to be loaded
         if (userLoading) {
-          return;
+          return
         }
 
         // Check if user is logged in
         if (!currentUser) {
           // Redirect to login with return URL
-          const returnUrl = `/invite?email=${email}&token=${token}&projectId=${projectId}`;
-          router.push(`/login?returnUrl=${encodeURIComponent(returnUrl)}`);
-          return;
+          const returnUrl = `/invite?email=${email}&token=${token}&projectId=${projectId}`
+          router.push(`/login?returnUrl=${encodeURIComponent(returnUrl)}`)
+          return
         }
 
         // Check if logged-in user matches invitation email
         if (currentUser.email !== email) {
-          setStatus('error');
+          setStatus('error')
           setErrorMessage(
             `This invitation was sent to ${email}. Please log in with the correct account.`
-          );
-          return;
+          )
+          return
         }
 
         // Accept invitation
         const response = await projectApi.acceptInvite({
           email,
           token,
-          projectId,
-        });
+          projectId
+        })
 
-        setProjectName(response.data.name || 'the project');
-        setStatus('success');
-        toast.success('Successfully joined the project!');
+        setProjectName(response.data.name || 'the project')
+        setStatus('success')
+        toast.success('Successfully joined the project!')
 
         // Redirect to project page after 2 seconds
         setTimeout(() => {
-          router.push(`/projects/${projectId}`);
-        }, 2000);
+          router.push(`/projects/${projectId}`)
+        }, 2000)
       } catch (error: any) {
-        setStatus('error');
-        const message = error.response?.data?.message || error.message || 'Failed to accept invitation';
-        setErrorMessage(message);
-        toast.error(message);
+        setStatus('error')
+        const message = error.response?.data?.message || error.message || 'Failed to accept invitation'
+        setErrorMessage(message)
+        toast.error(message)
       }
-    };
+    }
 
-    acceptInvitation();
-  }, [searchParams, currentUser, userLoading, router]);
+    acceptInvitation()
+  }, [searchParams, currentUser, userLoading, router])
 
   if (userLoading || status === 'loading') {
     return (
@@ -98,7 +98,7 @@ export default function InvitePage() {
           </CardContent>
         </Card>
       </div>
-    );
+    )
   }
 
   if (status === 'success') {
@@ -132,7 +132,7 @@ export default function InvitePage() {
           </CardContent>
         </Card>
       </div>
-    );
+    )
   }
 
   if (status === 'error') {
@@ -178,8 +178,8 @@ export default function InvitePage() {
           </CardContent>
         </Card>
       </div>
-    );
+    )
   }
 
-  return null;
+  return null
 }

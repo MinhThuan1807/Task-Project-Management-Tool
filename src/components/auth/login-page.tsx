@@ -1,18 +1,18 @@
-import { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { Button } from '../ui/button';
-import { Input } from '../ui/input';
-import { Label } from '../ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
-import { Separator } from '../ui/separator';
-import { Zap, Mail, Lock, ArrowLeft, Eye, EyeOff } from 'lucide-react';
-import { toast } from 'sonner';
-import { loginUserAPI } from '@/lib/features/auth/authSlice';
-import { useAppDispatch } from '@/lib/hooks';
-import { useRouter } from 'next/navigation';
-import { getErrorMessage } from '@/lib/utils';
+import { useState } from 'react'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { z } from 'zod'
+import { Button } from '../ui/button'
+import { Input } from '../ui/input'
+import { Label } from '../ui/label'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card'
+import { Separator } from '../ui/separator'
+import { Zap, Mail, Lock, ArrowLeft, Eye, EyeOff } from 'lucide-react'
+import { toast } from 'sonner'
+import { loginUserAPI } from '@/lib/features/auth/authSlice'
+import { useAppDispatch } from '@/lib/hooks'
+import { useRouter } from 'next/navigation'
+import { getErrorMessage } from '@/lib/utils'
 
 const loginSchema = z.object({
   email: z
@@ -22,8 +22,8 @@ const loginSchema = z.object({
   password: z
     .string()
     .min(1, 'Password is required')
-    .min(6, 'Password must be at least 6 characters'),
-});
+    .min(6, 'Password must be at least 6 characters')
+})
 
 type LoginFormData = z.infer<typeof loginSchema>;
 
@@ -34,39 +34,39 @@ type LoginPageProps = {
 
 export function LoginPageNew({
   onNavigateToResgister,
-  onNavigateToLanding,
+  onNavigateToLanding
 }: LoginPageProps) {
-  const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const dispatch = useAppDispatch();
-  const router = useRouter();
+  const [showPassword, setShowPassword] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
+  const dispatch = useAppDispatch()
+  const router = useRouter()
 
   const {
     register,
     handleSubmit,
-    formState: { errors },
+    formState: { errors }
   } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
       email: '',
-      password: '',
-    },
-  });
+      password: ''
+    }
+  })
 
   const onSubmit = async (data: LoginFormData) => {
-    setIsLoading(true);
+    setIsLoading(true)
     try {
-      await dispatch(loginUserAPI(data)).unwrap();
-      setTimeout(() => {
-        toast.success('Login successful!');
-        router.push('/dashboard');
-      }, 500);
+      await dispatch(loginUserAPI(data)).unwrap()
+      toast.success('Login successful!')
+      router.push('/login')
+
     }
     catch (error) {
-      toast.error(getErrorMessage(error));
+      setIsLoading(false)
+      // toast.error(getErrorMessage(error));
     }
-    
-  };
+
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center p-6">
@@ -231,5 +231,5 @@ export function LoginPageNew({
         </CardContent>
       </Card>
     </div>
-  );
+  )
 }

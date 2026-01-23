@@ -1,4 +1,4 @@
-import { ReportsView } from '@/components/projects/report-view';
+import { ReportsView } from '@/components/projects/report-view'
 
 
 export default function ProjectReportsPage() {
@@ -7,5 +7,5 @@ export default function ProjectReportsPage() {
     <div className="h-screen">
       <ReportsView />
     </div>
-  );
+  )
 }

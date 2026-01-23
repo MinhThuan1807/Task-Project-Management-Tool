@@ -1,19 +1,19 @@
-import { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { Button } from '../ui/button';
-import { Input } from '../ui/input';
-import { Label } from '../ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
-import { Separator } from '../ui/separator';
-import { Checkbox } from '../ui/checkbox';
-import { Zap, Mail, Lock, User, ArrowLeft, Eye, EyeOff } from 'lucide-react';
-import { toast } from 'sonner';
-import { cn } from '../../lib/utils';
-import { authApi } from '@/lib/services/auth.service';
-import { useRouter } from 'next/dist/client/components/navigation';
-import { getErrorMessage } from '@/lib/utils';
+import { useState } from 'react'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { z } from 'zod'
+import { Button } from '../ui/button'
+import { Input } from '../ui/input'
+import { Label } from '../ui/label'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card'
+import { Separator } from '../ui/separator'
+import { Checkbox } from '../ui/checkbox'
+import { Zap, Mail, Lock, User, ArrowLeft, Eye, EyeOff } from 'lucide-react'
+import { toast } from 'sonner'
+import { cn } from '../../lib/utils'
+import { authApi } from '@/lib/services/auth.service'
+import { useRouter } from 'next/dist/client/components/navigation'
+import { getErrorMessage } from '@/lib/utils'
 
 const registerSchema = z.object({
   email: z
@@ -29,8 +29,8 @@ const registerSchema = z.object({
     .regex(/\d/, 'Password must contain at least one number'),
   agreedToTerms: z
     .boolean()
-    .refine((val) => val === true, 'You must agree to the terms and conditions'),
-});
+    .refine((val) => val === true, 'You must agree to the terms and conditions')
+})
 
 type RegisterFormData = z.infer<typeof registerSchema>;
 
@@ -41,73 +41,73 @@ type RegisterPageProps = {
 
 export function RegisterPageNew({
   onNavigateToLogin,
-  onNavigateToLanding,
+  onNavigateToLanding
 }: RegisterPageProps) {
-  const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const router = useRouter();
-  
+  const [showPassword, setShowPassword] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
+  const router = useRouter()
+
   const {
     register,
     handleSubmit,
     watch,
     setValue,
-    formState: { errors },
+    formState: { errors }
   } = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
       email: '',
       password: '',
-      agreedToTerms: false,
-    },
-  });
+      agreedToTerms: false
+    }
+  })
 
-  const password = watch('password');
-  const agreedToTerms = watch('agreedToTerms');
+  const password = watch('password')
+  const agreedToTerms = watch('agreedToTerms')
 
   // Password strength calculation
   const getPasswordStrength = () => {
-    if (!password) return 0;
-    let strength = 0;
-    if (password.length >= 8) strength += 25;
-    if (/[a-z]/.test(password) && /[A-Z]/.test(password)) strength += 25;
-    if (/\d/.test(password)) strength += 25;
-    if (/[^a-zA-Z\d]/.test(password)) strength += 25;
-    return strength;
-  };
+    if (!password) return 0
+    let strength = 0
+    if (password.length >= 8) strength += 25
+    if (/[a-z]/.test(password) && /[A-Z]/.test(password)) strength += 25
+    if (/\d/.test(password)) strength += 25
+    if (/[^a-zA-Z\d]/.test(password)) strength += 25
+    return strength
+  }
 
-  const passwordStrength = getPasswordStrength();
+  const passwordStrength = getPasswordStrength()
 
   const getStrengthColor = () => {
-    if (passwordStrength <= 25) return 'bg-red-500';
-    if (passwordStrength <= 50) return 'bg-orange-500';
-    if (passwordStrength <= 75) return 'bg-yellow-500';
-    return 'bg-green-500';
-  };
+    if (passwordStrength <= 25) return 'bg-red-500'
+    if (passwordStrength <= 50) return 'bg-orange-500'
+    if (passwordStrength <= 75) return 'bg-yellow-500'
+    return 'bg-green-500'
+  }
 
   const getStrengthText = () => {
-    if (passwordStrength <= 25) return 'Weak';
-    if (passwordStrength <= 50) return 'Fair';
-    if (passwordStrength <= 75) return 'Good';
-    return 'Strong';
-  };
+    if (passwordStrength <= 25) return 'Weak'
+    if (passwordStrength <= 50) return 'Fair'
+    if (passwordStrength <= 75) return 'Good'
+    return 'Strong'
+  }
 
   const onSubmit = async (data: RegisterFormData) => {
-    setIsLoading(true);
+    setIsLoading(true)
     try {
       await authApi.register({
         email: data.email,
-        password: data.password,
-      });
-      toast.success('Account created successfully!');
-      setTimeout(() => {
-        router.push('/login');
+        password: data.password
       })
-    } 
-    catch (error) {
-      toast.error(getErrorMessage(error));
+      toast.success('Account created successfully!')
+      setTimeout(() => {
+        router.push('/login')
+      })
     }
-  };
+    catch (error) {
+      toast.error(getErrorMessage(error))
+    }
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center p-6">
@@ -190,7 +190,7 @@ export function RegisterPageNew({
                   )}
                 </Button>
               </div>
-               {errors.password && (
+              {errors.password && (
                 <p className="text-sm text-red-500">{errors.password.message}</p>
               )}
 
@@ -235,10 +235,10 @@ export function RegisterPageNew({
                     Privacy Policy
                   </Button>
                 </Label>
-                </div>
-                {errors.agreedToTerms && (
-                  <p className="text-sm text-red-500">{errors.agreedToTerms.message}</p>
-                )}
+              </div>
+              {errors.agreedToTerms && (
+                <p className="text-sm text-red-500">{errors.agreedToTerms.message}</p>
+              )}
             </div>
 
             {/* Submit Button */}
@@ -308,5 +308,5 @@ export function RegisterPageNew({
         </CardContent>
       </Card>
     </div>
-  );
+  )
 }

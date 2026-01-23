@@ -1,4 +1,4 @@
-import axiosInstance from '../axios';
+import axiosInstance from '../axios'
 import type {
   CreateTaskRequest,
   UpdateTaskRequest,
@@ -7,8 +7,8 @@ import type {
   AddAttachmentRequest,
   TaskResponse,
   TasksResponse,
-  TaskFilters,
-} from '../types';
+  TaskFilters
+} from '../types'
 
 export const taskApi = {
   /**
@@ -16,8 +16,8 @@ export const taskApi = {
    * POST /tasks
    */
   create: async (data: CreateTaskRequest): Promise<TaskResponse> => {
-    const response = await axiosInstance.post<TaskResponse>('/tasks/', data);
-    return response.data;
+    const response = await axiosInstance.post<TaskResponse>('/tasks/', data)
+    return response.data
   },
 
   /**
@@ -25,8 +25,8 @@ export const taskApi = {
    * GET /tasks/:id
    */
   getById: async (taskId: string): Promise<TaskResponse> => {
-    const response = await axiosInstance.get<TaskResponse>(`/tasks/${taskId}`);
-    return response.data;
+    const response = await axiosInstance.get<TaskResponse>(`/tasks/${taskId}`)
+    return response.data
   },
 
   /**
@@ -36,8 +36,8 @@ export const taskApi = {
   getAllBySprintId: async (sprintId: string): Promise<TasksResponse> => {
     const response = await axiosInstance.get<TasksResponse>(
       `/tasks/sprint/${sprintId}`
-    );
-    return response.data;
+    )
+    return response.data
   },
 
   /**
@@ -47,8 +47,8 @@ export const taskApi = {
   getAllByColumnId: async (columnId: string): Promise<TasksResponse> => {
     const response = await axiosInstance.get<TasksResponse>(
       `/tasks/column/${columnId}`
-    );
-    return response.data;
+    )
+    return response.data
   },
 
   /**
@@ -56,28 +56,46 @@ export const taskApi = {
    * GET /tasks
    */
   getWithFilters: async (filters: TaskFilters): Promise<TasksResponse> => {
-    const params = new URLSearchParams();
-    
-    if (filters.sprintId) params.append('sprintId', filters.sprintId);
-    if (filters.boardColumnId) params.append('boardColumnId', filters.boardColumnId);
-    if (filters.priority) filters.priority.forEach(p => params.append('priority[]', p));
-    if (filters.labels) filters.labels.forEach(l => params.append('labels[]', l));
-    if (filters.assigneeIds) filters.assigneeIds.forEach(id => params.append('assigneeIds[]', id));
-    if (filters.search) params.append('search', filters.search);
-    if (filters.dueDateFrom) params.append('dueDateFrom', filters.dueDateFrom);
-    if (filters.dueDateTo) params.append('dueDateTo', filters.dueDateTo);
+    const params = new URLSearchParams()
 
-    const response = await axiosInstance.get<TasksResponse>(`/tasks?${params.toString()}`);
-    return response.data;
+    if (filters.sprintId) params.append('sprintId', filters.sprintId)
+    if (filters.boardColumnId)
+      params.append('boardColumnId', filters.boardColumnId)
+    if (filters.priority)
+      filters.priority
+        .filter((p): p is string => typeof p === 'string')
+        .forEach((p) => params.append('priority[]', p))
+    if (filters.labels)
+      filters.labels
+        .filter((l): l is string => typeof l === 'string')
+        .forEach((l) => params.append('labels[]', l))
+    if (filters.assigneeIds)
+      filters.assigneeIds
+        .filter((id): id is string => typeof id === 'string')
+        .forEach((id) => params.append('assigneeIds[]', id))
+    if (filters.search) params.append('search', filters.search)
+    if (filters.dueDateFrom) params.append('dueDateFrom', filters.dueDateFrom)
+    if (filters.dueDateTo) params.append('dueDateTo', filters.dueDateTo)
+
+    const response = await axiosInstance.get<TasksResponse>(
+      `/tasks?${params.toString()}`
+    )
+    return response.data
   },
 
   /**
    * Update task
    * PUT /tasks/:id
    */
-  update: async (taskId: string, data: UpdateTaskRequest): Promise<TaskResponse> => {
-    const response = await axiosInstance.put<TaskResponse>(`/tasks/${taskId}`, data);
-    return response.data;
+  update: async (
+    taskId: string,
+    data: UpdateTaskRequest
+  ): Promise<TaskResponse> => {
+    const response = await axiosInstance.put<TaskResponse>(
+      `/tasks/${taskId}`,
+      data
+    )
+    return response.data
   },
 
   /**
@@ -90,10 +108,10 @@ export const taskApi = {
       {
         sourceBoardColumnId: data.sourceBoardColumnId,
         destinationBoardColumnId: data.destinationBoardColumnId,
-        newPosition: data.newPosition,
+        newPosition: data.newPosition
       }
-    );
-    return response.data;
+    )
+    return response.data
   },
 
   /**
@@ -104,8 +122,8 @@ export const taskApi = {
     const response = await axiosInstance.post<TaskResponse>(
       `/tasks/${data.taskId}/comments`,
       { content: data.content }
-    );
-    return response.data;
+    )
+    return response.data
   },
 
   /**
@@ -113,30 +131,33 @@ export const taskApi = {
    * POST /tasks/:id/attachments
    */
   addAttachment: async (data: AddAttachmentRequest): Promise<TaskResponse> => {
-    const formData = new FormData();
-    formData.append('file', data.file);
+    const formData = new FormData()
+    formData.append('file', data.file)
 
     const response = await axiosInstance.post<TaskResponse>(
       `/tasks/${data.taskId}/attachments`,
       formData,
       {
         headers: {
-          'Content-Type': 'multipart/form-data',
-        },
+          'Content-Type': 'multipart/form-data'
+        }
       }
-    );
-    return response.data;
+    )
+    return response.data
   },
 
   /**
    * Delete attachment from task
    * DELETE /tasks/:taskId/attachments/:attachmentId
    */
-  deleteAttachment: async (taskId: string, attachmentId: string): Promise<TaskResponse> => {
+  deleteAttachment: async (
+    taskId: string,
+    attachmentId: string
+  ): Promise<TaskResponse> => {
     const response = await axiosInstance.delete<TaskResponse>(
       `/tasks/${taskId}/attachments/${attachmentId}`
-    );
-    return response.data;
+    )
+    return response.data
   },
 
   /**
@@ -144,7 +165,9 @@ export const taskApi = {
    * DELETE /tasks/:id
    */
   delete: async (taskId: string): Promise<{ success: boolean }> => {
-    const response = await axiosInstance.delete<{ success: boolean }>(`/tasks/${taskId}`);
-    return response.data;
-  },
-} as const;
+    const response = await axiosInstance.delete<{ success: boolean }>(
+      `/tasks/${taskId}`
+    )
+    return response.data
+  }
+} as const

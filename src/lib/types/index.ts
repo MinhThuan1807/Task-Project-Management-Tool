@@ -8,8 +8,8 @@ export type {
   VerifyEmailPayload,
   AuthResponse,
   UpdateUserProfileRequest,
-  UserStats,
-} from './user.types';
+  UserStats
+} from './user.types'
 
 // Project types
 export type {
@@ -26,8 +26,8 @@ export type {
   ProjectFormData,
   ProjectFilters,
   ProjectWithStats,
-  TeamMember,
-} from './project.types';
+  TeamMember
+} from './project.types'
 
 // Sprint types
 export type {
@@ -38,8 +38,8 @@ export type {
   SprintsResponse,
   SprintFormData,
   SprintFilters,
-  SprintWithStats,
-} from './sprint.types';
+  SprintWithStats
+} from './sprint.types'
 
 // Task types
 export type {
@@ -56,8 +56,8 @@ export type {
   TaskFormData,
   TaskFilters,
   TaskWithRelations,
-  DraggedTask,
-} from './task.types';
+  DraggedTask
+} from './task.types'
 
 // Board types
 export type {
@@ -70,10 +70,10 @@ export type {
   BoardColumnsResponse,
   BoardColumnWithTasks,
   BoardView,
-  ColumnConfig,
-} from './board.types';
+  ColumnConfig
+} from './board.types'
 
-export { DEFAULT_COLUMNS } from './board.types';
+export { DEFAULT_COLUMNS } from './board.types'
 
 // Chat types
 export type {
@@ -85,5 +85,5 @@ export type {
   MessagesResponse,
   ChannelResponse,
   ChannelsResponse,
-  ChatEvent,
-} from './chat.types';
+  ChatEvent
+} from './chat.types'

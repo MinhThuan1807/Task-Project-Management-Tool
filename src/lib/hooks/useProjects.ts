@@ -97,7 +97,9 @@ export function useCreateProject() {
 
   return useMutation({
     mutationFn: projectApi.createProject,
-    onMutate: async (newProject) => {
+    onMutate: async (
+      newProject: CreateProjectRequest & { ownerId: string }
+    ) => {
       await queryClient.cancelQueries({ queryKey: projectKeys.owned() })
 
       const previousProjects = queryClient.getQueryData<Project[]>(
@@ -112,7 +114,14 @@ export function useCreateProject() {
             _id: 'temp-' + Date.now(),
             members: [],
             status: 'active' as const,
-            createdAt: Date.now()
+            createdAt: new Date().toISOString(), // Sửa ở đây
+            imageUrl:
+              typeof newProject.imageUrl === 'string'
+                ? newProject.imageUrl
+                : undefined,
+            imagePublicId: '',
+            updatedAt: null,
+            description: newProject.description ?? ''
           } as Project
         ])
       }
@@ -149,7 +158,11 @@ export function useUpdateProject(projectId: string) {
       if (previousProject) {
         queryClient.setQueryData<Project>(projectKeys.detail(projectId), {
           ...previousProject,
-          ...updatedData
+          ...updatedData,
+          imageUrl:
+            typeof updatedData.imageUrl === 'string'
+              ? updatedData.imageUrl
+              : previousProject.imageUrl
         })
       }
 

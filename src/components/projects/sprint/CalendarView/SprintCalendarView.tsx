@@ -1,8 +1,8 @@
-import { useState } from 'react';
-import { Task, Sprint } from '../../../../lib/types';
-import { Card, CardContent, CardHeader, CardTitle } from '../../../ui/card';
-import { Button } from '../../../ui/button';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { useState } from 'react'
+import { Task, Sprint } from '../../../../lib/types'
+import { Card, CardContent, CardHeader, CardTitle } from '../../../ui/card'
+import { Button } from '../../../ui/button'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 
 type SprintCalendarViewProps = {
   tasks: Task[];
@@ -11,43 +11,41 @@ type SprintCalendarViewProps = {
 };
 
 const SprintCalendarView = ({ tasks, sprint, onTaskClick }: SprintCalendarViewProps) => {
-  const [currentDate, setCurrentDate] = useState(new Date());
+  const [currentDate, setCurrentDate] = useState(new Date())
 
   // Get calendar grid
   const getDaysInMonth = (date: Date) => {
-    const year = date.getFullYear();
-    const month = date.getMonth();
-    const firstDay = new Date(year, month, 1);
-    const lastDay = new Date(year, month + 1, 0);
-    const daysInMonth = lastDay.getDate();
-    const startingDayOfWeek = firstDay.getDay();
+    const year = date.getFullYear()
+    const month = date.getMonth()
+    const firstDay = new Date(year, month, 1)
+    const lastDay = new Date(year, month + 1, 0)
+    const daysInMonth = lastDay.getDate()
+    const startingDayOfWeek = firstDay.getDay()
 
-    const days: (Date | null)[] = [];
+    const days: (Date | null)[] = []
 
     // Add empty cells for days before month starts
     for (let i = 0; i < startingDayOfWeek; i++) {
-      days.push(null);
+      days.push(null)
     }
 
     // Add all days in month
     for (let day = 1; day <= daysInMonth; day++) {
-      days.push(new Date(year, month, day));
+      days.push(new Date(year, month, day))
     }
 
-    return days;
-  };
+    return days
+  }
 
   const getTasksForDate = (date: Date | null) => {
-  if (!date) return [];
-  const dateStr = date.toISOString().split('T')[0];
-  return tasks.filter((task) => {
-    // Đảm bảo so sánh đúng định dạng
-    const taskDueDateStr = typeof task.dueDate === 'string'
-      ? task.dueDate.split('T')[0]
-      : new Date(task.dueDate).toISOString().split('T')[0];
-    return taskDueDateStr === dateStr;
-  });
-};
+    if (!date) return []
+    const dateStr = date.toISOString().split('T')[0]
+    return tasks?.filter((task) => {
+      const due = new Date(task.dueDate as string | number | Date)
+      const taskDueDateStr = due.toISOString().split('T')[0]
+      return taskDueDateStr === dateStr
+    }) ?? []
+  }
 
   const navigateMonth = (direction: 'prev' | 'next') => {
     setCurrentDate(
@@ -56,28 +54,33 @@ const SprintCalendarView = ({ tasks, sprint, onTaskClick }: SprintCalendarViewPr
         currentDate.getMonth() + (direction === 'next' ? 1 : -1),
         1
       )
-    );
-  };
+    )
+  }
 
-  const days = getDaysInMonth(currentDate);
-  const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-  const monthName = currentDate.toLocaleString('default', { month: 'long', year: 'numeric' });
+  const days = getDaysInMonth(currentDate)
+  const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+  const monthName = currentDate.toLocaleString('default', { month: 'long', year: 'numeric' })
 
   const isToday = (date: Date | null) => {
-    if (!date) return false;
-    const today = new Date();
+    if (!date) return false
+    const today = new Date()
     return (
       date.getDate() === today.getDate() &&
       date.getMonth() === today.getMonth() &&
       date.getFullYear() === today.getFullYear()
-    );
-  };
+    )
+  }
 
   const isInSprint = (date: Date | null) => {
-    if (!date) return false;
-    const dateStr = date.toISOString().split('T')[0];
-    return dateStr >= sprint.startDate && dateStr <= sprint.endDate;
-  };
+    if (!date) return false
+    if (!sprint?.startDate || !sprint?.endDate) return false
+
+    const dateStr = date.toISOString().split('T')[0]
+    const startStr = new Date(sprint.startDate).toISOString().split('T')[0]
+    const endStr = new Date(sprint.endDate).toISOString().split('T')[0]
+
+    return dateStr >= startStr && dateStr <= endStr
+  }
 
   return (
     <div className="flex-1 p-6 overflow-auto">
@@ -115,10 +118,10 @@ const SprintCalendarView = ({ tasks, sprint, onTaskClick }: SprintCalendarViewPr
 
             {/* Calendar days */}
             {days.map((date, index) => {
-              const dayTasks = getTasksForDate(date);
-              const today = isToday(date);
-              const inSprint = isInSprint(date);
-              console.log('date', date, 'inSprint', inSprint, 'dayTasks', dayTasks);
+              const dayTasks = getTasksForDate(date)
+              const today = isToday(date)
+              const inSprint = isInSprint(date)
+              console.log('date', date, 'inSprint', inSprint, 'dayTasks', dayTasks)
 
               return (
                 <div
@@ -147,8 +150,8 @@ const SprintCalendarView = ({ tasks, sprint, onTaskClick }: SprintCalendarViewPr
                           <div
                             key={task._id}
                             onClick={(e) => {
-                              e.stopPropagation();
-                              onTaskClick(task);
+                              e.stopPropagation()
+                              onTaskClick(task)
                             }}
                             className="text-xs p-1.5 rounded bg-white border border-gray-200 hover:border-blue-400 transition-colors cursor-pointer"
                           >
@@ -158,10 +161,10 @@ const SprintCalendarView = ({ tasks, sprint, onTaskClick }: SprintCalendarViewPr
                                   task.priority === 'critical'
                                     ? 'bg-red-500'
                                     : task.priority === 'high'
-                                    ? 'bg-orange-500'
-                                    : task.priority === 'medium'
-                                    ? 'bg-blue-500'
-                                    : 'bg-gray-500'
+                                      ? 'bg-orange-500'
+                                      : task.priority === 'medium'
+                                        ? 'bg-blue-500'
+                                        : 'bg-gray-500'
                                 }`}
                               />
                               <span className="line-clamp-2 text-gray-900">
@@ -175,12 +178,12 @@ const SprintCalendarView = ({ tasks, sprint, onTaskClick }: SprintCalendarViewPr
                             +{dayTasks.length - 3} more
                           </div>
                         )}
-                        
+
                       </div>
                     </>
                   )}
                 </div>
-              );
+              )
             })}
           </div>
 
@@ -216,6 +219,6 @@ const SprintCalendarView = ({ tasks, sprint, onTaskClick }: SprintCalendarViewPr
         </CardContent>
       </Card>
     </div>
-  );
+  )
 }
-export default SprintCalendarView;
+export default SprintCalendarView

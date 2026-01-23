@@ -1,16 +1,16 @@
+import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar'
+import { Separator } from '@/components/ui/separator'
+import { AppSidebar } from '@/components/dashboard/AppSideBar'
+import TopBar from '@/components/dashboard/TopBar'
 
-import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
-import { Separator } from '@/components/ui/separator';
-import { AppSidebar } from '@/components/dashboard/AppSideBar';
-import TopBar from '@/components/dashboard/TopBar';
 
 export default function DashboardLayout({
-  children,
+  children
 }: {
   children: React.ReactNode;
 }) {
   return (
-    <SidebarProvider>
+    <SidebarProvider defaultOpen={false}>
       <AppSidebar/>
       <SidebarInset className="flex flex-col h-screen">
         <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4 bg-white">
@@ -23,5 +23,5 @@ export default function DashboardLayout({
         </main>
       </SidebarInset>
     </SidebarProvider>
-  );
+  )
 }

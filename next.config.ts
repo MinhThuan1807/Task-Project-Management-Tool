@@ -16,14 +16,14 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  typescript: {
-    // Cho phép build thành công ngay cả khi có lỗi TS
-    ignoreBuildErrors: true,
-  },
-  eslint: {
-    // Bỏ qua lỗi lint khi build
-    ignoreDuringBuilds: true,
-  },
+  // typescript: {
+  //   // Cho phép build thành công ngay cả khi có lỗi TS
+  //   ignoreBuildErrors: true,
+  // },
+//   eslint: {
+//     // Bỏ qua lỗi lint khi build
+//     ignoreDuringBuilds: true,
+//   },
 }
 
 export default nextConfig

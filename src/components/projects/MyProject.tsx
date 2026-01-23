@@ -73,8 +73,8 @@ function MyProject() {
                   onOpenChange={(open: boolean) =>
                     setOpenProjectId(open ? project._id : null)
                   }
-                  onSelect={() => router.push(`/projects/${project._id}`)}
                   sprintLink={sprintLink}
+                  onSelect={() => router.push(`/projects/${project._id}`)}
                 />
               </Suspense>
             )

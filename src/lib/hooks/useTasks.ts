@@ -1,7 +1,7 @@
-import { useMutation, useQuery, useQueryClient, queryOptions } from '@tanstack/react-query';
-import { taskApi } from '../services/task.service';
-import { toast } from 'sonner';
-import { getErrorMessage } from '../utils';
+import { useMutation, useQuery, useQueryClient, queryOptions } from '@tanstack/react-query'
+import { taskApi } from '../services/task.service'
+import { toast } from 'sonner'
+import { getErrorMessage } from '../utils'
 import type {
   Task,
   CreateTaskRequest,
@@ -9,8 +9,8 @@ import type {
   MoveTaskRequest,
   AddCommentRequest,
   AddAttachmentRequest,
-  TaskFilters,
-} from '../types';
+  TaskFilters
+} from '../types'
 
 // Query keys
 export const taskKeys = {
@@ -20,87 +20,87 @@ export const taskKeys = {
   bySprint: (sprintId: string) => [...taskKeys.lists(), 'sprint', sprintId] as const,
   byColumn: (columnId: string) => [...taskKeys.lists(), 'column', columnId] as const,
   details: () => [...taskKeys.all, 'detail'] as const,
-  detail: (taskId: string) => [...taskKeys.details(), taskId] as const,
-};
+  detail: (taskId: string) => [...taskKeys.details(), taskId] as const
+}
 
 // Query Options
 export function tasksBySprintOptions(sprintId: string) {
   return queryOptions({
     queryKey: taskKeys.bySprint(sprintId),
     queryFn: async () => {
-      const response = await taskApi.getAllBySprintId(sprintId);
-      return response.data;
+      const response = await taskApi.getAllBySprintId(sprintId)
+      return response.data
     },
     staleTime: 2 * 60 * 1000, // 2 minutes
-    enabled: !!sprintId,
-  });
+    enabled: !!sprintId
+  })
 }
 
 export function tasksByColumnOptions(columnId: string) {
   return queryOptions({
     queryKey: taskKeys.byColumn(columnId),
     queryFn: async () => {
-      const response = await taskApi.getAllByColumnId(columnId);
-      return response.data;
+      const response = await taskApi.getAllByColumnId(columnId)
+      return response.data
     },
     staleTime: 2 * 60 * 1000,
-    enabled: !!columnId,
-  });
+    enabled: !!columnId
+  })
 }
 
 export function taskDetailOptions(taskId: string) {
   return queryOptions({
     queryKey: taskKeys.detail(taskId),
     queryFn: async () => {
-      const response = await taskApi.getById(taskId);
-      return response.data;
+      const response = await taskApi.getById(taskId)
+      return response.data
     },
     staleTime: 2 * 60 * 1000,
-    enabled: !!taskId,
-  });
+    enabled: !!taskId
+  })
 }
 
 export function tasksWithFiltersOptions(filters: TaskFilters) {
   return queryOptions({
     queryKey: taskKeys.list(filters),
     queryFn: async () => {
-      const response = await taskApi.getWithFilters(filters);
-      return response.data;
+      const response = await taskApi.getWithFilters(filters)
+      return response.data
     },
-    staleTime: 2 * 60 * 1000,
-  });
+    staleTime: 2 * 60 * 1000
+  })
 }
 
 // Hooks
 export function useTasksBySprint(sprintId: string) {
-  return useQuery(tasksBySprintOptions(sprintId));
+  return useQuery(tasksBySprintOptions(sprintId))
 }
 
 export function useTasksByColumn(columnId: string) {
-  return useQuery(tasksByColumnOptions(columnId));
+  return useQuery(tasksByColumnOptions(columnId))
 }
 
 export function useTaskDetail(taskId: string) {
-  return useQuery(taskDetailOptions(taskId));
+  return useQuery(taskDetailOptions(taskId))
 }
 
 export function useTasksWithFilters(filters: TaskFilters) {
-  return useQuery(tasksWithFiltersOptions(filters));
+  return useQuery(tasksWithFiltersOptions(filters))
 }
 
 export function useCreateTask() {
-  const queryClient = useQueryClient();
+  const queryClient = useQueryClient()
 
   return useMutation({
     mutationFn: taskApi.create,
     onMutate: async (newTask) => {
       await queryClient.cancelQueries({
-        queryKey: taskKeys.bySprint(newTask.sprintId),
-      });
+        queryKey: taskKeys.bySprint(newTask.sprintId)
+      })
 
       const previousTasks = queryClient.getQueryData<Task[]>(
         taskKeys.bySprint(newTask.sprintId)
-      );
+      )
 
       if (previousTasks) {
         queryClient.setQueryData<Task[]>(taskKeys.bySprint(newTask.sprintId), [
@@ -108,114 +108,114 @@ export function useCreateTask() {
           {
             ...newTask,
             _id: 'temp-' + Date.now(),
-            createdAt: Date.now(),
-          } as unknown as Task,
-        ]);
+            createdAt: Date.now()
+          } as unknown as Task
+        ])
       }
 
-      return { previousTasks };
+      return { previousTasks }
     },
     onError: (error, variables, context) => {
       if (context?.previousTasks) {
-        queryClient.setQueryData(taskKeys.bySprint(variables.sprintId), context.previousTasks);
+        queryClient.setQueryData(taskKeys.bySprint(variables.sprintId), context.previousTasks)
       }
     },
     onSuccess: (data, variables) => {
-      queryClient.invalidateQueries({ queryKey: taskKeys.bySprint(variables.sprintId) });
-      queryClient.invalidateQueries({ queryKey: taskKeys.byColumn(variables.boardColumnId || '') });
-    },
-  });
+      queryClient.invalidateQueries({ queryKey: taskKeys.bySprint(variables.sprintId) })
+      queryClient.invalidateQueries({ queryKey: taskKeys.byColumn(variables.boardColumnId || '') })
+    }
+  })
 }
 
 export function useUpdateTask(taskId: string) {
-  const queryClient = useQueryClient();
+  const queryClient = useQueryClient()
 
   return useMutation({
     mutationFn: (data: UpdateTaskRequest) => taskApi.update(taskId, data),
     onMutate: async (updatedData) => {
-      await queryClient.cancelQueries({ queryKey: taskKeys.detail(taskId) });
+      await queryClient.cancelQueries({ queryKey: taskKeys.detail(taskId) })
 
-      const previousTask = queryClient.getQueryData<Task>(taskKeys.detail(taskId));
+      const previousTask = queryClient.getQueryData<Task>(taskKeys.detail(taskId))
 
       if (previousTask) {
         queryClient.setQueryData<Task>(taskKeys.detail(taskId), {
           ...previousTask,
-          ...updatedData,
-        });
+          ...updatedData
+        })
       }
 
-      return { previousTask };
+      return { previousTask }
     },
     onError: (error, variables, context) => {
       if (context?.previousTask) {
-        queryClient.setQueryData(taskKeys.detail(taskId), context.previousTask);
+        queryClient.setQueryData(taskKeys.detail(taskId), context.previousTask)
       }
-      toast.error(getErrorMessage(error) || 'Failed to update task');
+      toast.error(getErrorMessage(error) || 'Failed to update task')
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: taskKeys.detail(taskId) });
-      queryClient.invalidateQueries({ queryKey: taskKeys.all });
-    },
-  });
+      queryClient.invalidateQueries({ queryKey: taskKeys.detail(taskId) })
+      queryClient.invalidateQueries({ queryKey: taskKeys.all })
+    }
+  })
 }
 
 export function useMoveTask() {
-  const queryClient = useQueryClient();
+  const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: ({ taskId, data }: { taskId: string; data: UpdateTaskRequest }) => 
+    mutationFn: ({ taskId, data }: { taskId: string; data: UpdateTaskRequest }) =>
       taskApi.update(taskId, data),
     onSuccess: (data, variables) => {
       // Chỉ invalidate các queries liên quan đến sprint và task detail
-      queryClient.invalidateQueries({ queryKey: taskKeys.all });
+      queryClient.invalidateQueries({ queryKey: taskKeys.all })
     },
     onError: (error) => {
-      toast.error(getErrorMessage(error) || 'Failed to move task');
-    },
-  });
+      toast.error(getErrorMessage(error) || 'Failed to move task')
+    }
+  })
 }
 
 export function useAddComment() {
-  const queryClient = useQueryClient();
+  const queryClient = useQueryClient()
 
   return useMutation({
     mutationFn: taskApi.addComment,
     onSuccess: (data, variables) => {
-      queryClient.invalidateQueries({ queryKey: taskKeys.detail(variables.taskId) });
-      toast.success('Comment added successfully!');
+      queryClient.invalidateQueries({ queryKey: taskKeys.detail(variables.taskId) })
+      toast.success('Comment added successfully!')
     },
     onError: (error) => {
-      toast.error(getErrorMessage(error) || 'Failed to add comment');
-    },
-  });
+      toast.error(getErrorMessage(error) || 'Failed to add comment')
+    }
+  })
 }
 
 export function useAddAttachment() {
-  const queryClient = useQueryClient();
+  const queryClient = useQueryClient()
 
   return useMutation({
     mutationFn: taskApi.addAttachment,
     onSuccess: (data, variables) => {
-      queryClient.invalidateQueries({ queryKey: taskKeys.detail(variables.taskId) });
-      toast.success('Attachment added successfully!');
+      queryClient.invalidateQueries({ queryKey: taskKeys.detail(variables.taskId) })
+      toast.success('Attachment added successfully!')
     },
     onError: (error) => {
-      toast.error(getErrorMessage(error) || 'Failed to add attachment');
-    },
-  });
+      toast.error(getErrorMessage(error) || 'Failed to add attachment')
+    }
+  })
 }
 
 export function useDeleteTask() {
-  const queryClient = useQueryClient();
+  const queryClient = useQueryClient()
 
   return useMutation({
     mutationFn: taskApi.delete,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: taskKeys.all });
-      toast.success('Task deleted successfully!');
+      queryClient.invalidateQueries({ queryKey: taskKeys.all })
+      toast.success('Task deleted successfully!')
     },
     onError: (error) => {
-      toast.error(getErrorMessage(error) || 'Failed to delete task');
-    },
-  });
+      toast.error(getErrorMessage(error) || 'Failed to delete task')
+    }
+  })
 }
