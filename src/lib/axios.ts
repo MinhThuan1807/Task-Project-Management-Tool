@@ -53,7 +53,7 @@ axiosInstance.interceptors.response.use(
     return response
   },
   async (error: AxiosError) => {
-    
+
     if (error?.status === 401) {
       axiosReduxStore.dispatch(logoutUserAPI())
     }

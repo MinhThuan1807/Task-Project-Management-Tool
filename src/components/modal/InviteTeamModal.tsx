@@ -1,22 +1,22 @@
-'use client';
-import { useState } from 'react';
+'use client'
+import { useState } from 'react'
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
-  DialogTitle,
-} from '../ui/dialog';
-import { Button } from '../ui/button';
-import { Input } from '../ui/input';
-import { Label } from '../ui/label';
-import { Badge } from '../ui/badge';
-import { UserPlus, Mail, Shield, Eye, Crown, X } from 'lucide-react';
-import {  projectApi } from '@/lib/services/project.service';
-import { InviteMemberRequest } from '@/lib/types/project.types';
-import { toast } from 'sonner';
-import { getErrorMessage } from '@/lib/utils';
+  DialogTitle
+} from '../ui/dialog'
+import { Button } from '../ui/button'
+import { Input } from '../ui/input'
+import { Label } from '../ui/label'
+import { Badge } from '../ui/badge'
+import { UserPlus, Mail, Shield, Eye, Crown, X } from 'lucide-react'
+import { projectApi } from '@/lib/services/project.service'
+import { InviteMemberRequest } from '@/lib/types/project.types'
+import { toast } from 'sonner'
+import { getErrorMessage } from '@/lib/utils'
 
 type InviteTeamModalProps = {
   open: boolean;
@@ -43,7 +43,7 @@ const roleInfo = {
     icon: Crown,
     color: 'text-yellow-600',
     bgColor: 'bg-yellow-50',
-    borderColor: 'border-yellow-200',
+    borderColor: 'border-yellow-200'
   },
   member: {
     label: 'Member',
@@ -51,7 +51,7 @@ const roleInfo = {
     icon: Shield,
     color: 'text-blue-600',
     bgColor: 'bg-blue-50',
-    borderColor: 'border-blue-200',
+    borderColor: 'border-blue-200'
   },
   viewer: {
     label: 'Viewer',
@@ -59,92 +59,92 @@ const roleInfo = {
     icon: Eye,
     color: 'text-gray-600',
     bgColor: 'bg-gray-50',
-    borderColor: 'border-gray-200',
-  },
-};
+    borderColor: 'border-gray-200'
+  }
+}
 
 export function InviteTeamModal({
   open,
   onOpenChange,
-  projectId,
+  projectId
 
 }: InviteTeamModalProps) {
-  const [email, setEmail] = useState('');
-  const [role, setRole] = useState<'owner' | 'member' | 'viewer'>('member');
-  const [pendingInvites, setPendingInvites] = useState<PendingInvite[]>([]);
-  const [emailError, setEmailError] = useState('');
+  const [email, setEmail] = useState('')
+  const [role, setRole] = useState<'owner' | 'member' | 'viewer'>('member')
+  const [pendingInvites, setPendingInvites] = useState<PendingInvite[]>([])
+  const [emailError, setEmailError] = useState('')
 
   const validateEmail = (email: string) => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-  };
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    return emailRegex.test(email)
+  }
 
   const handleAddInvite = () => {
     // Validation
     if (!email.trim()) {
-      setEmailError('Email is required');
-      return;
+      setEmailError('Email is required')
+      return
     }
 
     if (!validateEmail(email)) {
-      setEmailError('Please enter a valid email address');
-      return;
+      setEmailError('Please enter a valid email address')
+      return
     }
 
     // Check duplicate
     if (pendingInvites.some((inv) => inv.email === email)) {
-      setEmailError('This email has already been added');
-      return;
+      setEmailError('This email has already been added')
+      return
     }
 
     // Add to pending invites
     const newInvite: PendingInvite = {
       id: Math.random().toString(36).substr(2, 9),
       email,
-      role,
-    };
+      role
+    }
 
-    setPendingInvites([...pendingInvites, newInvite]);
-    setEmail('');
-    setRole('member');
-    setEmailError('');
-  };
+    setPendingInvites([...pendingInvites, newInvite])
+    setEmail('')
+    setRole('member')
+    setEmailError('')
+  }
 
   const handleRemoveInvite = (id: string) => {
-    setPendingInvites(pendingInvites.filter((inv) => inv.id !== id));
-  };
+    setPendingInvites(pendingInvites.filter((inv) => inv.id !== id))
+  }
 
   const handleSendInvites = async () => {
     if (pendingInvites.length === 0) {
-      return;
+      return
     }
     try {
       const invitations: InviteMemberRequest[] = pendingInvites.map((inv) => ({
         email: inv.email,
         role: inv.role,
-        projectId: projectId,
-      }));
+        projectId: projectId
+      }))
 
-      await Promise.all(invitations.map((invitation) => projectApi.inviteMember(invitation)));
-      toast.success('Invitations sent successfully!');
+      await Promise.all(invitations.map((invitation) => projectApi.inviteMember(invitation)))
+      toast.success('Invitations sent successfully!')
       // Reset
-      setPendingInvites([]);
-      setEmail('');
-      setRole('member');
-      setEmailError('');
-      onOpenChange(false);
+      setPendingInvites([])
+      setEmail('')
+      setRole('member')
+      setEmailError('')
+      onOpenChange(false)
     } catch (error) {
-      toast.error(getErrorMessage(error) || 'Failed to send invitations');
+      toast.error(getErrorMessage(error) || 'Failed to send invitations')
     }
-   
-  };
+
+  }
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
-      e.preventDefault();
-      handleAddInvite();
+      e.preventDefault()
+      handleAddInvite()
     }
-  };
+  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -165,9 +165,9 @@ export function InviteTeamModal({
           {/* Role Information */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             {Object.entries(roleInfo).map(([key, info]) => {
-              const Icon = info.icon;
-              const roleKey = key as 'owner' | 'member' | 'viewer';
-              const isSelected = role === roleKey;
+              const Icon = info.icon
+              const roleKey = key as 'owner' | 'member' | 'viewer'
+              const isSelected = role === roleKey
 
               return (
                 <button
@@ -188,7 +188,7 @@ export function InviteTeamModal({
                   </div>
                   <p className="text-xs text-gray-600">{info.description}</p>
                 </button>
-              );
+              )
             })}
           </div>
 
@@ -205,8 +205,8 @@ export function InviteTeamModal({
                     placeholder="colleague@example.com"
                     value={email}
                     onChange={(e) => {
-                      setEmail(e.target.value);
-                      setEmailError('');
+                      setEmail(e.target.value)
+                      setEmailError('')
                     }}
                     onKeyPress={handleKeyPress}
                     className={`pl-10 ${emailError ? 'border-red-500' : ''}`}
@@ -232,8 +232,8 @@ export function InviteTeamModal({
               <Label>Pending Invitations ({pendingInvites.length})</Label>
               <div className="border border-gray-200 rounded-lg divide-y divide-gray-200 max-h-64 overflow-y-auto">
                 {pendingInvites.map((invite) => {
-                  const info = roleInfo[invite.role];
-                  const Icon = info.icon;
+                  const info = roleInfo[invite.role]
+                  const Icon = info.icon
 
                   return (
                     <div
@@ -264,7 +264,7 @@ export function InviteTeamModal({
                         <X className="w-4 h-4" />
                       </Button>
                     </div>
-                  );
+                  )
                 })}
               </div>
             </div>
@@ -318,5 +318,5 @@ export function InviteTeamModal({
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  );
+  )
 }

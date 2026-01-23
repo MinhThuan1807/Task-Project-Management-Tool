@@ -8,7 +8,6 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import BacklogTaskList from './BacklogTaskList'
 import { toast } from 'sonner'
 import { CreateTaskModal } from '../../modal/CreateTaskModal'
-import { EditTaskModal } from '../../modal/EditTaskModal'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -43,13 +42,17 @@ function MainBacklogArea({
     .filter((s) => s.status === 'planned')
     .map((s) => s._id)
 
-  const { data: tasks, isError } = useTasksBySprint(
-    upcomingSprints[0]?._id || ''
+  const validUpcomingSprint = upcomingSprints.find((s) =>
+    /^[a-f\d]{24}$/i.test(s._id)
   )
+  const sprintId = validUpcomingSprint?._id
+
+  const { data: tasks, isError } = useTasksBySprint(sprintId || '')
   const filteredTasks =
     tasks?.filter((task) =>
       task.title.toLowerCase().includes(searchQuery.toLowerCase())
     ) || []
+
   if (isError) {
     return (
       <div className="h-full flex items-center justify-center">
@@ -75,6 +78,7 @@ function MainBacklogArea({
     setSelectedTask(task)
     setIsEditTaskOpen(true)
   }
+
   const handleDeleteTask = (task: Task) => {
     setSelectedTask(task)
     setIsDeleteAlertOpen(true)
@@ -165,13 +169,6 @@ function MainBacklogArea({
         </AlertDialogContent>
       </AlertDialog>
       {/* Assign to Member Modal */}
-      {selectedTask && (
-        <EditTaskModal
-          open={isEditTaskOpen}
-          onClose={() => setIsEditTaskOpen(false)}
-          task={selectedTask}
-        />
-      )}
     </div>
   )
 }

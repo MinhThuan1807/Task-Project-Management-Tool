@@ -1,9 +1,9 @@
-"use client";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { ArrowUpRight } from 'lucide-react';
+'use client'
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { ArrowUpRight } from 'lucide-react'
 
 const recentActivity = [
   {
@@ -11,30 +11,30 @@ const recentActivity = [
     action: 'completed task',
     target: 'Setup authentication module',
     time: '2 hours ago',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Alice',
+    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Alice'
   },
   {
     user: 'Bob Smith',
     action: 'created sprint',
     target: 'Sprint 4',
     time: '5 hours ago',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Bob',
+    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Bob'
   },
   {
     user: 'Charlie Wilson',
     action: 'commented on',
     target: 'Payment integration',
     time: '1 day ago',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Charlie',
+    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Charlie'
   },
   {
     user: 'Diana Chen',
     action: 'moved task',
     target: 'API documentation',
     time: '2 days ago',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Diana',
-  },
-];
+    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Diana'
+  }
+]
 
 const RecentActivity = () => {
   return (
@@ -84,7 +84,7 @@ const RecentActivity = () => {
         </div>
       </CardContent>
     </Card>
-  );
-};
+  )
+}
 
-export default RecentActivity;
+export default RecentActivity

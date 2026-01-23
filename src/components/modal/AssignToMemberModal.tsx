@@ -1,17 +1,17 @@
-'use client';
-import { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '../ui/dialog';
-import { Button } from '../ui/button';
-import { Label } from '../ui/label';
-import { Badge } from '../ui/badge';
-import { Users, Mail, CheckCircle2, Loader2 } from 'lucide-react';
-import { ScrollArea } from '../ui/scroll-area';
-import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
-import { Checkbox } from '../ui/checkbox';
-import { Project } from '../../lib/types';
-import { useUpdateTask } from '@/lib/hooks/useTasks';
-import { toast } from 'sonner';
-import { Popover, PopoverTrigger, PopoverContent } from '../ui/popover';
+'use client'
+import { useState, useEffect } from 'react'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '../ui/dialog'
+import { Button } from '../ui/button'
+import { Label } from '../ui/label'
+import { Badge } from '../ui/badge'
+import { Users, Mail, CheckCircle2, Loader2 } from 'lucide-react'
+import { ScrollArea } from '../ui/scroll-area'
+import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar'
+import { Checkbox } from '../ui/checkbox'
+import { Project } from '../../lib/types'
+import { useUpdateTask } from '@/lib/hooks/useTasks'
+import { toast } from 'sonner'
+import { Popover, PopoverTrigger, PopoverContent } from '../ui/popover'
 
 type AssignToMemberModalProps = {
   open: boolean;
@@ -30,65 +30,65 @@ export function AssignToMemberModal({
   taskTitle,
   project,
   currentAssignees = [],
-  onChangeAssignees,
+  onChangeAssignees
 }: AssignToMemberModalProps) {
-  const [selectedMemberIds, setSelectedMemberIds] = useState<string[]>(currentAssignees);
+  const [selectedMemberIds, setSelectedMemberIds] = useState<string[]>(currentAssignees)
 
   // sync when modal opens or currentAssignees changes
   useEffect(() => {
-    if (open) setSelectedMemberIds(currentAssignees);
-  }, [open, currentAssignees]);
+    if (open) setSelectedMemberIds(currentAssignees)
+  }, [open, currentAssignees])
 
-  const updateTaskMutation = useUpdateTask(taskId);
+  const updateTaskMutation = useUpdateTask(taskId)
 
-  const activeMembers = project.members.filter(m => m.status === 'active');
-  const owner = activeMembers.find(m => m.memberId === project.ownerId);
-  const otherMembers = activeMembers.filter(m => m.memberId !== project.ownerId);
+  const activeMembers = project.members.filter(m => m.status === 'active')
+  const owner = activeMembers.find(m => m.memberId === project.ownerId)
+  const otherMembers = activeMembers.filter(m => m.memberId !== project.ownerId)
 
   const handleToggleMember = (memberId: string) => {
     setSelectedMemberIds(prev =>
       prev.includes(memberId) ? prev.filter(id => id !== memberId) : [...prev, memberId]
-    );
-  };
+    )
+  }
 
   const handleAssign = async () => {
     try {
       await updateTaskMutation.mutateAsync({
         assigneeIds: selectedMemberIds
-      });
-      toast.success(`Task assigned to ${selectedMemberIds.length} member(s) successfully!`);
-      onOpenChange(false);
+      })
+      toast.success(`Task assigned to ${selectedMemberIds.length} member(s) successfully!`)
+      onOpenChange(false)
       if (onChangeAssignees) {
-        onChangeAssignees(selectedMemberIds);
+        onChangeAssignees(selectedMemberIds)
       }
     } catch (error) {
-      console.error('Failed to assign task:', error);
+      console.error('Failed to assign task:', error)
     }
-  };
+  }
 
   const handleClose = () => {
-    setSelectedMemberIds(currentAssignees);
-    onOpenChange(false);
-  };
+    setSelectedMemberIds(currentAssignees)
+    onOpenChange(false)
+  }
 
   const getRoleBadgeColor = (role: string) => {
     switch (role) {
-      case 'owner':
-        return 'bg-gradient-to-r from-yellow-500 to-orange-500 text-white';
-      case 'member':
-        return 'bg-blue-100 text-blue-700';
-      case 'viewer':
-        return 'bg-gray-100 text-gray-700';
-      default:
-        return 'bg-gray-100 text-gray-700';
+    case 'owner':
+      return 'bg-gradient-to-r from-yellow-500 to-orange-500 text-white'
+    case 'member':
+      return 'bg-blue-100 text-blue-700'
+    case 'viewer':
+      return 'bg-gray-100 text-gray-700'
+    default:
+      return 'bg-gray-100 text-gray-700'
     }
-  };
+  }
 
   const selectedDisplay = selectedMemberIds.length === 0
     ? 'No members selected'
     : selectedMemberIds.length === 1
       ? activeMembers.find(m => m.memberId === selectedMemberIds[0])?.email ?? `${selectedMemberIds.length} selected`
-      : `${selectedMemberIds.length} selected`;
+      : `${selectedMemberIds.length} selected`
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
@@ -227,5 +227,5 @@ export function AssignToMemberModal({
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  );
+  )
 }

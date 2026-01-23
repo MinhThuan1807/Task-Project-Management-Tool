@@ -1,7 +1,7 @@
-'use client';
+'use client'
 
-import { Button } from '../ui/button';
-import { Card, CardContent } from '../ui/card';
+import { Button } from '../ui/button'
+import { Card, CardContent } from '../ui/card'
 import {
   LayoutDashboard,
   FolderKanban,
@@ -10,8 +10,8 @@ import {
   TrendingUp,
   CheckCircle2,
   Zap,
-  ArrowRight,
-} from 'lucide-react';
+  ArrowRight
+} from 'lucide-react'
 
 type LandingPageProps = {
   onNavigateToLogin: () => void;
@@ -96,38 +96,38 @@ export function LandingPageNew({ onNavigateToLogin }: LandingPageProps) {
                 icon: FolderKanban,
                 title: 'Sprint Management',
                 description: 'Plan and execute sprints with ease using our intuitive kanban boards',
-                color: 'from-blue-500 to-blue-600',
+                color: 'from-blue-500 to-blue-600'
               },
               {
                 icon: MessageSquare,
                 title: 'Team Chat',
                 description: 'Built-in chat channels for seamless team communication',
-                color: 'from-purple-500 to-purple-600',
+                color: 'from-purple-500 to-purple-600'
               },
               {
                 icon: Users,
                 title: 'Team Collaboration',
                 description: 'Invite team members and manage roles with flexible permissions',
-                color: 'from-green-500 to-green-600',
+                color: 'from-green-500 to-green-600'
               },
               {
                 icon: TrendingUp,
                 title: 'Progress Tracking',
                 description: 'Real-time insights and analytics to track project progress',
-                color: 'from-orange-500 to-orange-600',
+                color: 'from-orange-500 to-orange-600'
               },
               {
                 icon: CheckCircle2,
                 title: 'Task Management',
                 description: 'Create, assign, and track tasks with priority levels',
-                color: 'from-pink-500 to-pink-600',
+                color: 'from-pink-500 to-pink-600'
               },
               {
                 icon: LayoutDashboard,
                 title: 'Custom Dashboards',
                 description: 'Personalized dashboards for different project views',
-                color: 'from-indigo-500 to-indigo-600',
-              },
+                color: 'from-indigo-500 to-indigo-600'
+              }
             ].map((feature, index) => (
               <Card
                 key={index}
@@ -156,7 +156,7 @@ export function LandingPageNew({ onNavigateToLogin }: LandingPageProps) {
               { value: '10K+', label: 'Active Teams' },
               { value: '50K+', label: 'Projects Delivered' },
               { value: '99.9%', label: 'Uptime' },
-              { value: '4.9/5', label: 'User Rating' },
+              { value: '4.9/5', label: 'User Rating' }
             ].map((stat, index) => (
               <div key={index}>
                 <div className="text-5xl mb-2">{stat.value}</div>
@@ -192,5 +192,5 @@ export function LandingPageNew({ onNavigateToLogin }: LandingPageProps) {
         </div>
       </footer>
     </div>
-  );
+  )
 }

@@ -10,6 +10,6 @@ const ProjectCollapSkeleton = () => (
       <div className="h-3 w-20 bg-gray-100 rounded" />
     </div>
   </div>
-);
+)
 
-export default ProjectCollapSkeleton;
+export default ProjectCollapSkeleton

@@ -1,15 +1,15 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Calendar, Users, ArrowUpRight, MoreVertical } from 'lucide-react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { Calendar, Users, ArrowUpRight, MoreVertical } from 'lucide-react'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Project } from '@/lib/types';
+  DropdownMenuTrigger
+} from '@/components/ui/dropdown-menu'
+import { Project } from '@/lib/types'
 
 interface ProjectCardProps {
   project: Project;
@@ -95,6 +95,6 @@ const ProjectCard = ({ project, handleDirect }: ProjectCardProps) => {
         </div>
       </CardContent>
     </Card>
-  );
+  )
 }
-export default ProjectCard;
+export default ProjectCard

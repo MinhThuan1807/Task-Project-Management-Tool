@@ -1,14 +1,14 @@
-'use client';
+'use client'
 
-import { LandingPageNew } from '@/components/auth/landing-page';
-import { useRouter } from 'next/navigation';
+import { LandingPageNew } from '@/components/auth/landing-page'
+import { useRouter } from 'next/navigation'
 
 export default function LandingPage() {
-  const router = useRouter();
+  const router = useRouter()
 
   const handleNavigateToLogin = () => {
-    router.push('/login');
-  };
+    router.push('/login')
+  }
 
-  return <LandingPageNew onNavigateToLogin={handleNavigateToLogin} />;
+  return <LandingPageNew onNavigateToLogin={handleNavigateToLogin} />
 }

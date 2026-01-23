@@ -64,40 +64,32 @@ const mockComments = [
     id: 'comment-2',
     userId: 'user-2',
     userName: 'Bob Smith',
-    content: "I've started working on this. Should be done by tomorrow.",
+    content: 'I\'ve started working on this. Should be done by tomorrow.',
     timestamp: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString()
   }
 ]
 
 export const updateTaskSchema = z.object({
   title: z.string().min(1).optional(),
-
   description: z.string().optional(),
-
   boardColumnId: z.string().optional(),
-
   priority: z.enum(['low', 'medium', 'high', 'critical']).optional(),
-
   storyPoint: z.number().min(0).optional(),
-
-  dueDate: z
-    .preprocess((arg) => {
-      if (!arg) return undefined
-      if (typeof arg === 'string') {
-        const d = new Date(arg)
-        return isNaN(d.getTime()) ? undefined : d
-      }
-      if (arg instanceof Date) return arg
-      return undefined
-    }, z.date())
-    .optional(),
-
+  dueDate: z.string().optional(),
   labels: z.array(z.string()).optional(),
-
   assigneeIds: z.array(z.string()).optional()
 })
 
-type UpdateTaskForm = z.infer<typeof updateTaskSchema>
+type UpdateTaskForm = {
+  title?: string
+  description?: string
+  boardColumnId?: string
+  priority?: 'low' | 'medium' | 'high' | 'critical'
+  storyPoint?: number
+  dueDate?: string
+  labels?: string[]
+  assigneeIds?: string[]
+}
 
 export function EditTaskModal({
   open,
@@ -130,7 +122,7 @@ export function EditTaskModal({
         priority: task?.priority as UpdateTaskForm['priority'],
         boardColumnId: task?.boardColumnId,
         storyPoint: task?.storyPoint,
-        dueDate: task?.dueDate ? new Date(task.dueDate) : undefined,
+        dueDate: task?.dueDate ? formatDateForInput(task.dueDate) : undefined,
         labels: task?.labels,
         assigneeIds: task?.assigneeIds
       }
@@ -335,14 +327,8 @@ export function EditTaskModal({
                         <Input
                           id="dueDate"
                           type="date"
-                          value={formatDateForInput(field.value)}
-                          onChange={(e) =>
-                            field.onChange(
-                              e.target.value
-                                ? new Date(e.target.value)
-                                : undefined
-                            )
-                          }
+                          value={field.value || ''}
+                          onChange={(e) => field.onChange(e.target.value)}
                         />
                       )}
                     />
@@ -508,23 +494,26 @@ export function EditTaskModal({
                       Date.now() - 6 * 60 * 60 * 1000
                     ).toISOString()
                   }
-                ].map((activity, index) => (
-                  <div key={index} className="flex gap-3">
-                    <Avatar className="w-8 h-8">
-                      <AvatarImage src="https://api.dicebear.com/7.x/avataaars/svg?seed=user" />
-                      <AvatarFallback>U</AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1">
-                      <p className="text-sm text-gray-900">
-                        <span className="font-medium">You</span>{' '}
-                        {activity.action}
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        {getRelativeTime(activity.time)}
-                      </p>
+                ].map((activity, index) => {
+                  const timeStr = typeof activity.time === 'string' ? activity.time : activity.time?.toISOString?.() ?? ''
+                  return (
+                    <div key={index} className="flex gap-3">
+                      <Avatar className="w-8 h-8">
+                        <AvatarImage src="https://api.dicebear.com/7.x/avataaars/svg?seed=user" />
+                        <AvatarFallback>U</AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1">
+                        <p className="text-sm text-gray-900">
+                          <span className="font-medium">You</span>{' '}
+                          {activity.action}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          {getRelativeTime(timeStr)}
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
             </TabsContent>
           </Tabs>

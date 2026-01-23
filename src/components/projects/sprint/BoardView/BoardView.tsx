@@ -53,7 +53,7 @@ function BoardView({
     })
   )
   return (
-    <div className="flex-1 overflow-auto">
+    <div className="flex-1 p-3 overflow-auto">
       <DndContext
         sensors={canEditTasks ? sensors : useSensors()} // Disable drag if no permission
         collisionDetection={closestCorners}

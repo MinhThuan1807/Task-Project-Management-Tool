@@ -1,4 +1,4 @@
-import axiosInstance from '../axios';
+import axiosInstance from '../axios'
 import type {
   CreateProjectRequest,
   UpdateProjectRequest,
@@ -7,8 +7,8 @@ import type {
   RemoveMemberRequest,
   UpdateMemberRoleRequest,
   ProjectResponse,
-  ProjectsResponse,
-} from '../types';
+  ProjectsResponse
+} from '../types'
 
 export const projectApi = {
   /**
@@ -16,33 +16,33 @@ export const projectApi = {
    * POST /projects
    */
   createProject: async (data: CreateProjectRequest): Promise<ProjectResponse> => {
-    const formData = new FormData();
+    const formData = new FormData()
 
-    formData.append('name', data.name);
+    formData.append('name', data.name)
 
     if (data.description) {
-      formData.append('description', data.description);
+      formData.append('description', data.description)
     }
 
     if (data.imageUrl) {
-      formData.append('image', data.imageUrl);
+      formData.append('image', data.imageUrl)
     }
 
     if (data.members && data.members.length > 0) {
       data.members.forEach((member, index) => {
-        formData.append(`members[${index}][email]`, member.email);
-        formData.append(`members[${index}][role]`, member.role);
-      });
+        formData.append(`members[${index}][email]`, member.email)
+        formData.append(`members[${index}][role]`, member.role)
+      })
     }
 
     const response = await axiosInstance.post<ProjectResponse>('/projects', formData, {
       headers: {
-        'Content-Type': 'multipart/form-data',
+        'Content-Type': 'multipart/form-data'
       },
-      withCredentials: true,
-    });
+      withCredentials: true
+    })
 
-    return response.data;
+    return response.data
   },
 
   /**
@@ -50,8 +50,8 @@ export const projectApi = {
    * GET /projects/owned
    */
   getOwnedProjects: async (): Promise<ProjectsResponse> => {
-    const response = await axiosInstance.get<ProjectsResponse>('/projects/owned');
-    return response.data;
+    const response = await axiosInstance.get<ProjectsResponse>('/projects/owned')
+    return response.data
   },
 
   /**
@@ -59,8 +59,8 @@ export const projectApi = {
    * GET /projects/joined
    */
   getJoinedProjects: async (): Promise<ProjectsResponse> => {
-    const response = await axiosInstance.get<ProjectsResponse>('/projects/joined');
-    return response.data;
+    const response = await axiosInstance.get<ProjectsResponse>('/projects/joined')
+    return response.data
   },
 
   /**
@@ -68,8 +68,8 @@ export const projectApi = {
    * GET /projects/:id
    */
   getById: async (projectId: string): Promise<ProjectResponse> => {
-    const response = await axiosInstance.get<ProjectResponse>(`/projects/${projectId}`);
-    return response.data;
+    const response = await axiosInstance.get<ProjectResponse>(`/projects/${projectId}`)
+    return response.data
   },
 
   /**
@@ -80,24 +80,24 @@ export const projectApi = {
     projectId: string,
     data: UpdateProjectRequest
   ): Promise<ProjectResponse> => {
-    const formData = new FormData();
+    const formData = new FormData()
 
-    if (data.name) formData.append('name', data.name);
-    if (data.description) formData.append('description', data.description);
-    if (data.status) formData.append('status', data.status);
-    if (data.imageUrl) formData.append('image', data.imageUrl);
+    if (data.name) formData.append('name', data.name)
+    if (data.description) formData.append('description', data.description)
+    if (data.status) formData.append('status', data.status)
+    if (data.imageUrl) formData.append('image', data.imageUrl)
 
     const response = await axiosInstance.put<ProjectResponse>(
       `/projects/${projectId}`,
       formData,
       {
         headers: {
-          'Content-Type': 'multipart/form-data',
-        },
+          'Content-Type': 'multipart/form-data'
+        }
       }
-    );
+    )
 
-    return response.data;
+    return response.data
   },
 
   /**
@@ -105,8 +105,8 @@ export const projectApi = {
    * DELETE /projects/:id
    */
   delete: async (projectId: string): Promise<{ success: boolean }> => {
-    const response = await axiosInstance.delete(`/projects/${projectId}`);
-    return response.data;
+    const response = await axiosInstance.delete(`/projects/${projectId}`)
+    return response.data
   },
 
   /**
@@ -115,14 +115,14 @@ export const projectApi = {
    */
   inviteMember: async (data: InviteMemberRequest): Promise<ProjectResponse> => {
     const response = await axiosInstance.post<ProjectResponse>(
-      `/projects/invite`,
+      '/projects/invite',
       {
         email: data.email,
         role: data.role,
-        projectId: data.projectId,
+        projectId: data.projectId
       }
-    );
-    return response.data;
+    )
+    return response.data
   },
 
   /**
@@ -133,8 +133,8 @@ export const projectApi = {
     const response = await axiosInstance.post<ProjectResponse>(
       '/projects/accept-invite',
       data
-    );
-    return response.data;
+    )
+    return response.data
   },
 
   /**
@@ -144,8 +144,8 @@ export const projectApi = {
   removeMember: async (data: RemoveMemberRequest): Promise<{ success: boolean }> => {
     const response = await axiosInstance.delete(
       `/projects/${data.projectId}/members/${data.memberId}`
-    );
-    return response.data;
+    )
+    return response.data
   },
 
   /**
@@ -156,10 +156,10 @@ export const projectApi = {
     const response = await axiosInstance.put<ProjectResponse>(
       `/projects/${data.projectId}/members/${data.memberId}/role`,
       { role: data.role }
-    );
-    return response.data;
-  },
-} as const;
+    )
+    return response.data
+  }
+} as const
 
 // Export types for backward compatibility
-export type { InviteMemberRequest, AcceptInviteRequest };
+export type { InviteMemberRequest, AcceptInviteRequest }

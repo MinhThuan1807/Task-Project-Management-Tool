@@ -1,12 +1,12 @@
-import axiosInstance from '../axios';
+import axiosInstance from '../axios'
 import type {
   SendMessageRequest,
   CreateChannelRequest,
   MessageResponse,
   MessagesResponse,
   ChannelResponse,
-  ChannelsResponse,
-} from '../types';
+  ChannelsResponse
+} from '../types'
 
 export const chatApi = {
   /**
@@ -14,24 +14,24 @@ export const chatApi = {
    * POST /messages
    */
   sendMessage: async (data: SendMessageRequest): Promise<MessageResponse> => {
-    const formData = new FormData();
-    
-    formData.append('projectId', data.projectId);
-    formData.append('channelId', data.channelId);
-    formData.append('content', data.content);
-    
+    const formData = new FormData()
+
+    formData.append('projectId', data.projectId)
+    formData.append('channelId', data.channelId)
+    formData.append('content', data.content)
+
     if (data.attachments && data.attachments.length > 0) {
       data.attachments.forEach((file) => {
-        formData.append('attachments', file);
-      });
+        formData.append('attachments', file)
+      })
     }
 
     const response = await axiosInstance.post<MessageResponse>('/messages', formData, {
       headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    });
-    return response.data;
+        'Content-Type': 'multipart/form-data'
+      }
+    })
+    return response.data
   },
 
   /**
@@ -41,8 +41,8 @@ export const chatApi = {
   getMessagesByChannelId: async (channelId: string): Promise<MessagesResponse> => {
     const response = await axiosInstance.get<MessagesResponse>(
       `/messages/channel/${channelId}`
-    );
-    return response.data;
+    )
+    return response.data
   },
 
   /**
@@ -52,8 +52,8 @@ export const chatApi = {
   getMessagesByProjectId: async (projectId: string): Promise<MessagesResponse> => {
     const response = await axiosInstance.get<MessagesResponse>(
       `/messages/project/${projectId}`
-    );
-    return response.data;
+    )
+    return response.data
   },
 
   /**
@@ -62,9 +62,9 @@ export const chatApi = {
    */
   editMessage: async (messageId: string, content: string): Promise<MessageResponse> => {
     const response = await axiosInstance.put<MessageResponse>(`/messages/${messageId}`, {
-      content,
-    });
-    return response.data;
+      content
+    })
+    return response.data
   },
 
   /**
@@ -74,8 +74,8 @@ export const chatApi = {
   deleteMessage: async (messageId: string): Promise<{ success: boolean }> => {
     const response = await axiosInstance.delete<{ success: boolean }>(
       `/messages/${messageId}`
-    );
-    return response.data;
+    )
+    return response.data
   },
 
   /**
@@ -83,8 +83,8 @@ export const chatApi = {
    * POST /channels
    */
   createChannel: async (data: CreateChannelRequest): Promise<ChannelResponse> => {
-    const response = await axiosInstance.post<ChannelResponse>('/channels', data);
-    return response.data;
+    const response = await axiosInstance.post<ChannelResponse>('/channels', data)
+    return response.data
   },
 
   /**
@@ -92,8 +92,8 @@ export const chatApi = {
    * GET /channels/:id
    */
   getChannelById: async (channelId: string): Promise<ChannelResponse> => {
-    const response = await axiosInstance.get<ChannelResponse>(`/channels/${channelId}`);
-    return response.data;
+    const response = await axiosInstance.get<ChannelResponse>(`/channels/${channelId}`)
+    return response.data
   },
 
   /**
@@ -103,8 +103,8 @@ export const chatApi = {
   getChannelsByProjectId: async (projectId: string): Promise<ChannelsResponse> => {
     const response = await axiosInstance.get<ChannelsResponse>(
       `/channels/project/${projectId}`
-    );
-    return response.data;
+    )
+    return response.data
   },
 
   /**
@@ -118,8 +118,8 @@ export const chatApi = {
     const response = await axiosInstance.put<ChannelResponse>(
       `/channels/${channelId}`,
       data
-    );
-    return response.data;
+    )
+    return response.data
   },
 
   /**
@@ -129,7 +129,7 @@ export const chatApi = {
   deleteChannel: async (channelId: string): Promise<{ success: boolean }> => {
     const response = await axiosInstance.delete<{ success: boolean }>(
       `/channels/${channelId}`
-    );
-    return response.data;
-  },
-} as const;
+    )
+    return response.data
+  }
+} as const

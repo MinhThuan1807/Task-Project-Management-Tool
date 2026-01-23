@@ -1,5 +1,5 @@
 import { Input } from '@/components/ui/input'
-import { Sprint } from '@/lib/types/sprint.types';
+import { Sprint } from '@/lib/types/sprint.types'
 import { formatDate } from '@/lib/utils'
 import { Calendar, CheckCircle2, Search } from 'lucide-react'
 
@@ -25,7 +25,7 @@ function SprintSearch({
 }: SprintSearchProps) {
   return (
     <div className="flex items-center gap-4 mb-4">
-      <div className="relative flex-1 max-w-md">
+      {/* <div className="relative flex-1 max-w-md">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
         <Input
           type="text"
@@ -34,7 +34,7 @@ function SprintSearch({
           onChange={(e) => setSearchQuery(e.target.value)}
           className="pl-10"
         />
-      </div>
+      </div> */}
       <div className="flex items-center gap-6 text-sm text-gray-600">
         <div className="flex items-center gap-2">
           <Calendar className="w-4 h-4" />

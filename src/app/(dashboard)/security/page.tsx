@@ -1,11 +1,11 @@
-'use client';
+'use client'
 
-import { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
+import { useState } from 'react'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Badge } from '@/components/ui/badge'
 import {
   Shield,
   Lock,
@@ -14,8 +14,8 @@ import {
   AlertTriangle,
   CheckCircle2,
   Monitor,
-  Trash2,
-} from 'lucide-react';
+  Trash2
+} from 'lucide-react'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -25,22 +25,22 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
-} from '@/components/ui/alert-dialog';
+  AlertDialogTrigger
+} from '@/components/ui/alert-dialog'
 
 export default function SecurityPage() {
-  const [currentPassword, setCurrentPassword] = useState('');
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState('')
+  const [newPassword, setNewPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [twoFactorEnabled, setTwoFactorEnabled] = useState(false)
 
   const handleChangePassword = () => {
     // Handle password change logic
-    alert('Password changed successfully!');
-    setCurrentPassword('');
-    setNewPassword('');
-    setConfirmPassword('');
-  };
+    alert('Password changed successfully!')
+    setCurrentPassword('')
+    setNewPassword('')
+    setConfirmPassword('')
+  }
 
   const activeSessions = [
     {
@@ -48,23 +48,23 @@ export default function SecurityPage() {
       location: 'Ho Chi Minh City, Vietnam',
       ip: '192.168.1.100',
       lastActive: 'Active now',
-      current: true,
+      current: true
     },
     {
       device: 'iPhone 14 Pro',
       location: 'Ho Chi Minh City, Vietnam',
       ip: '192.168.1.101',
       lastActive: '2 hours ago',
-      current: false,
+      current: false
     },
     {
       device: 'Chrome on MacBook',
       location: 'Hanoi, Vietnam',
       ip: '192.168.1.102',
       lastActive: '1 day ago',
-      current: false,
-    },
-  ];
+      current: false
+    }
+  ]
 
   return (
     <div className="h-full overflow-auto bg-gradient-to-br from-gray-50 to-blue-50/30">
@@ -337,5 +337,5 @@ export default function SecurityPage() {
         </div>
       </div>
     </div>
-  );
+  )
 }

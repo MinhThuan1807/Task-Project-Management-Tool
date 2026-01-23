@@ -38,7 +38,7 @@ export function Column({
   const [isColumnSelected, setColumnIsSelected] = useState(false)
 
   return (
-    <div className="pt-5 flex-shrink-0 w-80 flex flex-col">
+    <div className="pt-5 flex-shrink-0 w-68 flex flex-col">
       <div
         className={`${column.color} px-4 py-3 rounded-t-lg shadow-sm border-b-2 border-gray-300 sticky top-0 z-10`}
       >

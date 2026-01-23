@@ -1,4 +1,4 @@
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 
 interface ProjectState {
   isCreateModalOpen: boolean;
@@ -7,24 +7,24 @@ interface ProjectState {
 
 const initialState: ProjectState = {
   isCreateModalOpen: false,
-  selectedProjectId: null,
-};
+  selectedProjectId: null
+}
 
 export const projectSlice = createSlice({
   name: 'project',
   initialState,
   reducers: {
     openCreateModal: (state) => {
-      state.isCreateModalOpen = true;
+      state.isCreateModalOpen = true
     },
     closeCreateModal: (state) => {
-      state.isCreateModalOpen = false;
+      state.isCreateModalOpen = false
     },
     setSelectedProject: (state, action: PayloadAction<string | null>) => {
-      state.selectedProjectId = action.payload;
-    },
-  },
-});
+      state.selectedProjectId = action.payload
+    }
+  }
+})
 
-export const { openCreateModal, closeCreateModal, setSelectedProject } = projectSlice.actions;
-export default projectSlice.reducer;
+export const { openCreateModal, closeCreateModal, setSelectedProject } = projectSlice.actions
+export default projectSlice.reducer

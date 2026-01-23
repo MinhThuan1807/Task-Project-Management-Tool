@@ -1,10 +1,10 @@
-"use client";
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { TrendingUp, FolderKanban, Calendar, CheckCircle2, Users } from 'lucide-react';
-import { useAllProjects } from '@/lib/hooks/useProjects';
+'use client'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { TrendingUp, FolderKanban, Calendar, CheckCircle2, Users } from 'lucide-react'
+import { useAllProjects } from '@/lib/hooks/useProjects'
 
 const StatusOverview = () => {
-  const { data: projects = [], ownedProjects = [] } = useAllProjects();
+  const { data: projects = [], ownedProjects = [] } = useAllProjects()
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
@@ -71,7 +71,7 @@ const StatusOverview = () => {
         </CardContent>
       </Card>
     </div>
-  );
-};
+  )
+}
 
-export default StatusOverview;
+export default StatusOverview

@@ -1,14 +1,14 @@
-'use client';
-import { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
-import { Button } from '../ui/button';
+'use client'
+import { useState } from 'react'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card'
+import { Button } from '../ui/button'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
-} from '../ui/select';
+  SelectValue
+} from '../ui/select'
 import {
   LineChart,
   Line,
@@ -22,8 +22,8 @@ import {
   CartesianGrid,
   Tooltip,
   Legend,
-  ResponsiveContainer,
-} from 'recharts';
+  ResponsiveContainer
+} from 'recharts'
 import {
   TrendingUp,
   Users,
@@ -33,26 +33,26 @@ import {
   Calendar,
   Activity,
   FileText,
-  BarChart3,
-} from 'lucide-react';
-import { formatDate } from '../../lib/utils';
-import { useAllProjects } from '@/lib/hooks/useProjects';
-import { useSprintsByProject } from '@/lib/hooks/useSprints';
-import { useParams } from 'next/navigation';
+  BarChart3
+} from 'lucide-react'
+import { formatDate } from '../../lib/utils'
+import { useAllProjects } from '@/lib/hooks/useProjects'
+import { useSprintsByProject } from '@/lib/hooks/useSprints'
+import { useParams } from 'next/navigation'
 
 export function ReportsView() {
-  const param = useParams();
-  const projectId = param.id as string;
-  const { data: projects } = useAllProjects();
-  const project = projects?.find((p) => p._id === projectId);
-  const { data: sprints } = useSprintsByProject(projectId);
+  const param = useParams()
+  const projectId = param.id as string
+  const { data: projects } = useAllProjects()
+  const project = projects?.find((p) => p._id === projectId)
+  const { data: sprints } = useSprintsByProject(projectId)
 
   const [selectedSprintId, setSelectedSprintId] = useState<string>(
     sprints?.[0]?._id || ''
-  );
-    // ============= MOCK DATA FOR CHARTS =============
+  )
+  // ============= MOCK DATA FOR CHARTS =============
   // 1. BURNDOWN CHART DATA
-   const burndownData = [
+  const burndownData = [
     { day: 'Day 1', ideal: 100, actual: 100 },
     { day: 'Day 2', ideal: 93, actual: 95 },
     { day: 'Day 3', ideal: 86, actual: 88 },
@@ -67,20 +67,20 @@ export function ReportsView() {
     { day: 'Day 12', ideal: 21, actual: 22 },
     { day: 'Day 13', ideal: 14, actual: 15 },
     { day: 'Day 14', ideal: 7, actual: 8 },
-    { day: 'Day 15', ideal: 0, actual: 0 },
-  ];
-   // 2. SPRINT PROGRESS PIE CHART DATA
+    { day: 'Day 15', ideal: 0, actual: 0 }
+  ]
+  // 2. SPRINT PROGRESS PIE CHART DATA
   const progressData = [
     { name: 'Backlog', value: 5, color: '#94a3b8' },
     { name: 'Todo', value: 8, color: '#3b82f6' },
     { name: 'In Process', value: 12, color: '#f59e0b' },
     { name: 'Review', value: 6, color: '#8b5cf6' },
-    { name: 'Done', value: 15, color: '#10b981' },
-  ];
+    { name: 'Done', value: 15, color: '#10b981' }
+  ]
 
-  const totalTasks = progressData.reduce((sum, item) => sum + item.value, 0);
-  const completedTasks = progressData.find((item) => item.name === 'Done')?.value || 0;
-  const completionRate = ((completedTasks / totalTasks) * 100).toFixed(1);
+  const totalTasks = progressData.reduce((sum, item) => sum + item.value, 0)
+  const completedTasks = progressData.find((item) => item.name === 'Done')?.value || 0
+  const completionRate = ((completedTasks / totalTasks) * 100).toFixed(1)
 
   // 3. VELOCITY CHART DATA
   const velocityData = [
@@ -89,13 +89,13 @@ export function ReportsView() {
     { sprint: 'Sprint 3', planned: 90, completed: 88 },
     { sprint: 'Sprint 4', planned: 85, completed: 85 },
     { sprint: 'Sprint 5', planned: 95, completed: 92 },
-    { sprint: 'Sprint 6', planned: 100, completed: 0 }, // Current sprint
-  ];
+    { sprint: 'Sprint 6', planned: 100, completed: 0 } // Current sprint
+  ]
 
   const avgVelocity = (
     velocityData.slice(0, -1).reduce((sum, s) => sum + s.completed, 0) /
     (velocityData.length - 1)
-  ).toFixed(1);
+  ).toFixed(1)
 
   // 4. TASK DISTRIBUTION BY MEMBER DATA
   const memberDistribution = [
@@ -103,34 +103,34 @@ export function ReportsView() {
       name: 'Alice Johnson',
       done: 12,
       inProgress: 4,
-      todo: 3,
+      todo: 3
     },
     {
       name: 'Bob Smith',
       done: 10,
       inProgress: 5,
-      todo: 2,
+      todo: 2
     },
     {
       name: 'Carol White',
       done: 8,
       inProgress: 3,
-      todo: 4,
+      todo: 4
     },
     {
       name: 'David Brown',
       done: 7,
       inProgress: 2,
-      todo: 3,
-    },
-  ];
+      todo: 3
+    }
+  ]
 
-   // Calculate team stats
+  // Calculate team stats
   const teamStats = {
     totalMembers: memberDistribution.length,
     totalCompleted: memberDistribution.reduce((sum, m) => sum + m.done, 0),
-    totalInProgress: memberDistribution.reduce((sum, m) => sum + m.inProgress, 0),
-  };
+    totalInProgress: memberDistribution.reduce((sum, m) => sum + m.inProgress, 0)
+  }
 
   return (
     <div className="h-full overflow-auto bg-gradient-to-br from-gray-50 to-blue-50/30">
@@ -236,20 +236,20 @@ export function ReportsView() {
               <ResponsiveContainer width="100%" height={300}>
                 <LineChart data={burndownData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                  <XAxis 
-                    dataKey="day" 
+                  <XAxis
+                    dataKey="day"
                     tick={{ fontSize: 12 }}
                     stroke="#6b7280"
                   />
-                  <YAxis 
+                  <YAxis
                     tick={{ fontSize: 12 }}
                     stroke="#6b7280"
                   />
-                  <Tooltip 
+                  <Tooltip
                     contentStyle={{
                       backgroundColor: 'white',
                       border: '1px solid #e5e7eb',
-                      borderRadius: '8px',
+                      borderRadius: '8px'
                     }}
                   />
                   <Legend />
@@ -341,20 +341,20 @@ export function ReportsView() {
               <ResponsiveContainer width="100%" height={300}>
                 <BarChart data={velocityData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                  <XAxis 
-                    dataKey="sprint" 
+                  <XAxis
+                    dataKey="sprint"
                     tick={{ fontSize: 12 }}
                     stroke="#6b7280"
                   />
-                  <YAxis 
+                  <YAxis
                     tick={{ fontSize: 12 }}
                     stroke="#6b7280"
                   />
-                  <Tooltip 
+                  <Tooltip
                     contentStyle={{
                       backgroundColor: 'white',
                       border: '1px solid #e5e7eb',
-                      borderRadius: '8px',
+                      borderRadius: '8px'
                     }}
                   />
                   <Legend />
@@ -384,18 +384,18 @@ export function ReportsView() {
                 <BarChart data={memberDistribution} layout="vertical">
                   <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                   <XAxis type="number" tick={{ fontSize: 12 }} stroke="#6b7280" />
-                  <YAxis 
-                    dataKey="name" 
-                    type="category" 
+                  <YAxis
+                    dataKey="name"
+                    type="category"
                     tick={{ fontSize: 12 }}
                     stroke="#6b7280"
                     width={100}
                   />
-                  <Tooltip 
+                  <Tooltip
                     contentStyle={{
                       backgroundColor: 'white',
                       border: '1px solid #e5e7eb',
-                      borderRadius: '8px',
+                      borderRadius: '8px'
                     }}
                   />
                   <Legend />
@@ -451,5 +451,5 @@ export function ReportsView() {
         </Card>
       </div>
     </div>
-  );
+  )
 }

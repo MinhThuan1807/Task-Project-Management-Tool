@@ -1,11 +1,11 @@
-import axiosInstance from '../axios';
+import axiosInstance from '../axios'
 import type {
   CreateBoardColumnRequest,
   UpdateBoardColumnRequest,
   ReorderColumnsRequest,
   BoardColumnResponse,
-  BoardColumnsResponse,
-} from '../types';
+  BoardColumnsResponse
+} from '../types'
 
 export const boardColumnApi = {
   /**
@@ -13,8 +13,8 @@ export const boardColumnApi = {
    * POST /board-columns
    */
   create: async (data: CreateBoardColumnRequest): Promise<BoardColumnResponse> => {
-    const response = await axiosInstance.post<BoardColumnResponse>('/board-columns', data);
-    return response.data;
+    const response = await axiosInstance.post<BoardColumnResponse>('/board-columns', data)
+    return response.data
   },
 
   /**
@@ -24,8 +24,8 @@ export const boardColumnApi = {
   getById: async (boardColumnId: string): Promise<BoardColumnResponse> => {
     const response = await axiosInstance.get<BoardColumnResponse>(
       `/board-columns/${boardColumnId}`
-    );
-    return response.data;
+    )
+    return response.data
   },
 
   /**
@@ -35,8 +35,8 @@ export const boardColumnApi = {
   getAllBySprintId: async (sprintId: string): Promise<BoardColumnsResponse> => {
     const response = await axiosInstance.get<BoardColumnsResponse>(
       `/board-columns/sprint/${sprintId}`
-    );
-    return response.data;
+    )
+    return response.data
   },
 
   /**
@@ -50,8 +50,8 @@ export const boardColumnApi = {
     const response = await axiosInstance.put<BoardColumnResponse>(
       `/board-columns/${boardColumnId}`,
       data
-    );
-    return response.data;
+    )
+    return response.data
   },
 
   /**
@@ -62,8 +62,8 @@ export const boardColumnApi = {
     const response = await axiosInstance.put<BoardColumnsResponse>(
       '/board-columns/reorder',
       data
-    );
-    return response.data;
+    )
+    return response.data
   },
 
   /**
@@ -73,7 +73,7 @@ export const boardColumnApi = {
   delete: async (boardColumnId: string): Promise<{ success: boolean }> => {
     const response = await axiosInstance.delete<{ success: boolean }>(
       `/board-columns/${boardColumnId}`
-    );
-    return response.data;
-  },
-} as const;
+    )
+    return response.data
+  }
+} as const

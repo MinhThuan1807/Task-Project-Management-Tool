@@ -1,8 +1,8 @@
-import ProjectSection from '@/components/dashboard/ProjectSection';
-import { CreateProjectModal } from '../projects/components/CreateProjectModal';
-import StatusOverView from '@/components/dashboard/StatusOverView';
-import RecentActivity from '@/components/dashboard/RecentActivity';
-import { Suspense } from 'react';
+import ProjectSection from '@/components/dashboard/ProjectSection'
+import { CreateProjectModal } from '../projects/components/CreateProjectModal'
+import StatusOverView from '@/components/dashboard/StatusOverView'
+import RecentActivity from '@/components/dashboard/RecentActivity'
+import { Suspense } from 'react'
 
 export default function DashboardPage() {
   return (
@@ -12,7 +12,7 @@ export default function DashboardPage() {
         <Suspense fallback={<div>Loading Overview...</div>}>
           <StatusOverView />
         </Suspense>
-       
+
         {/* Projects Section */}
         <Suspense fallback={<div>Loading Projects...</div>}>
           <ProjectSection/>
@@ -22,10 +22,10 @@ export default function DashboardPage() {
         <Suspense>
           <RecentActivity />
         </Suspense>
-       
+
         {/* Create Project Modal */}
         <CreateProjectModal/>
       </div>
     </div>
-  );
+  )
 }

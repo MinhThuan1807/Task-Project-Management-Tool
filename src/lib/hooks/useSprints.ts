@@ -1,18 +1,24 @@
-import { useMutation, useQuery, useQueryClient, queryOptions } from "@tanstack/react-query";
-import { sprintApi } from "../services/sprint.service";
-import { toast } from "sonner";
-import { getErrorMessage } from "../utils";
-import { Sprint, UpdateSprintRequest } from "../types";
+import {
+  useMutation,
+  useQuery,
+  useQueryClient,
+  queryOptions
+} from '@tanstack/react-query'
+import { sprintApi } from '../services/sprint.service'
+import { toast } from 'sonner'
+import { getErrorMessage } from '../utils'
+import { Sprint, UpdateSprintRequest } from '../types'
 
 //Query key
 export const sprintKeys = {
   all: ['sprints'] as const,
   lists: () => [...sprintKeys.all, 'list'] as const,
   list: (filters: string) => [...sprintKeys.lists(), { filters }] as const,
-  byProject: (projectId: string) => [...sprintKeys.all, 'project', projectId] as const,
+  byProject: (projectId: string) =>
+    [...sprintKeys.all, 'project', projectId] as const,
   details: () => [...sprintKeys.all, 'detail'] as const,
-  detail: (sprintId: string) => [...sprintKeys.details(), sprintId] as const,
-};
+  detail: (sprintId: string) => [...sprintKeys.details(), sprintId] as const
+}
 
 export function sprintsByProjectOptions(projectId?: string) {
   return queryOptions<Sprint[]>({
@@ -24,7 +30,7 @@ export function sprintsByProjectOptions(projectId?: string) {
     },
     enabled: !!projectId,
     staleTime: 5 * 60 * 1000,
-    placeholderData: [] as Sprint[],
+    placeholderData: [] as Sprint[]
   })
 }
 export function useSprintsByProject(projectId?: string) {
@@ -41,16 +47,16 @@ export function sprintDetailOptions(sprintId?: string) {
     },
     enabled: !!sprintId,
     staleTime: 5 * 60 * 1000,
-    placeholderData: null,
+    placeholderData: null
   })
 }
 
 export function useSprintDetail(sprintId: string) {
-  return useQuery(sprintDetailOptions(sprintId));
+  return useQuery(sprintDetailOptions(sprintId))
 }
 
 export function useCreateSprint() {
-  const queryClient = useQueryClient();
+  const queryClient = useQueryClient()
 
   return useMutation({
     mutationFn: sprintApi.create,
@@ -59,24 +65,29 @@ export function useCreateSprint() {
       /* cancelQueries is used to cancel any outgoing refetches so they don't overwrite our optimistic update */
       await queryClient.cancelQueries({
         queryKey: sprintKeys.byProject(newSprint.projectId)
-      });
+      })
 
       /* getQueryData is used to get the current cached data for the query */
-      const previousSprints = queryClient.getQueryData<Sprint[]>(sprintKeys.byProject(newSprint.projectId));
+      const previousSprints = queryClient.getQueryData<Sprint[]>(
+        sprintKeys.byProject(newSprint.projectId)
+      )
 
       // Temporarily add new sprint
       if (previousSprints) {
         queryClient.setQueryData<Sprint[]>(
           sprintKeys.byProject(newSprint.projectId),
-          [...previousSprints, {
-            ...newSprint,
-            _id: 'temp-' + Date.now(),
-            status: 'planned' as const,
-            createdAt: Date.now(),
-          } as unknown as Sprint]
-        );
+          [
+            ...previousSprints,
+            {
+              ...newSprint,
+              _id: 'temp-' + Date.now(),
+              status: 'planned' as const,
+              createdAt: Date.now()
+            } as unknown as Sprint
+          ]
+        )
       }
-      return { previousSprints };
+      return { previousSprints }
     },
     onError: (error, variables, context) => {
       // Rollback on error
@@ -84,70 +95,61 @@ export function useCreateSprint() {
         queryClient.setQueryData<Sprint[]>(
           sprintKeys.byProject(variables.projectId),
           context.previousSprints
-        );
+        )
       }
-      toast.error(getErrorMessage(error) || 'Failed to create sprint');
+      toast.error(getErrorMessage(error) || 'Failed to create sprint')
     },
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({
         queryKey: sprintKeys.byProject(variables.projectId)
-      });
-    },
-  });
+      })
+    }
+  })
 }
 
-export function useUpdateSprint(sprintId: string) {
-  const queryClient = useQueryClient();
+export function useUpdateSprint(sprintId: string, projectId: string) {
+  const queryClient = useQueryClient()
 
   return useMutation({
     mutationFn: (data: UpdateSprintRequest) => sprintApi.update(sprintId, data),
     onMutate: async (updatedSprint) => {
-      await queryClient.cancelQueries({ queryKey: sprintKeys.detail(sprintId) });
+      await queryClient.cancelQueries({ queryKey: sprintKeys.detail(sprintId) })
 
       const previousSprints =
-        queryClient.getQueryData<Sprint[]>(sprintKeys.byProject(updatedSprint.projectId)) ?? []
-
-      queryClient.setQueryData<Sprint[]>(
-        sprintKeys.byProject(updatedSprint.projectId),
-        [
-          ...previousSprints,
-          {
-            ...updatedSprint,
-            _id: 'temp-' + Date.now(),
-            status: 'planned' as const,
-            createdAt: Date.now(),
-          } as unknown as Sprint,
-        ]
-      )
+        queryClient.getQueryData<Sprint[]>(sprintKeys.byProject(projectId)) ??
+        []
 
       return { previousSprints }
     },
-    onError: (variables, context) => {
-      if (context?.previousSprint) {
+    onError: (error, variables, context) => {
+      if (context?.previousSprints) {
         queryClient.setQueryData(
-          sprintKeys.detail(sprintId),
-          context.previousSprint
-        );
+          sprintKeys.byProject(projectId),
+          context.previousSprints
+        )
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: sprintKeys.detail(sprintId) });
-      queryClient.invalidateQueries({ queryKey: sprintKeys.all });
-    },
-  });
+      queryClient.invalidateQueries({ queryKey: sprintKeys.detail(sprintId) })
+      queryClient.invalidateQueries({
+        queryKey: sprintKeys.byProject(projectId)
+      })
+      queryClient.invalidateQueries({ queryKey: sprintKeys.all })
+    }
+  })
 }
 
 export function useDeleteSprint(sprintId: string) {
-  const queryClient = useQueryClient();
+  const queryClient = useQueryClient()
 
   return useMutation({
     mutationFn: sprintApi.delete,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: sprintKeys.all });
-      toast.success('Sprint deleted successfully!');
+      queryClient.invalidateQueries({ queryKey: sprintKeys.all })
+      toast.success('Sprint deleted successfully!')
     },
     onError: (error) => {
-      toast.error(getErrorMessage(error) || 'Failed to delete sprint');
-    },
-  });
+      toast.error(getErrorMessage(error) || 'Failed to delete sprint')
+    }
+  })
 }

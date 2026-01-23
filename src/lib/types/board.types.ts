@@ -1,4 +1,4 @@
-import { Task } from './task.types';
+import { Task } from './task.types'
 
 /**
  * Board Column Status enum
@@ -87,5 +87,5 @@ export const DEFAULT_COLUMNS: ColumnConfig[] = [
   { id: 'todo', title: 'Todo', color: 'bg-blue-100' },
   { id: 'in_process', title: 'In Progress', color: 'bg-yellow-100' },
   { id: 'review', title: 'Review', color: 'bg-purple-100' },
-  { id: 'done', title: 'Done', color: 'bg-green-100' },
-];
+  { id: 'done', title: 'Done', color: 'bg-green-100' }
+]

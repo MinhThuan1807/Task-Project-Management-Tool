@@ -36,7 +36,6 @@ export const loginUserAPI = createAsyncThunk(
   async (data: SignInFormData, { rejectWithValue }) => {
     try {
       const response = await axiosInstance.post('/auth/login', data)
-
       return response.data
     } catch (error: any) {
       const message =
@@ -132,7 +131,7 @@ const userSlice = createSlice({
           displayName: userData.displayName,
           role: userData.role,
           avatar: userData.avatar,
-          gender: userData.gender,
+          gender: userData.gender
         }
         state.isAuthenticated = true
         state.error = null

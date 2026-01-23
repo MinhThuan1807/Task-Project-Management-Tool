@@ -95,7 +95,7 @@ function ProjectTabs({
         <TabsTrigger value="sprints">Sprints</TabsTrigger>
         <TabsTrigger value="team">Team</TabsTrigger>
         <TabsTrigger value="activity">Activity</TabsTrigger>
-</TabsList>
+      </TabsList>
       {/** sprints từ project */}
       <TabsContent value="sprints" className="space-y-4">
         <Card className="border-0 shadow-lg">
@@ -167,7 +167,7 @@ function ProjectTabs({
                     </div>
                     <Badge
                       variant={isProjectOwner ? 'default' : 'outline'}
-className={
+                      className={
                         isProjectOwner
                           ? 'bg-gradient-to-r from-yellow-500 to-orange-500 text-white'
                           : ''

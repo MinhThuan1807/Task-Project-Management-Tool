@@ -1,25 +1,25 @@
-'use client';
+'use client'
 
-import { useRouter } from 'next/navigation';
-import { RegisterPageNew } from '@/components/auth/register-page';
-import { User } from '@/lib/types';
-import { toast } from 'sonner';
+import { useRouter } from 'next/navigation'
+import { RegisterPageNew } from '@/components/auth/register-page'
+import { User } from '@/lib/types'
+import { toast } from 'sonner'
 
 export default function RegisterPage() {
-  const router = useRouter();
+  const router = useRouter()
 
   const handleNavigateToLogin = () => {
-    router.push('/login');
-  };
+    router.push('/login')
+  }
 
   const handleNavigateToLanding = () => {
-    router.push('/');
-  };
+    router.push('/')
+  }
 
   return (
     <RegisterPageNew
       onNavigateToLogin={handleNavigateToLogin}
       onNavigateToLanding={handleNavigateToLanding}
     />
-  );
+  )
 }

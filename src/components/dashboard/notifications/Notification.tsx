@@ -96,7 +96,7 @@ export default function Notification() {
     const now = new Date()
     const diffMs = now.getTime() - date.getTime()
     const diffMins = Math.floor(diffMs / 60000)
-const diffHours = Math.floor(diffMs / 3600000)
+    const diffHours = Math.floor(diffMs / 3600000)
     const diffDays = Math.floor(diffMs / 86400000)
 
     if (diffMins < 1) return 'Just now'
@@ -167,7 +167,7 @@ const diffHours = Math.floor(diffMs / 3600000)
                         size="icon"
                         className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
                         onClick={(e) => {
-e.stopPropagation()
+                          e.stopPropagation()
                           handleMarkAsRead(notification._id)
                         }}
                       >

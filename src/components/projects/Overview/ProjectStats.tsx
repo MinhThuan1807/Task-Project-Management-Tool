@@ -4,7 +4,7 @@ import {
   CardHeader,
   CardTitle
 } from '@/components/ui/card'
-import { Sprint } from '@/lib/types';
+import { Sprint } from '@/lib/types'
 import {
   Calendar,
   CheckCircle2,
@@ -19,7 +19,7 @@ interface ProjectStatsProps {
     completedSprints: Sprint[];
   };
 }
-function ProjectStats( {sprintStats}: ProjectStatsProps) {
+function ProjectStats( { sprintStats }: ProjectStatsProps) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
       <Card className="border-0 shadow-lg">
@@ -75,10 +75,10 @@ function ProjectStats( {sprintStats}: ProjectStatsProps) {
             <div className="text-3xl text-gray-900">
               {sprintStats.totalSprints > 0
                 ? Math.round(
-                    (sprintStats.completedSprints.length /
+                  (sprintStats.completedSprints.length /
                       sprintStats.totalSprints) *
                       100
-                  )
+                )
                 : 0}
               %
             </div>

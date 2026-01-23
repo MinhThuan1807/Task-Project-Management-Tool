@@ -23,7 +23,7 @@ const rootPersistConfig = {
 // Combine all reducers
 const reducers = combineReducers({
   user: userReducer,
-  project: projectReducer,
+  project: projectReducer
 })
 
 // Process persist Reducer

@@ -75,7 +75,7 @@ export type ChannelsResponse = {
 /**
  * WebSocket event types
  */
-export type ChatEvent = 
+export type ChatEvent =
   | { type: 'message:new'; payload: Message }
   | { type: 'message:edit'; payload: Message }
   | { type: 'message:delete'; payload: { messageId: string } }

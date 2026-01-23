@@ -1,11 +1,11 @@
-import dynamic from 'next/dynamic';
-import { Suspense } from 'react';
-import { Project } from '@/lib/types';
-import ProjectCardSkeleton from './ProjectCardSkeleton';
+import dynamic from 'next/dynamic'
+import { Suspense } from 'react'
+import { Project } from '@/lib/types'
+import ProjectCardSkeleton from './ProjectCardSkeleton'
 
 const ProjectCard = dynamic(
-  () => import('@/app/(dashboard)/projects/components/ProjectCard'),
-);
+  () => import('@/app/(dashboard)/projects/components/ProjectCard')
+)
 
 interface ProjectCardGridProps {
   projects: Project[];
@@ -21,7 +21,7 @@ const ProjectCardGrid = ({ projects, handleDirect }: ProjectCardGridProps) => {
         </Suspense>
       ))}
     </div>
-  );
-};
+  )
+}
 
-export default ProjectCardGrid;
+export default ProjectCardGrid
