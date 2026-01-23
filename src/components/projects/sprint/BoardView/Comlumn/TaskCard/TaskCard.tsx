@@ -55,7 +55,7 @@ export function TaskCard({
   Click,
   isDragging = false,
   onDuplicate,
-  canEdit = true // Default to true for backward compatibility
+  canEdit 
 }: TaskCardProps) {
   const {
     attributes,
@@ -143,7 +143,7 @@ export function TaskCard({
               {task.title}
             </h4>
 
-            {canEdit && ( // Only show dropdown menu if can edit
+            {canEdit && ( 
               <DropdownMenu>
                 <DropdownMenuTrigger
                   asChild
@@ -315,7 +315,7 @@ export function TaskCard({
         </AlertDialogContent>
       </AlertDialog>
       {/* Edit task modal */}
-      {(isSelectedTask || isEditTaskOpen) && (
+      {(isSelectedTask || isEditTaskOpen) && (canEdit) && (
         <EditTaskModal
           open={isEditTaskOpen || Boolean(Click)}
           task={task}

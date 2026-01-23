@@ -76,6 +76,7 @@ function BoardView({
                     title: column.title,
                     color: getColumnColor(column.title)
                   }}
+                  canEdit={canEditTasks}
                   boardColumn={column}
                   tasks={columnTasks}
                   onTaskClick={handleTaskClick}

@@ -12,12 +12,12 @@ type SprintListViewProps = {
   canEdit?: boolean
 }
 
-export function SprintListView({
+const SprintListView = ({
   tasks,
   columns,
   onTaskClick,
   canEdit
-}: SprintListViewProps) {
+}: SprintListViewProps) => {
   const getCommentCount = () => Math.floor(Math.random() * 10)
   const getAttachmentCount = () => Math.floor(Math.random() * 5)
 
@@ -180,3 +180,4 @@ export function SprintListView({
     </ScrollArea>
   )
 }
+export default SprintListView

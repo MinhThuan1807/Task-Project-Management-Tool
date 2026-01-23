@@ -10,7 +10,7 @@ type SprintCalendarViewProps = {
   onTaskClick: (task: Task) => void;
 };
 
-export function SprintCalendarView({ tasks, sprint, onTaskClick }: SprintCalendarViewProps) {
+const SprintCalendarView = ({ tasks, sprint, onTaskClick }: SprintCalendarViewProps) => {
   const [currentDate, setCurrentDate] = useState(new Date());
 
   // Get calendar grid
@@ -218,3 +218,4 @@ export function SprintCalendarView({ tasks, sprint, onTaskClick }: SprintCalenda
     </div>
   );
 }
+export default SprintCalendarView;
