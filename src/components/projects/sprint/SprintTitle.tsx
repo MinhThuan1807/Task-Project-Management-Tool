@@ -6,24 +6,24 @@ import React from 'react'
 
 interface SprintTitleProps {
   sprint: Sprint;
-  projectId: string;
   onDirectToBacklog: () => void;
   isActiveSprint: boolean;
   setIsFilterOpen: (open: boolean) => void;
   isFilterOpen: boolean;
   setIsCreateTaskOpen: (open: boolean) => void;
   handleUpdateStatusSprint: () => void;
+  canEditTask?: boolean;
 }
 
 function SprintTitle({
   sprint,
-  projectId,
   onDirectToBacklog,
   isActiveSprint,
   setIsFilterOpen,
   isFilterOpen,
   setIsCreateTaskOpen,
-  handleUpdateStatusSprint
+  handleUpdateStatusSprint,
+  canEditTask
 }: SprintTitleProps) {
   return (
     <div className="flex items-center gap-4 mb-4">
@@ -58,8 +58,9 @@ function SprintTitle({
             <SlidersHorizontal className="w-4 h-4" />
           </Button>
           <Button
-            onClick={() => setIsCreateTaskOpen(true)}
+            onClick={() => {setIsCreateTaskOpen(true)}}
             className="ml-3 bg-gradient-to-r from-blue-600 to-purple-600"
+            disabled={!canEditTask}
           >
             <Plus className="w-4 h-4 mr-2" />
             Add Task
@@ -85,6 +86,7 @@ function SprintTitle({
           </Button>
         </div>
       </div>
+      
     </div>
   )
 }

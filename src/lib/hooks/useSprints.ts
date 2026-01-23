@@ -14,33 +14,35 @@ export const sprintKeys = {
   detail: (sprintId: string) => [...sprintKeys.details(), sprintId] as const,
 };
 
-export function sprintsByProjectOptions(projectId: string) {
-  return queryOptions({
-    queryKey: sprintKeys.byProject(projectId),
+export function sprintsByProjectOptions(projectId?: string) {
+  return queryOptions<Sprint[]>({
+    queryKey: projectId ? sprintKeys.byProject(projectId) : sprintKeys.lists(),
     queryFn: async () => {
-      const res = await sprintApi.getAllByProjectId(projectId);
-      return res.data || res;
+      if (!projectId) return []
+      const res = await sprintApi.getAllByProjectId(projectId)
+      return (res as any).data ?? res ?? []
     },
-    staleTime: 5 * 60 * 1000,
     enabled: !!projectId,
-  })
-}
-
-export function sprintDetailOptions(sprintId: string) {
-  return queryOptions({
-    queryKey: sprintKeys.detail(sprintId),
-    queryFn: async () => {
-      const res = await sprintApi.getById(sprintId);
-      return res.data || res;
-    },
     staleTime: 5 * 60 * 1000,
-    enabled: !!sprintId,
+    placeholderData: [] as Sprint[],
   })
 }
+export function useSprintsByProject(projectId?: string) {
+  return useQuery(sprintsByProjectOptions(projectId))
+}
 
-// Hooks
-export function useSprintsByProject(projectId: string) {
-  return useQuery(sprintsByProjectOptions(projectId));
+export function sprintDetailOptions(sprintId?: string) {
+  return queryOptions<Sprint | null>({
+    queryKey: sprintId ? sprintKeys.detail(sprintId) : sprintKeys.details(),
+    queryFn: async () => {
+      if (!sprintId) return null
+      const res = await sprintApi.getById(sprintId)
+      return (res as any).data ?? res ?? null
+    },
+    enabled: !!sprintId,
+    staleTime: 5 * 60 * 1000,
+    placeholderData: null,
+  })
 }
 
 export function useSprintDetail(sprintId: string) {
@@ -102,16 +104,23 @@ export function useUpdateSprint(sprintId: string) {
     onMutate: async (updatedSprint) => {
       await queryClient.cancelQueries({ queryKey: sprintKeys.detail(sprintId) });
 
-      const previousSprint = queryClient.getQueryData<Sprint>(sprintKeys.detail(sprintId));
+      const previousSprints =
+        queryClient.getQueryData<Sprint[]>(sprintKeys.byProject(updatedSprint.projectId)) ?? []
 
-      // Optimistically update sprint detail
-      if (previousSprint) {
-        queryClient.setQueryData<Sprint>(
-          sprintKeys.detail(sprintId),
-          { ...previousSprint, ...updatedSprint }
-        );
-      }
-      return { previousSprint };
+      queryClient.setQueryData<Sprint[]>(
+        sprintKeys.byProject(updatedSprint.projectId),
+        [
+          ...previousSprints,
+          {
+            ...updatedSprint,
+            _id: 'temp-' + Date.now(),
+            status: 'planned' as const,
+            createdAt: Date.now(),
+          } as unknown as Sprint,
+        ]
+      )
+
+      return { previousSprints }
     },
     onError: (variables, context) => {
       if (context?.previousSprint) {

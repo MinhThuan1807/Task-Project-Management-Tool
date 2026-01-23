@@ -1,5 +1,6 @@
 import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit'
 import axiosInstance from '@/lib/axios'
+import { toast } from 'sonner'
 
 
 interface User {
@@ -50,7 +51,7 @@ export const logoutUserAPI = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       const response = await axiosInstance.post('/auth/logout')
-
+      toast.success('Logged out successfully')
       return response.data
     } catch (error: any) {
       return rejectWithValue('Logout failed')

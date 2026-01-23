@@ -13,10 +13,10 @@ import { useAppDispatch } from '@/lib/hooks';
 import { useSelector } from 'react-redux';
 import { Button } from '../ui/button';
 import Link from 'next/dist/client/link';
-
 import { Settings, User as UserIcon, LogOut } from 'lucide-react';
-
+import { useRouter } from 'next/navigation';
 export function UserMenu() {
+  const router = useRouter();
   const dispatch = useAppDispatch();
   const currentUser = useSelector(selectCurrentUser);
   return (
@@ -48,7 +48,10 @@ export function UserMenu() {
             <DropdownMenuSeparator />
             <DropdownMenuItem 
               className="text-red-600"
-              onClick={() => dispatch(logoutUserAPI())}  
+              onClick={() => { 
+                dispatch(logoutUserAPI())
+                router.push('/login')
+              }}  
             >
               <LogOut className="w-4 h-4 mr-2" />
               <span>Log out</span>

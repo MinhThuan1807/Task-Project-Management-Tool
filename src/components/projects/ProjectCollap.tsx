@@ -1,21 +1,41 @@
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { SidebarMenuItem, SidebarMenuButton, SidebarMenuSub, SidebarMenuSubButton, SidebarMenuSubItem } from '@/components/ui/sidebar';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { ChevronRight, List, FolderKanban, BarChart2 } from 'lucide-react';
-import Link from 'next/link';
-import { Project } from '@/lib/types';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger
+} from '@/components/ui/collapsible'
+import {
+  SidebarMenuItem,
+  SidebarMenuButton,
+  SidebarMenuSub,
+  SidebarMenuSubButton,
+  SidebarMenuSubItem
+} from '@/components/ui/sidebar'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { ChevronRight, List, FolderKanban, BarChart2 } from 'lucide-react'
+import Link from 'next/link'
+import { Project } from '@/lib/types'
 
 interface ProjectCollapProps {
-  project: Project;
-  isSelected: boolean;
-  onSelect: () => void;
-  sprintLink: string;
+  project: Project
+  isSelected: boolean
+  isOpen: boolean
+  onOpenChange: (open: boolean) => void
+  onSelect: () => void
+  sprintLink: string
 }
 
-const ProjectCollap = ({ project, isSelected, onSelect, sprintLink }: ProjectCollapProps) => (
+const ProjectCollap = ({
+  project,
+  isSelected,
+  isOpen,
+  onOpenChange,
+  onSelect,
+  sprintLink
+}: ProjectCollapProps) => (
   <Collapsible
     key={project._id}
-    defaultOpen={isSelected}
+    open={isOpen}
+    onOpenChange={onOpenChange}
     className="group/collapsible"
   >
     <SidebarMenuItem>
@@ -46,8 +66,22 @@ const ProjectCollap = ({ project, isSelected, onSelect, sprintLink }: ProjectCol
             </SidebarMenuSubButton>
           </SidebarMenuSubItem>
           <SidebarMenuSubItem>
-            <SidebarMenuSubButton asChild>
-              <Link href={`/projects/${project._id}/${sprintLink}`}>
+            <SidebarMenuSubButton
+              asChild
+              className={!sprintLink ? 'cursor-not-allowed opacity-50' : ''}
+            >
+              <Link
+                href={
+                  sprintLink
+                    ? `/projects/${project._id}/${sprintLink}`
+                    : `/projects/${project._id}/backlog`
+                }
+                tabIndex={!sprintLink ? -1 : 0}
+                aria-disabled={!sprintLink}
+                onClick={(e) => {
+                  if (!sprintLink) e.preventDefault()
+                }}
+              >
                 <FolderKanban className="w-4 h-4" />
                 <span>Sprint Board</span>
               </Link>
@@ -65,6 +99,6 @@ const ProjectCollap = ({ project, isSelected, onSelect, sprintLink }: ProjectCol
       </CollapsibleContent>
     </SidebarMenuItem>
   </Collapsible>
-);
+)
 
-export default ProjectCollap;
+export default ProjectCollap

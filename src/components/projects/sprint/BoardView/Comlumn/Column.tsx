@@ -17,7 +17,7 @@ type ColumnProps = {
   }
   tasks: Task[]
   onTaskClick: (task: Task) => void
-  canEdit?: boolean // Add permission prop
+  canEdit?: boolean
   sprint: Sprint
   project: Project
 }
@@ -27,7 +27,7 @@ export function Column({
   column,
   tasks,
   onTaskClick,
-  canEdit = true,
+  canEdit,
   sprint,
   project
 }: ColumnProps) {
@@ -54,6 +54,7 @@ export function Column({
             onClick={() => {
               setColumnIsSelected(true)
             }}
+            disabled={!canEdit}
           >
             <Plus className="w-4 h-4" />
           </Button>
@@ -86,6 +87,7 @@ export function Column({
                     onClick={() => {
                       setColumnIsSelected(true)
                     }}
+                    disabled={!canEdit}
                   >
                     <Plus className="w-6 h-6 text-gray-400" />
                   </Button>

@@ -13,13 +13,13 @@ import { useOwnedProjects } from '@/lib/hooks/useProjects'
 import { Project } from '@/lib/types'
 import { useParams, useRouter } from 'next/navigation'
 import { useSprintsByProject } from '@/lib/hooks/useSprints'
-import { Suspense } from 'react'
+import { Suspense, useState } from 'react'
 import ProjectCollap from './ProjectCollap'
 import ProjectCollapSkeleton from './ProjectCollapSkeleton'
 
 function MyProject() {
   const dispatch = useDispatch()
-
+  const [openProjectId, setOpenProjectId] = useState<string | null>(null)
   const router = useRouter()
   const param = useParams()
   const selectedProjectId = param.id as string
@@ -69,6 +69,10 @@ function MyProject() {
                 <ProjectCollap
                   project={project}
                   isSelected={isSelected}
+                  isOpen={openProjectId === project._id}
+                  onOpenChange={(open: boolean) =>
+                    setOpenProjectId(open ? project._id : null)
+                  }
                   onSelect={() => router.push(`/projects/${project._id}`)}
                   sprintLink={sprintLink}
                 />
