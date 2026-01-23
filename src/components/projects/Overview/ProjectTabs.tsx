@@ -12,6 +12,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Users, AlertCircle } from 'lucide-react'
 import SprintCard from '@/app/(dashboard)/projects/[id]/sprint/components/SprintCard'
 import { Project, Sprint, User } from '@/lib/types'
+import { useSocket } from '@/app/providers/SocketProvider'
+import { useEffect, useState } from 'react'
+import { notificationApi } from '@/lib/services/notifications.service'
 
 interface ProjectTabsProps {
   project: Project
@@ -21,6 +24,18 @@ interface ProjectTabsProps {
   openInviteModal: () => void
 }
 
+interface INotification {
+  _id: string
+  userId?: string
+  projectId?: string
+  taskId?: string
+  type: string
+  title: string
+  message: string
+  isRead: boolean
+  createdAt: Date
+}
+
 function ProjectTabs({
   project,
   sprints,
@@ -28,14 +43,59 @@ function ProjectTabs({
   onDirect,
   openInviteModal
 }: ProjectTabsProps) {
+  const { socket, isConnected } = useSocket()
+  const [notifications, setNotifications] = useState<INotification[]>([])
   const isOwner = project.ownerId === user._id
+  // console.log('ProjectTabs render with notifications:', notifications)
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      const notifications = await notificationApi.getProjectNotifications(
+        project._id
+      )
+      setNotifications(notifications.data)
+    }
+    fetchNotifications()
+  }, [])
+
+  useEffect(() => {
+    if (!socket || !isConnected) return
+
+    // Join project room for real-time updates
+    socket.emit('join_notifications_for_project', project._id)
+
+    const handleNewNotification = (notification: INotification) => {
+      // console.log('New notification:', notification)
+      setNotifications((prev) => [notification, ...prev])
+    }
+
+    socket.on('project_notification', handleNewNotification)
+
+    return () => {
+      socket.off('project_notification', handleNewNotification)
+    }
+  }, [socket, isConnected])
+
+  const formatDate = (timestamp: Date | number) => {
+    const date = new Date(timestamp)
+    const now = new Date()
+    const diffMs = now.getTime() - date.getTime()
+    const diffMins = Math.floor(diffMs / 60000)
+    const diffHours = Math.floor(diffMs / 3600000)
+    const diffDays = Math.floor(diffMs / 86400000)
+
+    if (diffMins < 1) return 'Just now'
+    if (diffMins < 60) return `${diffMins}m ago`
+    if (diffHours < 24) return `${diffHours}h ago`
+    if (diffDays < 7) return `${diffDays}d ago`
+    return date.toLocaleDateString()
+  }
   return (
     <Tabs defaultValue="sprints" className="space-y-6">
       <TabsList>
         <TabsTrigger value="sprints">Sprints</TabsTrigger>
         <TabsTrigger value="team">Team</TabsTrigger>
         <TabsTrigger value="activity">Activity</TabsTrigger>
-      </TabsList>
+</TabsList>
       {/** sprints từ project */}
       <TabsContent value="sprints" className="space-y-4">
         <Card className="border-0 shadow-lg">
@@ -107,7 +167,7 @@ function ProjectTabs({
                     </div>
                     <Badge
                       variant={isProjectOwner ? 'default' : 'outline'}
-                      className={
+className={
                         isProjectOwner
                           ? 'bg-gradient-to-r from-yellow-500 to-orange-500 text-white'
                           : ''
@@ -141,59 +201,41 @@ function ProjectTabs({
             <CardDescription>Latest updates in this project</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              {[
-                {
-                  user: 'Alice Johnson',
-                  action: 'completed sprint',
-                  target: 'Sprint 3',
-                  time: '2 hours ago'
-                },
-                {
-                  user: 'Bob Smith',
-                  action: 'created task',
-                  target: 'Setup authentication',
-                  time: '5 hours ago'
-                },
-                {
-                  user: 'Charlie Wilson',
-                  action: 'joined project',
-                  target: '',
-                  time: '1 day ago'
-                },
-                {
-                  user: 'You',
-                  action: 'created sprint',
-                  target: 'Sprint 4',
-                  time: '2 days ago'
-                }
-              ].map((activity, index) => (
-                <div
-                  key={index}
-                  className="flex items-start gap-4 p-3 rounded-lg hover:bg-gray-50"
-                >
-                  <Avatar className="w-10 h-10">
-                    <AvatarImage
-                      src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${activity.user}`}
-                    />
-                    <AvatarFallback>
-                      {activity.user.substring(0, 2)}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1">
-                    <p className="text-sm text-gray-900">
-                      <span className="font-medium">{activity.user}</span>{' '}
-                      <span className="text-gray-600">{activity.action}</span>{' '}
-                      {activity.target && (
-                        <span className="font-medium">{activity.target}</span>
-                      )}
-                    </p>
-                    <p className="text-xs text-gray-500 mt-1">
-                      {activity.time}
-                    </p>
+            <div className="space-y-4 max-h-96 overflow-y-auto">
+              {notifications.length > 0 ? (
+                notifications.map((notification, index) => (
+                  <div
+                    key={notification._id || index}
+                    className="flex items-start gap-4 p-3 rounded-lg hover:bg-gray-50"
+                  >
+                    <Avatar className="w-10 h-10">
+                      <AvatarImage
+                        src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${notification.userId || 'user'}`}
+                      />
+                      <AvatarFallback>
+                        {notification.title.substring(0, 2).toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1">
+                      <p className="text-sm text-gray-900">
+                        <span className="font-medium">
+                          {notification.title}
+                        </span>
+                      </p>
+                      <p className="text-xs text-gray-600 mt-1">
+                        {notification.message}
+                      </p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        {formatDate(notification.createdAt)}
+                      </p>
+                    </div>
                   </div>
+                ))
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  No recent activity
                 </div>
-              ))}
+              )}
             </div>
           </CardContent>
         </Card>
@@ -203,3 +245,4 @@ function ProjectTabs({
 }
 
 export default ProjectTabs
+// ProjectTab

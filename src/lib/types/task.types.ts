@@ -30,7 +30,7 @@ export type Task = {
   title: string;
   description?: string;
   labels?: string[];
-  priority?: 'low' | 'medium' | 'high' | 'critical' | string;
+  priority?: 'low' | 'medium' | 'high' | 'critical' | string ;
   storyPoint?: number;
   dueDate?: string | Date;
   assigneeIds?: string[];

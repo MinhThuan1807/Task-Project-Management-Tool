@@ -1,7 +1,4 @@
-import {
-  LayoutDashboard,
-  MessageSquare,
-} from 'lucide-react';
+import { LayoutDashboard, MessageSquare } from 'lucide-react'
 import {
   Sidebar,
   SidebarContent,
@@ -10,15 +7,15 @@ import {
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
-  SidebarMenuItem,
-} from '../ui/sidebar';
-import { Separator } from '../ui/separator';
-import Link from 'next/link';
-import { CreateProjectModal } from '@/app/(dashboard)/projects/components/CreateProjectModal';
-import { Suspense } from 'react';
-import MyProject from '../MyProject';
-import ParticipatedProjects from '../ParticipatedProjects';
-import UserFooter from '../UserFooter';
+  SidebarMenuItem
+} from '../ui/sidebar'
+import { Separator } from '../ui/separator'
+import Link from 'next/link'
+import { CreateProjectModal } from '@/app/(dashboard)/projects/components/CreateProjectModal'
+import { Suspense } from 'react'
+import MyProject from '../projects/MyProject'
+import ParticipatedProjects from '../projects/ParticipatedProjects'
+import UserFooter from '../UserFooter'
 
 export function AppSidebar() {
   return (
@@ -34,7 +31,9 @@ export function AppSidebar() {
               <h1 className="text-xl bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
                 Sprintos
               </h1>
-              <p className="text-xs text-sidebar-foreground/60">Project Management</p>
+              <p className="text-xs text-sidebar-foreground/60">
+                Project Management
+              </p>
             </div>
           </div>
         </SidebarHeader>
@@ -67,21 +66,22 @@ export function AppSidebar() {
           <Separator className="my-2" />
 
           {/* My Projects */}
-          <MyProject/>
+          <MyProject />
 
           {/* Participating Projects */}
-          <ParticipatedProjects  />
-
+          <ParticipatedProjects />
         </SidebarContent>
 
         {/* User Profile Footer */}
-        <Suspense fallback={<div className="p-2 text-sm text-center">Loading...</div>}>
+        <Suspense
+          fallback={<div className="p-2 text-sm text-center">Loading...</div>}
+        >
           <UserFooter />
         </Suspense>
       </Sidebar>
 
       {/* Create Project Modal */}
-      <CreateProjectModal/>
+      <CreateProjectModal />
     </>
-  );
+  )
 }

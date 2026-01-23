@@ -2,10 +2,10 @@
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { Task, UpdateTaskRequest } from '@/lib/types'
-import { Card, CardContent } from '../ui/card'
-import { Badge } from '../ui/badge'
-import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar'
-import { Button } from '../ui/button'
+import { Card, CardContent } from '../../../../../ui/card'
+import { Badge } from '../../../../../ui/badge'
+import { Avatar, AvatarFallback, AvatarImage } from '../../../../../ui/avatar'
+import { Button } from '../../../../../ui/button'
 import {
   MoreVertical,
   MessageSquare,
@@ -20,7 +20,7 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger
-} from '../ui/dropdown-menu'
+} from '../../../../../ui/dropdown-menu'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -30,16 +30,16 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle
-} from '../ui/alert-dialog'
+} from '../../../../../ui/alert-dialog'
 import { cn, formatDate, getPriorityColor } from '@/lib/utils'
 import { useState } from 'react'
 import { useDeleteTask, useMoveTask, useUpdateTask } from '@/lib/hooks/useTasks'
-import { EditTaskModal } from './edit-task-modal'
+import { EditTaskModal } from '../../../../../modal/EditTaskModal'
 import { useParams } from 'next/navigation'
 import { set } from 'zod'
 import { toast } from 'sonner'
-import { CreateTaskModal } from './create-task-modal'
-import { Tooltip, TooltipTrigger } from '../ui/tooltip'
+import { CreateTaskModal } from '../../../../../modal/CreateTaskModal'
+import { Tooltip, TooltipTrigger } from '../../../../../ui/tooltip'
 import { TooltipContent } from '@radix-ui/react-tooltip'
 
 type TaskCardProps = {
@@ -89,7 +89,6 @@ export function TaskCard({
   const [isSelectedTask, setIsSelectedTask] = useState<Task | null>(null)
   const deleteTaskMutation = useDeleteTask()
   const updateTaskMutation = useUpdateTask(task._id)
-  
 
   const handleDeleteTask = (taskId: string) => {
     deleteTaskMutation.mutate(taskId, {
@@ -101,15 +100,15 @@ export function TaskCard({
 
   const handleEditTask = (taskId: string, taskData: UpdateTaskRequest) => {
     updateTaskMutation.mutate(
-    taskData, // chỉ truyền data, vì useUpdateTask đã biết taskId
-    {
-      onSuccess: () => {
-        setIsEditTaskOpen(false)
-        setIsSelectedTask(null)
-        toast.success('Task updated successfully!')
+      taskData, // chỉ truyền data, vì useUpdateTask đã biết taskId
+      {
+        onSuccess: () => {
+          setIsEditTaskOpen(false)
+          setIsSelectedTask(null)
+          toast.success('Task updated successfully!')
+        }
       }
-    }
-  )
+    )
   }
 
   return (

@@ -1,8 +1,5 @@
-import dynamic from "next/dynamic"
-const SprintBoardDnd = dynamic(() => import('@/components/projects/sprint-board-dnd'))
+import SprintBoardContainer from '@/components/projects/sprint/SprintBoardContainer'
 
 export default function SprintPage() {
-  return (
-    <SprintBoardDnd/>
-  )
+  return <SprintBoardContainer />
 }
