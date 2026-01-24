@@ -71,7 +71,7 @@ export default function InvitePage() {
         setTimeout(() => {
           router.push(`/projects/${projectId}`)
           router.refresh()
-        }, 2000)
+          }, 2000)
       } catch (error) {
         setStatus('error')
         toast.error(getErrorMessage(error))
