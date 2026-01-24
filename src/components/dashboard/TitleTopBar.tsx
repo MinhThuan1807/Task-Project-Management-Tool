@@ -5,7 +5,7 @@ import { useParams } from 'next/navigation'
 
 function TitleTopBar() {
   const param = useParams()
-  const { data: allProjects, isLoading: projectsLoading } = useAllProjects()
+  const { data: allProjects } = useAllProjects()
   const selectedProjectId = param.id as string
   const selectedProject = allProjects.find(
     (p) => p._id === selectedProjectId || p._id === selectedProjectId

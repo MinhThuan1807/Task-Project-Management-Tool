@@ -26,13 +26,14 @@ export function sprintsByProjectOptions(projectId?: string) {
     queryFn: async () => {
       if (!projectId) return []
       const res = await sprintApi.getAllByProjectId(projectId)
-      return (res as any).data ?? res ?? []
+      return res.data ?? []
     },
     enabled: !!projectId,
     staleTime: 5 * 60 * 1000,
-    placeholderData: [] as Sprint[]
+    placeholderData: []
   })
 }
+
 export function useSprintsByProject(projectId?: string) {
   return useQuery(sprintsByProjectOptions(projectId))
 }
@@ -43,7 +44,7 @@ export function sprintDetailOptions(sprintId?: string) {
     queryFn: async () => {
       if (!sprintId) return null
       const res = await sprintApi.getById(sprintId)
-      return (res as any).data ?? res ?? null
+      return res.data ?? null
     },
     enabled: !!sprintId,
     staleTime: 5 * 60 * 1000,
@@ -107,39 +108,25 @@ export function useCreateSprint() {
   })
 }
 
-export function useUpdateSprint(sprintId: string, projectId: string) {
+export function useUpdateSprint(params: { sprintId?: string; projectId?: string }) {
+  const { sprintId, projectId } = params
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (data: UpdateSprintRequest) => sprintApi.update(sprintId, data),
-    onMutate: async (updatedSprint) => {
-      await queryClient.cancelQueries({ queryKey: sprintKeys.detail(sprintId) })
-
-      const previousSprints =
-        queryClient.getQueryData<Sprint[]>(sprintKeys.byProject(projectId)) ??
-        []
-
-      return { previousSprints }
+    mutationFn: (data: UpdateSprintRequest) => {
+      if (!sprintId) return Promise.reject(new Error('Missing sprintId'))
+      return sprintApi.update(sprintId, data)
     },
-    onError: (error, variables, context) => {
-      if (context?.previousSprints) {
-        queryClient.setQueryData(
-          sprintKeys.byProject(projectId),
-          context.previousSprints
-        )
-      }
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: sprintKeys.detail(sprintId) })
-      queryClient.invalidateQueries({
-        queryKey: sprintKeys.byProject(projectId)
-      })
-      queryClient.invalidateQueries({ queryKey: sprintKeys.all })
+    onSuccess: async () => {
+      if (!sprintId || !projectId) return
+      await queryClient.invalidateQueries({ queryKey: sprintKeys.detail(sprintId) })
+      await queryClient.invalidateQueries({ queryKey: sprintKeys.byProject(projectId) })
+      await queryClient.invalidateQueries({ queryKey: sprintKeys.all })
     }
   })
 }
 
-export function useDeleteSprint(sprintId: string) {
+export function useDeleteSprint() {
   const queryClient = useQueryClient()
 
   return useMutation({

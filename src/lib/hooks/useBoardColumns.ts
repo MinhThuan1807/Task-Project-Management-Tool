@@ -4,9 +4,7 @@ import { toast } from 'sonner'
 import { getErrorMessage } from '../utils'
 import type {
   BoardColumn,
-  CreateBoardColumnRequest,
-  UpdateBoardColumnRequest,
-  ReorderColumnsRequest
+  UpdateBoardColumnRequest
 } from '../types'
 
 // Query keys

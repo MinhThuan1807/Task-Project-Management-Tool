@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { Upload, X, Search, Check, Loader2 } from 'lucide-react'
+import { Upload, X, Search, Loader2 } from 'lucide-react'
 import {
   Dialog,
   DialogContent,
@@ -18,7 +18,6 @@ import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
-import { ScrollArea } from '@/components/ui/scroll-area'
 import {
   Select,
   SelectContent,
@@ -26,7 +25,7 @@ import {
   SelectTrigger,
   SelectValue
 } from '@/components/ui/select'
-import { useCreateProject } from '@/lib/hooks/useProjects' // ✅ Import mutation hook
+import { useCreateProject } from '@/lib/hooks/useProjects'
 import { toast } from 'sonner'
 import { useDispatch, useSelector } from 'react-redux'
 import { closeCreateModal } from '@/lib/features/project/projectSlice'

@@ -31,7 +31,7 @@ interface BoardViewProps {
 
 function BoardView({
   sprint,
-  project,
+  // project,
   boardColumns,
   canEditTasks,
   handleTaskClick,
@@ -52,10 +52,11 @@ function BoardView({
       coordinateGetter: sortableKeyboardCoordinates
     })
   )
+  const disabledSensors = useSensors()
   return (
     <div className="flex-1 p-3 overflow-auto">
       <DndContext
-        sensors={canEditTasks ? sensors : useSensors()} // Disable drag if no permission
+        sensors={canEditTasks ? sensors : disabledSensors} // Disable drag if no permission
         collisionDetection={closestCorners}
         onDragStart={handleDragStart}
         onDragOver={handleDragOver}
@@ -81,7 +82,7 @@ function BoardView({
                   tasks={columnTasks}
                   onTaskClick={handleTaskClick}
                   sprint={sprint}
-                  project={project}
+                  // project={project}
                 />
               )
             })}

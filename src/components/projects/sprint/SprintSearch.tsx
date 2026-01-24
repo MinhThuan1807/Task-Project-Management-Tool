@@ -1,7 +1,6 @@
-import { Input } from '@/components/ui/input'
 import { Sprint } from '@/lib/types/sprint.types'
 import { formatDate } from '@/lib/utils'
-import { Calendar, CheckCircle2, Search } from 'lucide-react'
+import { Calendar, CheckCircle2 } from 'lucide-react'
 
 
 interface SprintSearchProps {
@@ -10,8 +9,8 @@ interface SprintSearchProps {
   totalTasks: number;
   isActiveSprint: boolean;
   daysLeft: number;
-  searchQuery: string;
-  setSearchQuery: (query: string) => void;
+  // searchQuery: string;
+  // setSearchQuery: (query: string) => void;
 }
 
 function SprintSearch({
@@ -19,9 +18,9 @@ function SprintSearch({
   completedTasks,
   totalTasks,
   isActiveSprint,
-  daysLeft,
-  searchQuery,
-  setSearchQuery
+  daysLeft
+  // searchQuery,
+  // setSearchQuery
 }: SprintSearchProps) {
   return (
     <div className="flex items-center gap-4 mb-4">

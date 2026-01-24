@@ -14,6 +14,8 @@ import { notificationApi } from '@/lib/services/notifications.service'
 import { useSocket } from '@/app/providers/SocketProvider'
 import { useSelector } from 'react-redux'
 import { selectCurrentUser } from '@/lib/features/auth/authSlice'
+import { getErrorMessage } from '@/lib/utils'
+import { toast } from 'sonner'
 
 interface INotification {
   _id: string
@@ -37,7 +39,9 @@ export default function Notification() {
     const fetchNotifications = async () => {
       const notifications = await notificationApi.getUserNotifications()
       setNotifications(notifications.data)
-      setUnreadCount(notifications.data.filter((n: any) => !n.isRead).length)
+      setUnreadCount(
+        notifications.data.filter((n: INotification) => !n.isRead).length
+      )
     }
     fetchNotifications()
   }, [])
@@ -46,10 +50,10 @@ export default function Notification() {
   useEffect(() => {
     if (!socket || !isConnected || !currentUser?._id) return
 
-    socket.emit('join_notifications', currentUser._id)
+    socket.emit('join_notifications_for_user', currentUser._id)
 
     const handleNewNotification = (notification: INotification) => {
-      console.log('New notification:', notification)
+      // console.log('New notification:', notification)
       setNotifications((prev) => [notification, ...prev])
       setUnreadCount((prev) => prev + 1)
     }
@@ -73,7 +77,8 @@ export default function Notification() {
       )
       setUnreadCount((prev) => Math.max(0, prev - 1))
     } catch (error) {
-      console.error('Error marking notification as read:', error)
+      // console.error('Error marking notification as read:', error)
+      toast.error(getErrorMessage(error))
     }
   }
 
@@ -87,7 +92,8 @@ export default function Notification() {
       setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })))
       setUnreadCount(0)
     } catch (error) {
-      console.error('Error marking all notifications as read:', error)
+      // console.error('Error marking all notifications as read:', error)
+      toast.error(getErrorMessage(error))
     }
   }
 

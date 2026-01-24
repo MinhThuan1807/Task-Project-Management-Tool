@@ -2,8 +2,6 @@
 
 import { useRouter } from 'next/navigation'
 import { RegisterPageNew } from '@/components/auth/register-page'
-import { User } from '@/lib/types'
-import { toast } from 'sonner'
 
 export default function RegisterPage() {
   const router = useRouter()

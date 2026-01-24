@@ -8,6 +8,7 @@ import { Loader2, CheckCircle2, XCircle, Mail, Shield } from 'lucide-react'
 import { projectApi } from '@/lib/services/project.service'
 import { toast } from 'sonner'
 import { useCurrentUser } from '@/lib/hooks/useAuth'
+import { getErrorMessage } from '@/lib/utils'
 
 export default function InvitePage() {
   const router = useRouter()
@@ -70,11 +71,9 @@ export default function InvitePage() {
         setTimeout(() => {
           router.push(`/projects/${projectId}`)
         }, 2000)
-      } catch (error: any) {
+      } catch (error) {
         setStatus('error')
-        const message = error.response?.data?.message || error.message || 'Failed to accept invitation'
-        setErrorMessage(message)
-        toast.error(message)
+        toast.error(getErrorMessage(error))
       }
     }
 
@@ -147,7 +146,7 @@ export default function InvitePage() {
             </div>
             <CardTitle className="text-2xl">Invitation Failed</CardTitle>
             <CardDescription className="text-base mt-2">
-              We couldn't process your invitation
+              {'We couldn\'t process your invitation'}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">

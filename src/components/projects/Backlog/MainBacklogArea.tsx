@@ -1,6 +1,6 @@
 import { useTasksBySprint } from '@/lib/hooks/useTasks'
 import { useState } from 'react'
-import { Project, Sprint, Task } from '@/lib/types'
+import { Sprint, Task } from '@/lib/types'
 import { AlertCircle, Filter, Plus, Search } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -22,16 +22,16 @@ import {
 interface MainBacklogAreaProps {
   sprints: Sprint[]
   onCreateSprint: () => void
-  project: Project
+  // project: Project
 }
 function MainBacklogArea({
   sprints,
-  onCreateSprint,
-  project
+  onCreateSprint
+  // project
 }: MainBacklogAreaProps) {
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedTask, setSelectedTask] = useState<Task>()
-  const [isEditTaskOpen, setIsEditTaskOpen] = useState(false)
+  // const [isEditTaskOpen, setIsEditTaskOpen] = useState(false)
   const [isCreateTaskOpen, setIsCreateTaskOpen] = useState(false)
   const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState(false)
 
@@ -76,13 +76,13 @@ function MainBacklogArea({
   }
   const handleEditTaskOpen = (task: Task) => {
     setSelectedTask(task)
-    setIsEditTaskOpen(true)
+    // setIsEditTaskOpen(true)
   }
 
-  const handleDeleteTask = (task: Task) => {
-    setSelectedTask(task)
-    setIsDeleteAlertOpen(true)
-  }
+  // const handleDeleteTask = (task: Task) => {
+  //   setSelectedTask(task)
+  //   setIsDeleteAlertOpen(true)
+  // }
   const confirmDelete = () => {
     setIsDeleteAlertOpen(false)
     setSelectedTask(undefined)
@@ -136,14 +136,14 @@ function MainBacklogArea({
           sprints={sprints}
           handleCreateTask={handleCreateTask}
           handleEditTaskOpen={handleEditTaskOpen}
-          handleDeleteTask={handleDeleteTask}
+          // handleDeleteTask={handleDeleteTask}
         />
       </ScrollArea>
       <CreateTaskModal
         open={isCreateTaskOpen}
         onClose={() => setIsCreateTaskOpen(false)}
         sprintId={sprintIdUpcomming[0] || ''}
-        projectId={project._id}
+        // projectId={project._id}
       />
 
       {/* Delete Confirmation Alert */}

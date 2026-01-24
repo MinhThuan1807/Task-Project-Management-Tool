@@ -1,5 +1,5 @@
 'use client'
-import { useMemo, useState, useEffect, Suspense } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { useAllProjects } from '@/lib/hooks/useProjects'
 import { useSprintsByProject, useUpdateSprint } from '@/lib/hooks/useSprints'
@@ -14,7 +14,6 @@ import { CreateTaskModal } from '../../modal/CreateTaskModal'
 import { FilterSortPanel } from '../filter-sort-panel'
 import SprintTitle from './SprintTitle'
 import SprintSearch from './SprintSearch'
-import { getColumnColor } from '@/lib/utils'
 import dynamic from 'next/dynamic'
 import { toast } from 'sonner'
 import { Task } from '@/lib/types'
@@ -68,10 +67,16 @@ const SprintBoardContainer = () => {
   const columnsQuery = useBoardColumnsBySprint(sprintId!)
   const { data: currentUser } = useCurrentUser()
 
-  const allProjects = allProjectsQuery.data ?? []
-  const sprints = sprintsQuery.data ?? []
-  const tasks = tasksQuery.data ?? []
-  const boardColumns = columnsQuery.data ?? []
+  const allProjects = useMemo(
+    () => allProjectsQuery.data ?? [],
+    [allProjectsQuery.data]
+  )
+  const sprints = useMemo(() => sprintsQuery.data ?? [], [sprintsQuery.data])
+  const tasks = useMemo(() => tasksQuery.data ?? [], [tasksQuery.data])
+  const boardColumns = useMemo(
+    () => columnsQuery.data ?? [],
+    [columnsQuery.data]
+  )
 
   const project = useMemo(
     () => allProjects.find((p) => p._id === projectId),
@@ -92,6 +97,7 @@ const SprintBoardContainer = () => {
 
   // Nếu sprintId không thuộc project hiện tại, redirect về backlog
   useEffect(() => {
+    if(!projectId) return
     if (
       !sprintsQuery.isLoading &&
       sprintId &&
@@ -104,7 +110,10 @@ const SprintBoardContainer = () => {
 
   // Mutations
   const moveTaskMutation = useMoveTask()
-  const updateSprintMutation = sprintId ? useUpdateSprint(sprintId, projectId!) : undefined
+  const updateSprintMutation = useUpdateSprint({
+    sprintId: sprintId,
+    projectId: projectId
+  })
 
   // Loading state
   if (
@@ -157,16 +166,22 @@ const SprintBoardContainer = () => {
 
   const daysLeft = sprint?.endDate
     ? Math.ceil(
-      (new Date(sprint.endDate).getTime() - new Date().getTime()) /
+        (new Date(sprint.endDate).getTime() - new Date().getTime()) /
           (1000 * 60 * 60 * 24)
-    )
+      )
     : 0
 
   // Drag handlers
   function handleDragStart(event: DragStartEvent) {
     setActiveId(event.active.id as string)
   }
-  function handleDragOver(event: DragOverEvent) {}
+  function handleDragOver(event: DragOverEvent) {
+    const { over } = event
+    if (!over || !canEditTasks) {
+      if (!canEditTasks) toast.error('You do not have permission to edit tasks')
+      return
+    }
+  }
   function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event
     setActiveId(null)
@@ -201,6 +216,7 @@ const SprintBoardContainer = () => {
   const isActiveSprint = sprint?.status === 'active'
 
   const handleUpdateStatusSprint = () => {
+    if (!sprintId || !projectId) return
     if (!updateSprintMutation) return
     if (sprint?.status === 'planned') {
       updateSprintMutation.mutate({ status: 'active' })
@@ -235,8 +251,8 @@ const SprintBoardContainer = () => {
             totalTasks={totalTasks}
             isActiveSprint={isActiveSprint}
             daysLeft={daysLeft}
-            searchQuery={searchQuery}
-            setSearchQuery={setSearchQuery}
+            // searchQuery={searchQuery}
+            // setSearchQuery={setSearchQuery}
           />
           <div className="space-y-2 mb-4">
             <div className="flex items-center justify-between text-sm">
@@ -292,11 +308,6 @@ const SprintBoardContainer = () => {
         {viewMode === 'list' && (
           <SprintListView
             tasks={filteredTasks}
-            columns={boardColumns.map((col) => ({
-              id: col._id,
-              title: col.title,
-              color: getColumnColor(col.title)
-            }))}
             onTaskClick={handleTaskClick}
             canEdit={canEditTasks}
           />
@@ -313,7 +324,6 @@ const SprintBoardContainer = () => {
         <CreateTaskModal
           open={isCreateTaskOpen}
           onClose={() => setIsCreateTaskOpen(false)}
-          projectId={project._id}
           sprintId={sprint._id}
           boardColumns={boardColumns}
         />

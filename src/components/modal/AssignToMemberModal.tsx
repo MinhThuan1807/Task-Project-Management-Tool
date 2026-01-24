@@ -12,6 +12,7 @@ import { Project } from '../../lib/types'
 import { useUpdateTask } from '@/lib/hooks/useTasks'
 import { toast } from 'sonner'
 import { Popover, PopoverTrigger, PopoverContent } from '../ui/popover'
+import { getErrorMessage } from '@/lib/utils'
 
 type AssignToMemberModalProps = {
   open: boolean;
@@ -62,7 +63,8 @@ export function AssignToMemberModal({
         onChangeAssignees(selectedMemberIds)
       }
     } catch (error) {
-      console.error('Failed to assign task:', error)
+      // console.error('Failed to assign task:', error)
+      toast.error(getErrorMessage(error))
     }
   }
 

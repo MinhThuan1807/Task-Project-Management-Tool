@@ -8,11 +8,10 @@ import {
 } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { useState, useMemo } from 'react'
-import { CheckCircle2, AlertCircle, Plus, UserPlus } from 'lucide-react'
+import { CheckCircle2, Plus, UserPlus } from 'lucide-react'
 import { InviteTeamModal } from '@/components/modal/InviteTeamModal'
 import { useRouter } from 'next/navigation'
 import { EditProjectModal } from '@/components/EditProjectModal'
-import { toast } from 'sonner'
 import { useProjectDetail } from '@/lib/hooks/useProjects'
 import { useSprintsByProject } from '@/lib/hooks/useSprints'
 import { useParams } from 'next/navigation'
@@ -55,9 +54,9 @@ function ProjectContainer() {
     return <ProjectContainerSkeleton />
   }
 
-  const handleEditProject = (projectId: string, projectData: any) => {
-    toast.success('Project updated successfully')
-  }
+  // const handleEditProject = (projectId: string, projectData: any) => {
+  // toast.success('Project updated successfully')
+  // }
   const handleOpenEditModal = () => {
     setIsEditProjectOpen(true)
   }
@@ -132,7 +131,7 @@ function ProjectContainer() {
       <EditProjectModal
         open={isEditProjectOpen}
         onOpenChange={setIsEditProjectOpen}
-        onSave={handleEditProject}
+        // onSave={handleEditProject}
       />
     </div>
   )

@@ -15,9 +15,9 @@ interface BacklogTaskListProps {
   sprints: Sprint[];
   handleCreateTask: () => void;
   handleEditTaskOpen: (task: Task) => void;
-  handleDeleteTask: (task: Task) => void;
+  // handleDeleteTask: (task: Task) => void;
 }
-function BacklogTaskList({ tasks, searchQuery, sprints, handleCreateTask, handleEditTaskOpen, handleDeleteTask }: BacklogTaskListProps) {
+function BacklogTaskList({ tasks, searchQuery, sprints, handleCreateTask, handleEditTaskOpen }: BacklogTaskListProps) {
   return (
     <div className="p-6 space-y-3 max-w-4xl">
       {tasks?.length === 0 ? (

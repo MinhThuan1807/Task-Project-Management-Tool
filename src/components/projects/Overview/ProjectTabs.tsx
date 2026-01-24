@@ -11,7 +11,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Users, AlertCircle } from 'lucide-react'
 import SprintCard from '@/app/(dashboard)/projects/[id]/sprint/components/SprintCard'
-import { Project, Sprint, User } from '@/lib/types'
+import { Project, ProjectMember, Sprint, User } from '@/lib/types'
 import { useSocket } from '@/app/providers/SocketProvider'
 import { useEffect, useState } from 'react'
 import { notificationApi } from '@/lib/services/notifications.service'
@@ -55,7 +55,7 @@ function ProjectTabs({
       setNotifications(notifications.data)
     }
     fetchNotifications()
-  }, [])
+  }, [project._id])
 
   useEffect(() => {
     if (!socket || !isConnected) return
@@ -73,7 +73,7 @@ function ProjectTabs({
     return () => {
       socket.off('project_notification', handleNewNotification)
     }
-  }, [socket, isConnected])
+  }, [socket, isConnected, project._id])
 
   const formatDate = (timestamp: Date | number) => {
     const date = new Date(timestamp)
@@ -115,7 +115,7 @@ function ProjectTabs({
               </div>
             ) : (
               <div className="space-y-4">
-                {sprints.map((sprint: any) => (
+                {sprints.map((sprint: Sprint) => (
                   <SprintCard
                     key={sprint._id}
                     sprint={sprint}
@@ -139,7 +139,7 @@ function ProjectTabs({
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {project?.members?.map((member: any) => {
+              {project?.members?.map((member: ProjectMember) => {
                 const isProjectOwner = member.memberId === project.ownerId
 
                 return (

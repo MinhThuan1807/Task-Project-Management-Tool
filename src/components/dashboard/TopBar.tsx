@@ -1,5 +1,4 @@
-import { Bell, Search, User as UserIcon, LogOut } from 'lucide-react'
-import { Button } from '../ui/button'
+import { Search } from 'lucide-react'
 import { Input } from '../ui/input'
 import Notification from '@/components/dashboard/notifications/Notification'
 import { Suspense } from 'react'

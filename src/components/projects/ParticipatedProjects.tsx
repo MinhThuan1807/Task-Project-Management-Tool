@@ -1,25 +1,12 @@
 'use client'
 
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger
-} from '../ui/collapsible'
 import { Separator } from '../ui/separator'
 import {
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  SidebarMenuSub,
-  SidebarMenuSubButton,
-  SidebarMenuSubItem
+  SidebarMenu
 } from '../ui/sidebar'
-import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar'
-import { BarChart2, ChevronRight, FolderKanban, List } from 'lucide-react'
-import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
 import { useJoinedProjects } from '@/lib/hooks/useProjects'
 import { Project } from '@/lib/types'

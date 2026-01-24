@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useSearchParams, useRouter, redirect } from 'next/navigation'
 import { authApi } from '@/lib/services/auth.service'
 import { toast } from 'sonner'
+import { getErrorMessage } from '@/lib/utils'
 
 export default function VerificationPage() {
   const searchParams = useSearchParams()
@@ -12,7 +13,6 @@ export default function VerificationPage() {
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>(
     'loading'
   )
-  const [message, setMessage] = useState('')
 
   useEffect(() => {
     const verifyEmail = async () => {
@@ -23,7 +23,6 @@ export default function VerificationPage() {
       // Validate params
       if (!email || !token) {
         setStatus('error')
-        setMessage('Invalid verification link')
         return
       }
 
@@ -35,19 +34,15 @@ export default function VerificationPage() {
 
         toast.success(response.message)
         setStatus('success')
-        setMessage('Email verification successful!')
 
         // Redirect to login after 3 seconds
         setTimeout(() => {
           //   router.push('user/login?verified=true');
           redirect('/login?verified=true')
         }, 3000)
-      } catch (error: any) {
-        toast.error(error.message)
+      } catch (error) {
         setStatus('error')
-        setMessage(
-          error.message || 'Verification failed. Token may have expired.'
-        )
+        toast.error(getErrorMessage(error))
       }
     }
 
@@ -69,7 +64,7 @@ export default function VerificationPage() {
           <div className="text-center">
             <div className="text-green-500 text-5xl mb-4">✓</div>
             <h2 className="text-xl font-semibold mb-2 text-green-600">
-              {message}
+              Verification successful!
             </h2>
             <p className="text-gray-600 mb-4">
               You will be redirected to the login page...
@@ -89,7 +84,7 @@ export default function VerificationPage() {
             <h2 className="text-xl font-semibold mb-2 text-red-600">
               Verification failed
             </h2>
-            <p className="text-gray-600 mb-4">{message}</p>
+            <p className="text-gray-600 mb-4">Verification failed. Token may have expired.</p>
             <div className="space-y-2">
               <button
                 onClick={() => router.push('/resend-verification')}

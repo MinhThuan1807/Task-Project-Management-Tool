@@ -1,6 +1,7 @@
 import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit'
 import axiosInstance from '@/lib/axios'
 import { toast } from 'sonner'
+import { getErrorMessage } from '@/lib/utils'
 
 
 interface User {
@@ -33,39 +34,37 @@ const initialState: AuthState = {
 
 export const loginUserAPI = createAsyncThunk(
   'users/login',
-  async (data: SignInFormData, { rejectWithValue }) => {
+  async (data: SignInFormData) => {
     try {
       const response = await axiosInstance.post('/auth/login', data)
       return response.data
-    } catch (error: any) {
-      const message =
-        error.response?.data?.message || error?.message || 'Login failed'
-      return rejectWithValue(message)
+    } catch (error) {
+      toast.error(getErrorMessage(error))
     }
   }
 )
 
 export const logoutUserAPI = createAsyncThunk(
   'users/logout',
-  async (_, { rejectWithValue }) => {
+  async (_) => {
     try {
       const response = await axiosInstance.post('/auth/logout')
       toast.success('Logged out successfully')
       return response.data
-    } catch (error: any) {
-      return rejectWithValue('Logout failed')
+    } catch (error) {
+      toast.error(getErrorMessage(error))
     }
   }
 )
 
 export const getCurrentUserAPI = createAsyncThunk(
   'users/getCurrentUser',
-  async (_, { rejectWithValue }) => {
+  async (_) => {
     try {
       const response = await axiosInstance.get('/users/')
       return response.data
-    } catch (error: any) {
-      return rejectWithValue('Failed to fetch current user')
+    } catch (error) {
+      toast.error(getErrorMessage(error))
     }
   }
 )

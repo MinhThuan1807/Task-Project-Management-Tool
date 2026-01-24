@@ -5,7 +5,7 @@ export function middleware(request: NextRequest) {
   const token = request.cookies.get('accessToken')?.value
   const pathname = request.nextUrl.pathname
 
-  const publicPaths = ['/', '/login', '/register']
+  const publicPaths = ['/', '/login', '/register', '/verification']
 
   const isPublic = publicPaths.some(path => pathname === path || pathname.startsWith(path + '/'))
 
@@ -29,6 +29,7 @@ export const config = {
     '/dashboard/:path*',
     '/chat/:path*',
     '/report/:path*',
-    '/project/:path*'
+    '/project/:path*',
+    '/verification/:path*'
   ]
 }

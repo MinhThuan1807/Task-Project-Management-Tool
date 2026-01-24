@@ -121,7 +121,7 @@ const SprintCalendarView = ({ tasks, sprint, onTaskClick }: SprintCalendarViewPr
               const dayTasks = getTasksForDate(date)
               const today = isToday(date)
               const inSprint = isInSprint(date)
-              console.log('date', date, 'inSprint', inSprint, 'dayTasks', dayTasks)
+              // console.log('date', date, 'inSprint', inSprint, 'dayTasks', dayTasks)
 
               return (
                 <div

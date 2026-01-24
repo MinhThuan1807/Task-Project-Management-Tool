@@ -7,13 +7,22 @@ import axios, {
 import { logoutUserAPI } from '@/lib/features/auth/authSlice'
 import { toast } from 'sonner'
 
-// Variable to hold the injected Redux store
-let axiosReduxStore: any
+type ReduxStoreLike = {
+  dispatch: (action: unknown) => unknown
+}
 
-export const injectStore = (mainStore: any) => {
-  // console.log('Injecting store:', mainStore)
+type ApiErrorResponse = {
+  message?: string
+}
+
+type RefreshTokenResponse = {
+  accessToken?: string
+}
+
+let axiosReduxStore: ReduxStoreLike | null = null
+
+export const injectStore = (mainStore: ReduxStoreLike) => {
   axiosReduxStore = mainStore
-  // console.log('axiosReduxStore after injection:', axiosReduxStore)
 }
 
 const axiosInstance: AxiosInstance = axios.create({
@@ -23,11 +32,9 @@ const axiosInstance: AxiosInstance = axios.create({
   timeout: 60000
 })
 
-const refreshToken = async () => {
-  const response = await axios.post(
-    `${
-      process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/v1'
-    }auth/refresh-token`,
+const refreshToken = async (): Promise<RefreshTokenResponse> => {
+  const response = await axios.post<RefreshTokenResponse>(
+    `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/v1'}auth/refresh-token`,
     {},
     {
       withCredentials: true,
@@ -38,59 +45,56 @@ const refreshToken = async () => {
 }
 
 axiosInstance.interceptors.request.use(
-  async (config: InternalAxiosRequestConfig) => {
-    return config
-  },
-  (error: AxiosError) => {
-    return Promise.reject(error)
-  }
+  async (config: InternalAxiosRequestConfig) => config,
+  (error: AxiosError) => Promise.reject(error)
 )
 
-let refreshTokenPromise: Promise<any> | null = null
+let refreshTokenPromise: Promise<string | undefined> | null = null
+
+type RetryRequestConfig = AxiosRequestConfig & { _retry?: boolean }
 
 axiosInstance.interceptors.response.use(
-  (response) => {
-    return response
-  },
-  async (error: AxiosError) => {
+  (response) => response,
+  async (error: AxiosError<ApiErrorResponse>) => {
+    const status = error.response?.status
+    const originalRequest = error.config as RetryRequestConfig | undefined
 
-    if (error?.status === 401) {
-      axiosReduxStore.dispatch(logoutUserAPI())
+    // Nếu không có config request thì reject luôn
+    if (!originalRequest) return Promise.reject(error)
+
+    // ✅ 401: logout
+    if (status === 401) {
+      axiosReduxStore?.dispatch(logoutUserAPI())
     }
 
-    const originalRequest = error.config as AxiosRequestConfig & {
-      _retry?: boolean
-    }
-
-    // If error 410 GONE - token expired, need to refresh
-    if (error.status === 410 && !originalRequest._retry) {
+    // ✅ 410: token expired -> refresh
+    if (status === 410 && !originalRequest._retry) {
       originalRequest._retry = true
 
       if (!refreshTokenPromise) {
         refreshTokenPromise = refreshToken()
-          .then((data) => {
-            return data?.accessToken
-          })
+          .then((data) => data.accessToken)
           .catch((err) => {
-            axiosReduxStore.dispatch(logoutUserAPI())
+            axiosReduxStore?.dispatch(logoutUserAPI())
             return Promise.reject(err)
           })
           .finally(() => {
             refreshTokenPromise = null
           })
       }
-      return refreshTokenPromise.then((accessToken) => {
-        return axiosInstance(originalRequest)
-      })
+
+      // Chờ refresh xong rồi gọi lại request cũ
+      return refreshTokenPromise.then(() => axiosInstance(originalRequest))
     }
 
-    let errorMessage: any = error.message
-    if (error.response?.data && (error.response.data as any)?.message) {
-      errorMessage = (error.response?.data as any)?.message
-    }
-    if (error.status !== 410) {
+    // ✅ Lấy message lỗi an toàn, không any
+    const errorMessage =
+      error.response?.data?.message ?? error.message ?? 'Unknown error'
+
+    if (status !== 410) {
       toast.error(errorMessage)
     }
+
     return Promise.reject(error)
   }
 )

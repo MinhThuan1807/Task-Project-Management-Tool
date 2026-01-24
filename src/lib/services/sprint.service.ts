@@ -1,6 +1,5 @@
 import axiosInstance from '../axios'
 import type {
-  Sprint,
   CreateSprintRequest,
   UpdateSprintRequest,
   SprintResponse,

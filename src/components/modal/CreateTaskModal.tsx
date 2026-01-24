@@ -26,9 +26,7 @@ import { BoardColumn } from '@/lib/types'
 import { useCreateTask } from '@/lib/hooks/useTasks'
 import { toast } from 'sonner'
 import { useState } from 'react'
-import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar'
-import { AssignToMemberModal } from './AssignToMemberModal'
-
+import { getErrorMessage } from '@/lib/utils'
 // Validation schema
 const createTaskSchema = z.object({
   title: z
@@ -52,7 +50,6 @@ type CreateTaskFormData = z.infer<typeof createTaskSchema>
 type CreateTaskModalProps = {
   open: boolean
   onClose: () => void
-  projectId: string
   sprintId: string
   boardColumns?: BoardColumn[]
   boardColumn?: BoardColumn
@@ -61,7 +58,6 @@ type CreateTaskModalProps = {
 export function CreateTaskModal({
   open,
   onClose,
-  projectId,
   sprintId,
   boardColumns,
   boardColumn
@@ -82,7 +78,6 @@ export function CreateTaskModal({
     reset,
     setValue,
     watch,
-    control,
     formState: { errors }
   } = useForm<CreateTaskFormData>({
     resolver: zodResolver(createTaskSchema),
@@ -124,8 +119,8 @@ export function CreateTaskModal({
         toast.success('Task created successfully!')
         handleClose()
       },
-      onError: (error: any) => {
-        toast.error(error?.message || 'Failed to create task')
+      onError: (error) => {
+        toast.error(getErrorMessage(error))
       }
     })
   }
@@ -222,7 +217,12 @@ export function CreateTaskModal({
                 </Label>
                 <Select
                   value={priority}
-                  onValueChange={(value: any) => setValue('priority', value)}
+                  onValueChange={(value) =>
+                    setValue(
+                      'priority',
+                      value as 'low' | 'medium' | 'high' | 'critical'
+                    )
+                  }
                   disabled={createTaskMutation.isPending}
                 >
                   <SelectTrigger id="priority">

@@ -34,7 +34,6 @@ import { useBoardColumnsBySprint } from '@/lib/hooks/useBoardColumns'
 import { useForm, Controller } from 'react-hook-form'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useMoveTask } from '@/lib/hooks/useTasks'
 
 type EditTaskModalProps = {
   open?: boolean

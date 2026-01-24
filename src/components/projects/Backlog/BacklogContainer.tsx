@@ -1,7 +1,7 @@
 'use client'
 import { useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import { Sprint, UpdateTaskRequest } from '@/lib/types'
+import { Sprint } from '@/lib/types'
 import { CreateSprintModal } from '@/components/CreateSprintModal'
 import { toast } from 'sonner'
 import { useAllProjects } from '@/lib/hooks/useProjects'
@@ -10,7 +10,6 @@ import { getErrorMessage } from '@/lib/utils'
 import MainBacklogArea from './MainBacklogArea'
 import BlacklogSprintPlanning from './BlacklogSprintPlanning'
 import BacklogContainerSkeleton from './BacklogContainerSkeleton'
-import { useUpdateTask } from '@/lib/hooks/useTasks'
 
 function BacklogContainer() {
   const params = useParams()
@@ -27,7 +26,7 @@ function BacklogContainer() {
   const plannedSprint = sprints?.find((s) => s.status === 'planned')
   const sprintPlannedId = plannedSprint ? plannedSprint._id : ''
 
-  const updateStatusSprint = useUpdateSprint(sprintPlannedId, projectId)
+  const updateStatusSprint = useUpdateSprint({ sprintId: sprintPlannedId, projectId })
 
   const handleStartSprint = async (sprint: Sprint) => {
     if (sprint.status === 'planned') {
@@ -58,7 +57,7 @@ function BacklogContainer() {
       <MainBacklogArea
         sprints={projectSprints}
         onCreateSprint={() => setIsCreateSprintOpen(true)}
-        project={project}
+        // project={project}
       />
 
       {/* Sprint Planning Sidebar */}

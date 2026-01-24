@@ -28,14 +28,10 @@ import {
   TrendingUp,
   Users,
   CheckCircle2,
-  Target,
   Download,
-  Calendar,
-  Activity,
   FileText,
   BarChart3
 } from 'lucide-react'
-import { formatDate } from '../../lib/utils'
 import { useAllProjects } from '@/lib/hooks/useProjects'
 import { useSprintsByProject } from '@/lib/hooks/useSprints'
 import { useParams } from 'next/navigation'

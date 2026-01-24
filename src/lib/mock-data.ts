@@ -1,4 +1,4 @@
-import { Project, Sprint, User } from './types'
+import { Sprint } from './types'
 
 // Mock current user
 // export const mockCurrentUser: User = {

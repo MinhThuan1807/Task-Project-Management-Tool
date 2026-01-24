@@ -11,8 +11,7 @@ import {
   MessageSquare,
   Paperclip,
   Calendar,
-  GripVertical,
-  Clock
+  GripVertical
 } from 'lucide-react'
 import {
   DropdownMenu,

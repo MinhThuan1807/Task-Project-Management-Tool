@@ -7,7 +7,6 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { Badge } from '@/components/ui/badge'
 import {
   Camera,
   Mail,
@@ -15,10 +14,7 @@ import {
   Phone,
   MapPin,
   Briefcase,
-  Calendar,
-  FolderKanban,
-  CheckCircle2,
-  Users as UsersIcon
+  Calendar
 } from 'lucide-react'
 import { useCurrentUser } from '@/lib/hooks/useAuth'
 
@@ -27,7 +23,7 @@ export default function ProfilePage() {
   const [isEditing, setIsEditing] = useState(false)
   const [formData, setFormData] = useState({
     displayName: currentUser?.displayName || 'John Doe',
-    email: 'john.doe@example.com',
+    email: currentUser?.email || 'john.doe@example.com',
     phone: '+1 (555) 123-4567',
     location: 'San Francisco, CA',
     title: 'Product Manager',

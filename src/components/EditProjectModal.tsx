@@ -1,7 +1,6 @@
 'use client'
 import { useState } from 'react'
 import { Upload, Trash2 } from 'lucide-react'
-import { Project } from '../lib/types'
 import {
   Dialog,
   DialogContent,
@@ -34,16 +33,16 @@ import Image from 'next/image'
 type EditProjectModalProps = {
   open: boolean
   onOpenChange: (open: boolean) => void
-  onSave: (projectId: string, updates: Partial<Project>) => void
+  // onSave: (projectId: string, updates: Partial<Project>) => void
 }
 
 export function EditProjectModal({
   open,
-  onOpenChange,
-  onSave
+  onOpenChange
+  // onSave
 }: EditProjectModalProps) {
   const { data: user } = useCurrentUser()
-  const { data: allProjects, isLoading: projectsLoading } = useAllProjects()
+  const { data: allProjects } = useAllProjects()
   const params = useParams()
   const projectId = params.id as string
   const project = allProjects.find((p) => p._id === projectId)
@@ -58,8 +57,8 @@ export function EditProjectModal({
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
 
   const handleSubmit = (e: React.FormEvent) => {
-    // e.preventDefault();
-    // onSave(project.id, {
+    e.preventDefault()
+    // onSave(project._id, {
     //   name,
     //   description,
     //   status,
@@ -253,8 +252,7 @@ export function EditProjectModal({
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Project</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete "{project?.name}"? This action
-              cannot be undone and will permanently delete:
+              {`Are you sure you want to delete "${project?.name}"? This action cannot be undone and will permanently delete:`}
               <ul className="list-disc list-inside mt-2 space-y-1">
                 <li>All sprints and tasks</li>
                 <li>All chat messages</li>

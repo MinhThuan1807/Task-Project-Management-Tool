@@ -4,11 +4,7 @@ import { toast } from 'sonner'
 import { getErrorMessage } from '../utils'
 import type {
   Task,
-  CreateTaskRequest,
   UpdateTaskRequest,
-  MoveTaskRequest,
-  AddCommentRequest,
-  AddAttachmentRequest,
   TaskFilters
 } from '../types'
 
@@ -165,7 +161,7 @@ export function useMoveTask() {
   return useMutation({
     mutationFn: ({ taskId, data }: { taskId: string; data: UpdateTaskRequest }) =>
       taskApi.update(taskId, data),
-    onSuccess: (data, variables) => {
+    onSuccess: () => {
       // Chỉ invalidate các queries liên quan đến sprint và task detail
       queryClient.invalidateQueries({ queryKey: taskKeys.all })
     },
