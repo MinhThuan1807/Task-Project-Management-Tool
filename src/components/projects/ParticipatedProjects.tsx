@@ -14,6 +14,8 @@ import { useSprintsByProject } from '@/lib/hooks/useSprints'
 import { Suspense, useState } from 'react'
 import ProjectCollapSkeleton from './ProjectCollapSkeleton'
 import ProjectCollap from './ProjectCollap'
+import { selectCurrentUser } from '@/lib/features/auth/authSlice'
+import { useSelector } from 'react-redux'
 
 function ParticipatedProjects() {
   const [openProjectId, setOpenProjectId] = useState<string | null>(null)
@@ -29,13 +31,30 @@ function ParticipatedProjects() {
     return selectedProjectId === project._id
   }
 
-  if (!joinedProjects) {
+  const currentUser = useSelector(selectCurrentUser)
+
+  const isActiveProject = joinedProjects?.some((project) =>
+    project.members.some(
+      (member) =>
+        member.memberId === currentUser?._id && member.status === 'active'
+    )
+  )
+
+  if (!joinedProjects && !isActiveProject) {
     return <ProjectCollapSkeleton />
   }
 
   return (
     <>
-      {joinedProjects?.length > 0 && (
+      {!isActiveProject && (
+        <>
+          <Separator className="my-2" />
+          <div className="px-4 py-2 text-sm text-gray-500">
+            You are not participating in any projects.
+          </div>
+        </>
+      )}
+      {isActiveProject && (
         <>
           <Separator className="my-2" />
           <SidebarGroup>
@@ -60,7 +79,6 @@ function ParticipatedProjects() {
                         sprintLink={sprintLink}
                         onOpenChange={(open: boolean) =>
                           setOpenProjectId(open ? project._id : null)
-
                         }
                         isOpen={openProjectId === project._id}
                       />

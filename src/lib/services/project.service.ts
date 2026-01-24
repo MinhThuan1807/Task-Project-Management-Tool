@@ -130,8 +130,8 @@ export const projectApi = {
    * POST /projects/accept-invite
    */
   acceptInvite: async (data: AcceptInviteRequest): Promise<ProjectResponse> => {
-    const response = await axiosInstance.post<ProjectResponse>(
-      '/projects/accept-invite',
+    const response = await axiosInstance.put<ProjectResponse>(
+      '/projects/verify/invite',
       data
     )
     return response.data
