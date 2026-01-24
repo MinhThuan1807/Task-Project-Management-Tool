@@ -70,6 +70,7 @@ export default function InvitePage() {
         // Redirect to project page after 2 seconds
         setTimeout(() => {
           router.push(`/projects/${projectId}`)
+          router.refresh()
         }, 2000)
       } catch (error) {
         setStatus('error')
