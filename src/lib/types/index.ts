@@ -78,12 +78,12 @@ export { DEFAULT_COLUMNS } from './board.types'
 // Chat types
 export type {
   Message,
-  Channel,
-  SendMessageRequest,
-  CreateChannelRequest,
-  MessageResponse,
+  // Channel,
+  // SendMessageRequest,
+  // CreateChannelRequest,
+  // MessageResponse,
   MessagesResponse,
-  ChannelResponse,
-  ChannelsResponse,
-  ChatEvent
+  // ChannelResponse,
+  // ChannelsResponse,
+  // ChatEvent
 } from './chat.types'
