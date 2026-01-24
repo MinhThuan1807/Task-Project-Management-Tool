@@ -1,438 +1,794 @@
-// import { useState } from 'react';
-// import { Send, Search, Phone, Video, Info, Smile, Paperclip, Hash, MessageSquare, Plus } from 'lucide-react';
-// import {
-//   Dialog,
-//   DialogContent,
-//   DialogDescription,
-//   DialogFooter,
-//   DialogHeader,
-//   DialogTitle,
-// } from './ui/dialog';
-// import { Button } from './ui/button';
-// import { Input } from './ui/input';
-// import { Label } from './ui/label';
-// import { Project, User } from '@/lib/types';
+import { useState, useEffect, useRef } from 'react'
+import {
+  Send,
+  Search,
+  Phone,
+  Video,
+  Info,
+  Smile,
+  Paperclip,
+  MessageSquare,
+  Trash2,
+  MoreVertical,
+  ArrowDown
+} from 'lucide-react'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger
+} from './ui/dropdown-menu'
+import { Project, User } from '@/lib/types'
+import { projectChatApi } from '@/lib/services/chat.service'
+import { useSocket } from '@/app/providers/SocketProvider'
+import EmojiPicker, { EmojiClickData } from 'emoji-picker-react'
+import { toast } from 'sonner'
 
-// type ChatViewProps = {
-//   currentUser: User;
-//   allProjects: Project[];
-// };
+type ChatViewProps = {
+  currentUser: User
+  allProjects: Project[]
+}
 
-// type Message = {
-//   id: string;
-//   projectId: string;
-//   channelId: string;
-//   senderId: string;
-//   senderName: string;
-//   senderAvatar: string;
-//   content: string;
-//   timestamp: string;
-// };
+type Message = {
+  _id: string
+  senderId: string
+  senderName: string
+  senderRole: string
+  senderAvatarUrl?: string
+  message: string
+  timestamp: Date | number
+  isDeleted: boolean
+}
+interface IProjectChat {
+  _id: string
+  projectId: string
+  roomId: string
+  messages: Array<Message>
+  lastMessage: string
+  lastMessageTime?: Date | number | null
+  createdAt: Date | number
+  updatedAt: Date | number | null
+}
 
-// type Channel = {
-//   id: string;
-//   name: string;
-//   projectId: string;
-// };
+type TypingUser = {
+  userId: string
+  userName: string
+  projectId: string
+}
 
-// // Mock channels data
-// const mockChannels: Channel[] = [
-//   { id: 'general', name: 'general', projectId: 'all' },
-//   { id: 'sprint-updates', name: 'sprint-updates', projectId: 'all' },
-//   { id: 'random', name: 'random', projectId: 'all' },
-// ];
+export function ChatView({ currentUser, allProjects }: ChatViewProps) {
+  const { socket, isConnected } = useSocket()
+  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(
+    allProjects.length > 0 ? allProjects[0]._id : null
+  )
+  const [searchQuery, setSearchQuery] = useState('')
+  const [messageInput, setMessageInput] = useState('')
+  const [messages, setMessages] = useState<Message[]>([])
+  const [projectChats, setProjectChats] = useState<
+    Record<string, IProjectChat>
+  >({})
+  const [typingUsers, setTypingUsers] = useState<TypingUser[]>([])
+  const [typingTimeout, setTypingTimeout] = useState<NodeJS.Timeout | null>(
+    null
+  )
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false)
+  const [showScrollButton, setShowScrollButton] = useState(false)
+  const messagesEndRef = useRef<HTMLDivElement>(null)
+  const messagesContainerRef = useRef<HTMLDivElement>(null)
+  const emojiPickerRef = useRef<HTMLDivElement>(null)
 
-// // Mock messages data
-// const mockMessages: Message[] = [
-//   {
-//     id: 'msg-1',
-//     projectId: 'project-1',
-//     channelId: 'general',
-//     senderId: 'user-2',
-//     senderName: 'Alice Johnson',
-//     senderAvatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Alice',
-//     content: 'Hey team, just finished the authentication module!',
-//     timestamp: new Date(Date.now() - 5 * 60 * 1000).toISOString(),
-//   },
-//   {
-//     id: 'msg-2',
-//     projectId: 'project-1',
-//     channelId: 'general',
-//     senderId: 'user-1',
-//     senderName: 'Project Manager',
-//     senderAvatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=PM',
-//     content: 'Great work! Can you push it to the dev branch?',
-//     timestamp: new Date(Date.now() - 3 * 60 * 1000).toISOString(),
-//   },
-//   {
-//     id: 'msg-3',
-//     projectId: 'project-1',
-//     channelId: 'sprint-updates',
-//     senderId: 'user-3',
-//     senderName: 'Bob Smith',
-//     senderAvatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Bob',
-//     content: 'Sprint 3 is now complete! 🎉',
-//     timestamp: new Date(Date.now() - 1 * 60 * 1000).toISOString(),
-//   },
-//   {
-//     id: 'msg-4',
-//     projectId: 'project-2',
-//     channelId: 'general',
-//     senderId: 'user-4',
-//     senderName: 'Emma Davis',
-//     senderAvatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Emma',
-//     content: 'When is the next sprint planning meeting?',
-//     timestamp: new Date(Date.now() - 30 * 60 * 1000).toISOString(),
-//   },
-//   {
-//     id: 'msg-5',
-//     projectId: 'project-3',
-//     channelId: 'random',
-//     senderId: 'user-5',
-//     senderName: 'Charlie Wilson',
-//     senderAvatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Charlie',
-//     content: 'The e-commerce platform is coming along nicely!',
-//     timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-//   },
-// ];
+  const selectedProject = allProjects.find((p) => p._id === selectedProjectId)
 
-// export function ChatView({ currentUser, allProjects }: ChatViewProps) {
-//   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(
-//     allProjects.length > 0 ? allProjects[0].id : null
-//   );
-//   const [selectedChannelId, setSelectedChannelId] = useState<string>('general');
-//   const [searchQuery, setSearchQuery] = useState('');
-//   const [messageInput, setMessageInput] = useState('');
-//   const [messages, setMessages] = useState<Message[]>(mockMessages);
-//   const [channels, setChannels] = useState<Channel[]>(mockChannels);
-//   const [showCreateChannel, setShowCreateChannel] = useState(false);
-//   const [newChannelName, setNewChannelName] = useState('');
+  // Get typing users for current project
+  const currentTypingUsers = typingUsers.filter(
+    (user) =>
+      user.projectId === selectedProjectId && user.userId !== currentUser._id
+  )
 
-//   const selectedProject = allProjects.find((p) => p.id === selectedProjectId);
-//   const selectedChannel = channels.find((c) => c.id === selectedChannelId);
-//   const projectMessages = messages.filter(
-//     (m) => m.projectId === selectedProjectId && m.channelId === selectedChannelId
-//   );
+  // Fetch messages for all projects on mount
+  useEffect(() => {
+    const fetchAllProjectChats = async () => {
+      const chatData: Record<string, IProjectChat> = {}
 
-//   // Get last message for each project
-//   const getLastMessage = (projectId: string) => {
-//     const projectMsgs = messages.filter((m) => m.projectId === projectId);
-//     return projectMsgs.length > 0 ? projectMsgs[projectMsgs.length - 1] : null;
-//   };
+      for (const project of allProjects) {
+        try {
+          const data = await projectChatApi.getAllProjectById(project._id)
+          chatData[project._id] = data.data
+        } catch (error) {
+          console.error(
+            `Error fetching chat for project ${project._id}:`,
+            error
+          )
+        }
+      }
 
-//   // Filter projects by search
-//   const filteredProjects = allProjects.filter((project) =>
-//     project.name.toLowerCase().includes(searchQuery.toLowerCase())
-//   );
+      setProjectChats(chatData)
+    }
 
-//   const handleSendMessage = () => {
-//     if (!messageInput.trim() || !selectedProjectId) return;
+    if (allProjects.length > 0) {
+      fetchAllProjectChats()
+    }
+  }, [allProjects])
 
-//     const newMessage: Message = {
-//       id: `msg-${Date.now()}`,
-//       projectId: selectedProjectId,
-//       channelId: selectedChannelId,
-//       senderId: currentUser.id,
-//       senderName: currentUser.displayName,
-//       senderAvatar: currentUser.avatarUrl || '',
-//       content: messageInput,
-//       timestamp: new Date().toISOString(),
-//     };
+  // Fetch messages when selected project changes
+  useEffect(() => {
+    if (!selectedProjectId) {
+      setMessages([])
+      return
+    }
 
-//     setMessages([...messages, newMessage]);
-//     setMessageInput('');
-//   };
+    // Fetch messages from API
+    projectChatApi.getAllProjectById(selectedProjectId).then((data) => {
+      setMessages(data.data.messages || [])
+      setProjectChats((prev) => ({
+        ...prev,
+        [selectedProjectId]: data.data
+      }))
+    })
+  }, [selectedProjectId])
 
-//   const formatTime = (timestamp: string) => {
-//     const date = new Date(timestamp);
-//     return date.toLocaleTimeString('en-US', {
-//       hour: '2-digit',
-//       minute: '2-digit',
-//       hour12: true,
-//     });
-//   };
+  // Listen events via socket
+  useEffect(() => {
+    if (!isConnected || !socket || !selectedProjectId) return
 
-//   const formatRelativeTime = (timestamp: string) => {
-//     const date = new Date(timestamp);
-//     const now = new Date();
-//     const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
+    const currentRoomId = projectChats[selectedProjectId]?._id
+    if (!currentRoomId) return
 
-//     if (diffInMinutes < 1) return 'Just now';
-//     if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
-//     if (diffInMinutes < 1440) return `${Math.floor(diffInMinutes / 60)}h ago`;
-//     return date.toLocaleDateString();
-//   };
+    // Connect to project chat room
+    socket.emit('join_project_chat', currentRoomId)
 
-//   const handleCreateChannel = () => {
-//     if (!newChannelName.trim()) return;
+    // Handle incoming messages
+    const handleNewMessage = (message: Message) => {
+      setMessages((prev) => [...prev, message])
+      // Update last message in projectChats
+      setProjectChats((prev) => ({
+        ...prev,
+        [selectedProjectId]: {
+          ...prev[selectedProjectId],
+          lastMessage: message.message,
+          lastMessageTime: message.timestamp,
+          messages: [...(prev[selectedProjectId]?.messages || []), message]
+        }
+      }))
+    }
 
-//     const newChannel: Channel = {
-//       id: `channel-${Date.now()}`,
-//       name: newChannelName,
-//       projectId: selectedProjectId || 'all',
-//     };
+    // Handle typing indicators
+    const handleUserTyping = (data: {
+      roomId: string
+      userId: string
+      userName: string
+    }) => {
+      if (data.roomId !== currentRoomId) return
 
-//     setChannels([...channels, newChannel]);
-//     setSelectedChannelId(newChannel.id);
-//     setShowCreateChannel(false);
-//     setNewChannelName('');
-//   };
+      setTypingUsers((prev) => {
+        const exists = prev.find(
+          (u) => u.userId === data.userId && u.projectId === selectedProjectId
+        )
+        if (!exists) {
+          return [
+            ...prev,
+            {
+              userId: data.userId,
+              userName: data.userName,
+              projectId: selectedProjectId
+            }
+          ]
+        }
+        return prev
+      })
+    }
 
-//   return (
-//     <div className="flex-1 flex bg-white h-full">
-//       {/* Projects/Conversations List - Left Sidebar */}
-//       <div className="w-80 bg-white border-r border-gray-200 flex flex-col">
-//         <div className="p-4 border-b border-gray-200">
-//           <h2 className="text-2xl text-gray-900 mb-4">Chat</h2>
-//           <div className="relative">
-//             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-//             <input
-//               type="text"
-//               placeholder="Search projects..."
-//               value={searchQuery}
-//               onChange={(e) => setSearchQuery(e.target.value)}
-//               className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-//             />
-//           </div>
-//         </div>
+    // Handle stop typing indicators
+    const handleUserStopTyping = (data: { roomId: string; userId: string }) => {
+      if (data.roomId !== currentRoomId) return
 
-//         <div className="flex-1 overflow-y-auto">
-//           {filteredProjects.map((project) => {
-//             const lastMessage = getLastMessage(project.id);
-//             const isSelected = selectedProjectId === project.id;
-//             const unreadCount = 0; // Mock unread count
+      setTypingUsers((prev) =>
+        prev.filter(
+          (u) =>
+            !(u.userId === data.userId && u.projectId === selectedProjectId)
+        )
+      )
+    }
 
-//             return (
-//               <button
-//                 key={project.id}
-//                 onClick={() => {
-//                   setSelectedProjectId(project.id);
-//                   setSelectedChannelId('general'); // Reset to general channel
-//                 }}
-//                 className={`w-full p-4 flex items-start gap-3 hover:bg-gray-50 transition-colors border-b border-gray-100 ${
-//                   isSelected ? 'bg-blue-50' : ''
-//                 }`}
-//               >
-//                 <img
-//                   src={project.imageUrl || 'https://api.dicebear.com/7.x/shapes/svg?seed=default'}
-//                   alt={project.name}
-//                   className="w-12 h-12 rounded-full flex-shrink-0"
-//                 />
-//                 <div className="flex-1 min-w-0 text-left">
-//                   <div className="flex items-center justify-between mb-1">
-//                     <h3 className="text-sm text-gray-900 truncate">{project.name}</h3>
-//                     {lastMessage && (
-//                       <span className="text-xs text-gray-500 ml-2 flex-shrink-0">
-//                         {formatRelativeTime(lastMessage.timestamp)}
-//                       </span>
-//                     )}
-//                   </div>
-//                   {lastMessage && (
-//                     <p className="text-sm text-gray-600 truncate">
-//                       {lastMessage.senderId === currentUser.id ? 'You: ' : ''}
-//                       {lastMessage.content}
-//                     </p>
-//                   )}
-//                   {!lastMessage && (
-//                     <p className="text-sm text-gray-400">No messages yet</p>
-//                   )}
-//                 </div>
-//                 {unreadCount > 0 && (
-//                   <span className="w-5 h-5 bg-blue-600 text-white text-xs rounded-full flex items-center justify-center flex-shrink-0">
-//                     {unreadCount}
-//                   </span>
-//                 )}
-//               </button>
-//             );
-//           })}
-//         </div>
-//       </div>
+    // Handle message deleted events
+    const handleMessageDeleted = (data: {
+      roomId: string
+      messageId: string
+    }) => {
+      if (data.roomId !== currentRoomId) return
 
-//       {/* Chat Area - Right Side */}
-//       {selectedProject ? (
-//         <div className="flex-1 flex flex-col">
-//           {/* Chat Header */}
-//           <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between bg-white">
-//             <div className="flex items-center gap-3">
-//               <Hash className="w-6 h-6 text-gray-600" />
-//               <div>
-//                 <h2 className="text-lg text-gray-900">{selectedChannel?.name || 'general'}</h2>
-//                 <p className="text-sm text-gray-500">{selectedProject.name}</p>
-//               </div>
-//             </div>
-//             <div className="flex items-center gap-2">
-//               <button className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
-//                 <Phone className="w-5 h-5" />
-//               </button>
-//               <button className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
-//                 <Video className="w-5 h-5" />
-//               </button>
-//               <button className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
-//                 <Info className="w-5 h-5" />
-//               </button>
-//             </div>
-//           </div>
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg._id === data.messageId
+            ? {
+                ...msg,
+                message: 'This message has been deleted',
+                isDeleted: true
+              }
+            : msg
+        )
+      )
 
-//           {/* Channels Section */}
-//           <div className="px-6 py-3 border-b border-gray-200 bg-white flex-shrink-0">
-//             <div className="text-xs text-gray-500 uppercase tracking-wider mb-2">
-//               Channels
-//             </div>
-//             <div className="flex gap-2 overflow-x-auto pb-1">
-//               {channels.map((channel) => (
-//                 <button
-//                   key={channel.id}
-//                   onClick={() => setSelectedChannelId(channel.id)}
-//                   className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-sm transition-colors whitespace-nowrap flex-shrink-0 ${
-//                     selectedChannelId === channel.id
-//                       ? 'bg-blue-50 text-blue-700'
-//                       : 'text-gray-700 hover:bg-gray-50'
-//                   }`}
-//                 >
-//                   <Hash className="w-4 h-4" />
-//                   <span>{channel.name}</span>
-//                 </button>
-//               ))}
-//               <button
-//                 onClick={() => setShowCreateChannel(true)}
-//                 className="flex items-center gap-1.5 px-3 py-1.5 rounded text-sm transition-colors text-gray-700 hover:bg-gray-50 whitespace-nowrap flex-shrink-0"
-//               >
-//                 <Plus className="w-4 h-4" />
-//                 <span>New Channel</span>
-//               </button>
-//             </div>
-//           </div>
+      setProjectChats((prev) => {
+        const updatedMessages =
+          prev[selectedProjectId]?.messages.map((m: any) =>
+            m._id === data.messageId
+              ? {
+                  ...m,
+                  message: 'This message has been deleted',
+                  isDeleted: true
+                }
+              : m
+          ) || []
 
-//           {/* Messages */}
-//           <div className="flex-1 overflow-y-auto p-6 bg-gray-50">
-//             <div className="space-y-4">
-//               {projectMessages.length > 0 ? (
-//                 projectMessages.map((message) => (
-//                   <div key={message.id} className="flex gap-3">
-//                     <img
-//                       src={message.senderAvatar}
-//                       alt={message.senderName}
-//                       className="w-10 h-10 rounded-full flex-shrink-0"
-//                     />
-//                     <div className="flex-1 min-w-0">
-//                       <div className="flex items-baseline gap-2 mb-1">
-//                         <span className="text-sm text-gray-900">{message.senderName}</span>
-//                         <span className="text-xs text-gray-500">
-//                           {formatTime(message.timestamp)}
-//                         </span>
-//                       </div>
-//                       <p className="text-sm text-gray-700 leading-relaxed">{message.content}</p>
-//                     </div>
-//                   </div>
-//                 ))
-//               ) : (
-//                 <div className="text-center py-12">
-//                   <MessageSquare className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-//                   <p className="text-gray-500">No messages in #{selectedChannel?.name || 'this channel'} yet</p>
-//                   <p className="text-sm text-gray-400 mt-1">Be the first to send a message!</p>
-//                 </div>
-//               )}
-//             </div>
-//           </div>
+        return {
+          ...prev,
+          [selectedProjectId]: {
+            ...prev[selectedProjectId],
+            messages: updatedMessages
+          }
+        }
+      })
+    }
 
-//           {/* Message Input */}
-//           <div className="p-4 bg-white border-t border-gray-200">
-//             <div className="flex items-end gap-3">
-//               <button className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
-//                 <Paperclip className="w-5 h-5" />
-//               </button>
-//               <div className="flex-1 relative">
-//                 <textarea
-//                   value={messageInput}
-//                   onChange={(e) => setMessageInput(e.target.value)}
-//                   onKeyDown={(e) => {
-//                     if (e.key === 'Enter' && !e.shiftKey) {
-//                       e.preventDefault();
-//                       handleSendMessage();
-//                     }
-//                   }}
-//                   placeholder={`Message #${selectedChannel?.name || 'general'}`}
-//                   className="w-full px-4 py-2 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
-//                   rows={1}
-//                   style={{ maxHeight: '120px' }}
-//                 />
-//                 <button className="absolute right-2 bottom-2 p-1 text-gray-600 hover:bg-gray-100 rounded transition-colors">
-//                   <Smile className="w-5 h-5" />
-//                 </button>
-//               </div>
-//               <button
-//                 onClick={handleSendMessage}
-//                 disabled={!messageInput.trim()}
-//                 className="p-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-//               >
-//                 <Send className="w-5 h-5" />
-//               </button>
-//             </div>
-//           </div>
-//         </div>
-//       ) : (
-//         <div className="flex-1 flex items-center justify-center bg-gray-50">
-//           <div className="text-center">
-//             <MessageSquare className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-//             <h3 className="text-xl text-gray-900 mb-2">Select a project to start chatting</h3>
-//             <p className="text-gray-600">Choose from your projects on the left</p>
-//           </div>
-//         </div>
-//       )}
+    // Register socket event listeners
+    socket.on('new_message', handleNewMessage)
+    socket.on('user_typing', handleUserTyping)
+    socket.on('user_stop_typing', handleUserStopTyping)
+    socket.on('message_deleted', handleMessageDeleted)
+    socket.on('error', (err: any) => {
+      toast.error(`Socket error: ${err.message || err}`)
+    })
+    socket.on('warning', (msg: any) => {
+      toast.warning(`Socket warning: ${msg}`)
+    })
 
-//       {/* Create Channel Modal */}
-//       <Dialog open={showCreateChannel} onOpenChange={setShowCreateChannel}>
-//         <DialogContent>
-//           <DialogHeader>
-//             <DialogTitle>Create a New Channel</DialogTitle>
-//             <DialogDescription>
-//               Channel names must be lowercase, without spaces. Use dashes instead.
-//             </DialogDescription>
-//           </DialogHeader>
+    // Cleanup on unmount or dependency change
+    return () => {
+      socket.off('new_message', handleNewMessage)
+      socket.off('user_typing', handleUserTyping)
+      socket.off('user_stop_typing', handleUserStopTyping)
+      socket.off('message_deleted', handleMessageDeleted)
+      socket.off('error')
+      socket.off('warning')
+      socket.emit('leave_project_chat', currentRoomId)
+    }
+  }, [isConnected, socket, selectedProjectId, projectChats])
 
-//           <div className="space-y-4 py-4">
-//             <div className="space-y-2">
-//               <Label htmlFor="channelName">Channel Name</Label>
-//               <div className="relative">
-//                 <Hash className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-//                 <Input
-//                   id="channelName"
-//                   type="text"
-//                   placeholder="e.g. team-announcements"
-//                   value={newChannelName}
-//                   onChange={(e) => setNewChannelName(e.target.value)}
-//                   onKeyDown={(e) => {
-//                     if (e.key === 'Enter' && newChannelName.trim()) {
-//                       handleCreateChannel();
-//                     }
-//                   }}
-//                   className="pl-10"
-//                   autoFocus
-//                 />
-//               </div>
-//             </div>
-//           </div>
+  // Filter projects by search
+  const filteredProjects = allProjects.filter((project) =>
+    project.name.toLowerCase().includes(searchQuery.toLowerCase())
+  )
 
-//           <DialogFooter>
-//             <Button
-//               variant="outline"
-//               onClick={() => {
-//                 setShowCreateChannel(false);
-//                 setNewChannelName('');
-//               }}
-//             >
-//               Cancel
-//             </Button>
-//             <Button
-//               onClick={handleCreateChannel}
-//               disabled={!newChannelName.trim()}
-//               className="bg-gradient-to-r from-blue-600 to-purple-600"
-//             >
-//               Create Channel
-//             </Button>
-//           </DialogFooter>
-//         </DialogContent>
-//       </Dialog>
-//     </div>
-//   );
-// }
+  // Handle send message events
+  const handleSendMessage = () => {
+    if (!messageInput.trim() || !selectedProjectId) return
+    const newMessage: any = {
+      roomId: projectChats[selectedProjectId]?._id,
+      senderId: currentUser._id,
+      senderName: currentUser.displayName,
+      senderRole: currentUser.role,
+      senderAvatarUrl: currentUser.avatar || '',
+      message: messageInput
+    }
+
+    console.log('new message', newMessage)
+
+    // Emit message via socket
+    socket?.emit('send_message', newMessage)
+
+    setMessageInput('')
+    handleStopTyping()
+  }
+
+  // Handle delete message
+  const handleDeleteMessage = (messageId: string) => {
+    if (!selectedProjectId) return
+    const roomId = projectChats[selectedProjectId]?._id
+    if (!roomId) return
+
+    socket?.emit('delete_message', {
+      roomId,
+      messageId
+    })
+
+    // Optimistically update UI
+    setMessages((prev) =>
+      prev.map((msg) =>
+        msg._id === messageId
+          ? {
+              ...msg,
+              message: 'This message has been deleted',
+              isDeleted: true
+            }
+          : msg
+      )
+    )
+
+    setProjectChats((prev) => {
+      const updatedMessages =
+        prev[selectedProjectId]?.messages.map((m) =>
+          m._id === messageId
+            ? {
+                ...m,
+                message: 'This message has been deleted',
+                isDeleted: true
+              }
+            : m
+        ) || []
+
+      return {
+        ...prev,
+        [selectedProjectId]: {
+          ...prev[selectedProjectId],
+          messages: updatedMessages
+        }
+      }
+    })
+  }
+
+  // Handle typing indicator
+  const handleTyping = () => {
+    if (!selectedProjectId) return
+    const roomId = projectChats[selectedProjectId]?._id
+    if (!roomId) return
+
+    // Emit typing event
+    socket?.emit('typing', {
+      roomId,
+      userId: currentUser._id,
+      userName: currentUser.displayName
+    })
+
+    // Clear previous timeout
+    if (typingTimeout) {
+      clearTimeout(typingTimeout)
+    }
+
+    // Set new timeout to stop typing after 3 seconds
+    const timeout = setTimeout(() => {
+      handleStopTyping()
+    }, 3000)
+
+    setTypingTimeout(timeout)
+  }
+
+  // Handle stop typing indicator
+  const handleStopTyping = () => {
+    if (!selectedProjectId) return
+    const roomId = projectChats[selectedProjectId]?._id
+    if (!roomId) return
+
+    // Emit stop typing event
+    socket?.emit('stop_typing', {
+      roomId,
+      userId: currentUser._id
+    })
+
+    if (typingTimeout) {
+      clearTimeout(typingTimeout)
+      setTypingTimeout(null)
+    }
+  }
+
+  // Format date for messages
+  const formatDate = (timestamp: Date | number) => {
+    const date = new Date(timestamp)
+    const now = new Date()
+    const diffMs = now.getTime() - date.getTime()
+    const diffMins = Math.floor(diffMs / 60000)
+    const diffHours = Math.floor(diffMs / 3600000)
+    const diffDays = Math.floor(diffMs / 86400000)
+
+    if (diffMins < 1) return 'Just now'
+    if (diffMins < 60) return `${diffMins}m ago`
+    if (diffHours < 24) return `${diffHours}h ago`
+    if (diffDays < 7) return `${diffDays}d ago`
+    return date.toLocaleDateString()
+  }
+
+  // Format typing indicator text
+  const getTypingText = () => {
+    if (currentTypingUsers.length === 0) return ''
+    if (currentTypingUsers.length === 1) {
+      return `${currentTypingUsers[0].userName} is typing...`
+    }
+    if (currentTypingUsers.length === 2) {
+      return `${currentTypingUsers[0].userName} and ${currentTypingUsers[1].userName} are typing...`
+    }
+    return `${currentTypingUsers[0].userName} and ${currentTypingUsers.length - 1} others are typing...`
+  }
+
+  // Clean up typing timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (typingTimeout) {
+        clearTimeout(typingTimeout)
+      }
+    }
+  }, [typingTimeout])
+
+  // Scroll to bottom function
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }
+
+  // Auto scroll to bottom when new messages arrive
+  useEffect(() => {
+    const container = messagesContainerRef.current
+    if (!container) return
+
+    const isNearBottom =
+      container.scrollHeight - container.scrollTop - container.clientHeight <
+      100
+
+    if (isNearBottom) {
+      scrollToBottom()
+    }
+  }, [messages])
+
+  // Handle scroll to show/hide button
+  const handleScroll = () => {
+    const container = messagesContainerRef.current
+    if (!container) return
+
+    const isNearBottom =
+      container.scrollHeight - container.scrollTop - container.clientHeight <
+      100
+    setShowScrollButton(!isNearBottom)
+  }
+
+  // Handle emoji click
+  const onEmojiClick = (emojiData: EmojiClickData) => {
+    setMessageInput((prev) => prev + emojiData.emoji)
+    setShowEmojiPicker(false)
+  }
+
+  // Close emoji picker when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        emojiPickerRef.current &&
+        !emojiPickerRef.current.contains(event.target as Node)
+      ) {
+        setShowEmojiPicker(false)
+      }
+    }
+
+    if (showEmojiPicker) {
+      document.addEventListener('mousedown', handleClickOutside)
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [showEmojiPicker])
+
+  return (
+    <div className="flex-1 flex bg-white h-full">
+      {/* Projects List - Left Sidebar */}
+      <div className="w-80 bg-white border-r border-gray-200 flex flex-col">
+        <div className="p-4 border-b border-gray-200">
+          <h2 className="text-2xl text-gray-900 mb-4">Chat</h2>
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search projects..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+        </div>
+
+        <div className="flex-1 overflow-y-auto">
+          {filteredProjects.map((project) => {
+            const isSelected = selectedProjectId === project._id
+            const unreadCount = 0
+            const projectTypingUsers = typingUsers.filter(
+              (user) => user.projectId === project._id
+            )
+            const currentProjectChat = projectChats[project._id]
+
+            return (
+              <button
+                key={project._id}
+                onClick={() => setSelectedProjectId(project._id)}
+                className={`w-full p-4 flex items-start gap-3 hover:bg-gray-50 transition-colors border-b border-gray-100 ${
+                  isSelected ? 'bg-blue-50' : ''
+                }`}
+              >
+                <img
+                  src={
+                    project.imageUrl ||
+                    'https://api.dicebear.com/7.x/shapes/svg?seed=default'
+                  }
+                  alt={project.name}
+                  className="w-12 h-12 rounded-full flex-shrink-0"
+                />
+                <div className="flex-1 min-w-0 text-left">
+                  <div className="flex items-center justify-between mb-1">
+                    <h3 className="text-sm text-gray-900 truncate">
+                      {project.name}
+                    </h3>
+                    {currentProjectChat?.lastMessage && (
+                      <span className="text-xs text-gray-500 ml-2 flex-shrink-0">
+                        {formatDate(
+                          new Date(currentProjectChat.lastMessageTime || '')
+                        )}
+                      </span>
+                    )}
+                  </div>
+                  {projectTypingUsers.length > 0 ? (
+                    <p className="text-sm text-blue-600 italic truncate">
+                      {projectTypingUsers.length === 1
+                        ? `${projectTypingUsers[0].userName} is typing...`
+                        : 'Multiple people are typing...'}
+                    </p>
+                  ) : currentProjectChat?.lastMessage ? (
+                    <p className="text-sm text-gray-600 truncate">
+                      {currentProjectChat.lastMessage === currentUser._id
+                        ? 'You: '
+                        : ''}
+                      {currentProjectChat.lastMessage}
+                    </p>
+                  ) : (
+                    <p className="text-sm text-gray-400">No messages yet</p>
+                  )}
+                </div>
+                {unreadCount > 0 && (
+                  <span className="w-5 h-5 bg-blue-600 text-white text-xs rounded-full flex items-center justify-center flex-shrink-0">
+                    {unreadCount}
+                  </span>
+                )}
+              </button>
+            )
+          })}
+        </div>
+      </div>
+
+      {/* Chat Area - Right Side */}
+      {selectedProject ? (
+        <div className="flex-1 flex flex-col">
+          {/* Chat Header */}
+          <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between bg-white">
+            <div className="flex items-center gap-3">
+              <img
+                src={
+                  selectedProject.imageUrl ||
+                  'https://api.dicebear.com/7.x/shapes/svg?seed=default'
+                }
+                alt={selectedProject.name}
+                className="w-10 h-10 rounded-full"
+              />
+              <div>
+                <h2 className="text-lg text-gray-900">
+                  {selectedProject.name}
+                </h2>
+                <p className="text-sm text-gray-500">
+                  {currentTypingUsers.length > 0
+                    ? getTypingText()
+                    : `${selectedProject.members?.length || 0} members`}
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <button className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
+                <Phone className="w-5 h-5" />
+              </button>
+              <button className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
+                <Video className="w-5 h-5" />
+              </button>
+              <button className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
+                <Info className="w-5 h-5" />
+              </button>
+            </div>
+          </div>
+
+          {/* Messages */}
+          <div
+            ref={messagesContainerRef}
+            onScroll={handleScroll}
+            className="flex-1 overflow-y-auto p-6 bg-gray-50 relative"
+          >
+            <div className="space-y-4">
+              {messages.length > 0 ? (
+                messages.map((message) => {
+                  const isOwnMessage = message.senderId === currentUser._id
+
+                  return (
+                    <div
+                      key={message._id}
+                      className={`flex gap-3 group ${
+                        isOwnMessage ? 'flex-row-reverse' : ''
+                      }`}
+                    >
+                      {!isOwnMessage && (
+                        <img
+                          src={
+                            message.senderAvatarUrl ||
+                            'https://api.dicebear.com/7.x/avataaars/svg?seed=default'
+                          }
+                          alt={message.senderName}
+                          className="w-10 h-10 rounded-full flex-shrink-0"
+                        />
+                      )}
+                      <div
+                        className={`flex-1 min-w-0 max-w-[70%] ${
+                          isOwnMessage ? 'flex flex-col items-end' : ''
+                        }`}
+                      >
+                        {!isOwnMessage && (
+                          <div className="flex items-baseline gap-2 mb-1">
+                            <span className="text-sm text-gray-900">
+                              {message.senderName}
+                            </span>
+                            <span className="text-xs text-gray-500">
+                              {formatDate(new Date(message.timestamp))}
+                            </span>
+                          </div>
+                        )}
+                        <div
+                          className={`flex items-start gap-2 ${
+                            isOwnMessage ? 'flex-row-reverse' : ''
+                          }`}
+                        >
+                          <div
+                            className={`px-4 py-2 rounded-lg ${
+                              isOwnMessage
+                                ? 'bg-blue-600 text-white'
+                                : 'bg-white text-gray-700 border border-gray-200'
+                            }`}
+                          >
+                            <p className="text-sm leading-relaxed">
+                              {message.message}
+                            </p>
+                            {isOwnMessage && (
+                              <span className="text-xs text-blue-100 mt-1 block">
+                                {formatDate(new Date(message.timestamp))}
+                              </span>
+                            )}
+                          </div>
+                          {isOwnMessage && (
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <button className="p-1 text-gray-400 hover:text-gray-600 opacity-0 group-hover:opacity-100 transition-opacity">
+                                  <MoreVertical className="w-4 h-4" />
+                                </button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem
+                                  onClick={() =>
+                                    handleDeleteMessage(message._id)
+                                  }
+                                  className="text-red-600 cursor-pointer"
+                                >
+                                  <Trash2 className="w-4 h-4 mr-2" />
+                                  Delete Message
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })
+              ) : (
+                <div className="text-center py-12">
+                  <MessageSquare className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+                  <p className="text-gray-500">
+                    No messages in this project yet
+                  </p>
+                  <p className="text-sm text-gray-400 mt-1">
+                    Be the first to send a message!
+                  </p>
+                </div>
+              )}
+
+              {/* Typing Indicator */}
+              {currentTypingUsers.length > 0 && (
+                <div className="flex gap-3 items-center">
+                  <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
+                    <div className="flex gap-1">
+                      <span className="w-2 h-2 bg-gray-500 rounded-full animate-bounce [animation-delay:-0.3s]"></span>
+                      <span className="w-2 h-2 bg-gray-500 rounded-full animate-bounce [animation-delay:-0.15s]"></span>
+                      <span className="w-2 h-2 bg-gray-500 rounded-full animate-bounce"></span>
+                    </div>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600 italic">
+                      {getTypingText()}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Scroll anchor */}
+              <div ref={messagesEndRef} />
+            </div>
+
+            {/* Scroll to bottom button */}
+            {showScrollButton && (
+              <button
+                onClick={scrollToBottom}
+                className="fixed bottom-24 right-8 p-3 bg-blue-600 text-white rounded-full shadow-lg hover:bg-blue-700 transition-all duration-200 hover:scale-110"
+                aria-label="Scroll to bottom"
+              >
+                <ArrowDown className="w-5 h-5" />
+              </button>
+            )}
+          </div>
+
+          {/* Message Input */}
+          <div className="p-4 bg-white border-t border-gray-200">
+            <div className="flex items-end gap-3">
+              <button className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
+                <Paperclip className="w-5 h-5" />
+              </button>
+              <div className="flex-1 relative">
+                <textarea
+                  value={messageInput}
+                  onChange={(e) => {
+                    setMessageInput(e.target.value)
+                    handleTyping()
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault()
+                      handleSendMessage()
+                    }
+                  }}
+                  onBlur={handleStopTyping}
+                  placeholder={`Message ${selectedProject.name}`}
+                  className="w-full px-4 py-2 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                  rows={1}
+                  style={{ maxHeight: '120px' }}
+                />
+                <div className="absolute right-2 bottom-2" ref={emojiPickerRef}>
+                  <button
+                    onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                    className="p-1 text-gray-600 hover:bg-gray-100 rounded transition-colors"
+                    type="button"
+                  >
+                    <Smile className="w-5 h-5" />
+                  </button>
+                  {showEmojiPicker && (
+                    <div className="absolute bottom-full right-0 mb-2 z-50">
+                      <EmojiPicker
+                        onEmojiClick={onEmojiClick}
+                        autoFocusSearch={false}
+                        width={350}
+                        height={400}
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
+              <button
+                onClick={handleSendMessage}
+                disabled={!messageInput.trim()}
+                className="p-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <Send className="w-5 h-5" />
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="flex-1 flex items-center justify-center bg-gray-50">
+          <div className="text-center">
+            <MessageSquare className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-xl text-gray-900 mb-2">
+              Select a project to start chatting
+            </h3>
+            <p className="text-gray-600">
+              Choose from your projects on the left
+            </p>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
