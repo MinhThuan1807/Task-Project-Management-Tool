@@ -1,6 +1,6 @@
 'use client'
 
-import { Suspense, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useSearchParams, useRouter, redirect } from 'next/navigation'
 import { authApi } from '@/lib/services/auth.service'
 import { toast } from 'sonner'

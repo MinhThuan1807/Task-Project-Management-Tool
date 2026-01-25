@@ -3,7 +3,6 @@
 import { ChatView } from '@/components/ChatView'
 import { useAllProjects } from '@/lib/hooks/useProjects'
 import { useCurrentUser } from '@/lib/hooks/useAuth'
-import { SocketProvider } from '@/app/providers/SocketProvider'
 
 export default function ChatPage() {
   const { data: currentUser } = useCurrentUser()
@@ -35,9 +34,5 @@ export default function ChatPage() {
     return <div>Loading...</div>
   }
 
-  return (
-    <SocketProvider>
-      <ChatView currentUser={currentUser} allProjects={allProjects} />
-    </SocketProvider>
-  )
+  return <ChatView currentUser={currentUser} allProjects={allProjects} />
 }
