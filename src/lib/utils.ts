@@ -121,3 +121,29 @@ export function getColumnColor(status: string): string {
       return 'bg-gray-100'
   }
 }
+/**
+ * Convert File object sang base64 string
+ * @param file File từ input
+ * @returns Promise<string> base64 string
+ */
+export const fileToBase64 = (file: File): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.readAsDataURL(file)
+    reader.onload = () => resolve(reader.result as string)
+    reader.onerror = (error) => reject(error)
+  })
+}
+
+/**
+ * Format file size sang human readable
+ * @param bytes File size in bytes
+ * @returns Formatted string (e.g., "2.5 MB")
+ */
+export const formatFileSize = (bytes: number): string => {
+  if (bytes === 0) return '0 Bytes'
+  const k = 1024
+  const sizes = ['Bytes', 'KB', 'MB', 'GB']
+  const i = Math.floor(Math.log(bytes) / Math.log(k))
+  return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i]
+}

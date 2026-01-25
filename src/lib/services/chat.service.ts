@@ -142,8 +142,8 @@ export const projectChatApi = {
    * 
    * Get all chats by project id 
    */
-  getAllProjectById: async (projectId: string): Promise<MessagesResponse> => {
-    const response = await axiosInstance.get<MessagesResponse>(
+  getAllProjectById: async (projectId: string): Promise<any> => {
+    const response = await axiosInstance.get(
       `/project-chats/project/${projectId}`
     )
     return response.data
@@ -152,8 +152,8 @@ export const projectChatApi = {
    * 
    * Get all messages by room id 
    */
-  getAllMessagesByRoomId: async (roomId: string): Promise<MessagesResponse> => {
-    const response = await axiosInstance.get<MessagesResponse>(
+  getAllMessagesByRoomId: async (roomId: string): Promise<any> => {
+    const response = await axiosInstance.get(
       `/project-chats/${roomId}/messages`
     )
     return response.data
