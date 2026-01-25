@@ -9,7 +9,7 @@ Sprintos is a modern Agile project management platform designed to help teams co
 - [Features](#-core-features)
 - [Installation](#-installation)
 - [Project Structure](#-project-structure)
-- [Screenshots](#-screenshots)
+- [public/Screenshots](#-public/screenshots)
 - [Checklist](#-checklist)
 
 ---
@@ -108,19 +108,19 @@ pnpm dev
 
 ---
 
-## 📸 Screenshots
+## 📸 public/Screenshots
 
 ### Dashboard
 
 | Overview                                | Project Board                   | Team Chat                     |
 | --------------------------------------- | ------------------------------- | ----------------------------- |
-| ![Dashboard](screenshots/dashboard.png) | ![Board](screenshots/board.png) | ![Chat](screenshots/chat.png) |
+| ![Dashboard](public/screenshots/dashboard.png) | ![Board](public/screenshots/board.png) | ![Chat](public/screenshots/chat.png) |
 
 ### Project Details
 
 | Sprint Planning                   | Reports & Analytics                 | Team Management               |
 | --------------------------------- | ----------------------------------- | ----------------------------- |
-| ![Sprint](screenshots/sprint.png) | ![Reports](screenshots/report.png) | ![Team](screenshots/team.png) |
+| ![Sprint](public/screenshots/sprint.png) | ![Reports](public/screenshots/report.png) | ![Team](public/screenshots/team.png) |
 
 ---
 
@@ -173,8 +173,8 @@ Then open [http://localhost:3000](http://localhost:3000) in your browser.
 - **Interactive UI**: The app auto-updates as you edit the code.
 
 ## 🔗 Links
-- **Backend Repository**: [beautify-backend](https://github.com/QUANG221222/Sprintos-API.git)
-- **Live Demo**: []()
+- **Backend Repository**: [sprintOs-backend](https://github.com/QUANG221222/Sprintos-API.git)
+- **Live Demo**: [sprintos-task-project-management](https://sprintsos-task-project-management.vercel.app/)
 
 ## 👤 Author
 **NGUYEN MINH THUAN**
