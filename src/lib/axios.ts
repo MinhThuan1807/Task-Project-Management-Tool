@@ -26,7 +26,7 @@ export const injectStore = (mainStore: ReduxStoreLike) => {
 }
 
 const axiosInstance: AxiosInstance = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/v1',
+  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/v1/',
   headers: { 'Content-Type': 'application/json' },
   withCredentials: true,
   timeout: 60000
@@ -34,7 +34,7 @@ const axiosInstance: AxiosInstance = axios.create({
 
 const refreshToken = async (): Promise<RefreshTokenResponse> => {
   const response = await axios.post<RefreshTokenResponse>(
-    `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/v1'}auth/refresh-token`,
+    `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/v1/'}auth/refresh-token`,
     {},
     {
       withCredentials: true,

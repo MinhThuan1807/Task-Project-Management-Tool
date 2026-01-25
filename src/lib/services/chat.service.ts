@@ -136,14 +136,19 @@
 
 import axiosInstance from '@/lib/axios'
 import { MessagesResponse } from '../types'
+import { IProjectChat } from '@/components/ChatView'
+interface ProjectChatResponse {
+  success: boolean
+  data: IProjectChat;
+}
 
 export const projectChatApi = {
   /**
    * 
    * Get all chats by project id 
    */
-  getAllProjectById: async (projectId: string): Promise<any> => {
-    const response = await axiosInstance.get(
+  getAllProjectById: async (projectId: string): Promise<ProjectChatResponse> => {
+    const response = await axiosInstance.get<ProjectChatResponse>(
       `/project-chats/project/${projectId}`
     )
     return response.data
@@ -152,8 +157,8 @@ export const projectChatApi = {
    * 
    * Get all messages by room id 
    */
-  getAllMessagesByRoomId: async (roomId: string): Promise<any> => {
-    const response = await axiosInstance.get(
+  getAllMessagesByRoomId: async (roomId: string): Promise<ProjectChatResponse> => {
+    const response = await axiosInstance.get<ProjectChatResponse>(
       `/project-chats/${roomId}/messages`
     )
     return response.data

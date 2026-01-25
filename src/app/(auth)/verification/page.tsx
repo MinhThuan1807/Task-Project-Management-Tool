@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import { useSearchParams, useRouter, redirect } from 'next/navigation'
 import { authApi } from '@/lib/services/auth.service'
 import { toast } from 'sonner'
@@ -84,7 +84,9 @@ export default function VerificationPage() {
             <h2 className="text-xl font-semibold mb-2 text-red-600">
               Verification failed
             </h2>
-            <p className="text-gray-600 mb-4">Verification failed. Token may have expired.</p>
+            <p className="text-gray-600 mb-4">
+              Verification failed. Token may have expired.
+            </p>
             <div className="space-y-2">
               <button
                 onClick={() => router.push('/resend-verification')}
