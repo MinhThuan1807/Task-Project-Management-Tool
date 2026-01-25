@@ -38,6 +38,7 @@
     "axios": "^1.13.2",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "emoji-picker-react": "^4.17.1",
     "lucide-react": "^0.562.0",
     "motion": "^12.23.26",
     "next": "15.5.9",
