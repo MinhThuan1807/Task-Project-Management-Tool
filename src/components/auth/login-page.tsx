@@ -51,7 +51,7 @@ export function LoginPageNew() {
     try {
       await dispatch(loginUserAPI(data)).unwrap()
       toast.success('Login successful!')
-      router.push('/login')
+      router.push('/dashboard')
 
     }
     catch (error) {
