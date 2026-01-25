@@ -3,8 +3,6 @@ import { Inter } from 'next/font/google'
 import './globals.css'
 import { Toaster } from '@/components/ui/sonner'
 import StoreProvider from './providers/StoreProvider'
-import { QueryProviders } from './providers/QueryProvider'
-import { SocketProvider } from './providers/SocketProvider'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
@@ -28,14 +26,10 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
-        <QueryProviders>
-          <StoreProvider>
-            <SocketProvider>
-              {children}
-              <Toaster position="top-right" />
-            </SocketProvider>
-          </StoreProvider>
-        </QueryProviders>
+        <StoreProvider>
+          {children}
+          <Toaster position="top-right" />
+        </StoreProvider>
       </body>
     </html>
   )

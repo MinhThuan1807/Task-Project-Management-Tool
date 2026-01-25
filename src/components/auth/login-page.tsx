@@ -1,3 +1,4 @@
+'use client'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -27,15 +28,7 @@ const loginSchema = z.object({
 
 type LoginFormData = z.infer<typeof loginSchema>;
 
-type LoginPageProps = {
-  onNavigateToResgister: () => void;
-  onNavigateToLanding: () => void;
-};
-
-export function LoginPageNew({
-  onNavigateToResgister,
-  onNavigateToLanding
-}: LoginPageProps) {
+export function LoginPageNew() {
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const dispatch = useAppDispatch()
@@ -81,7 +74,7 @@ export function LoginPageNew({
         <Button
           variant="ghost"
           size="sm"
-          onClick={onNavigateToLanding}
+          onClick={() => router.push('/')}
           className="absolute top-4 left-4"
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
@@ -220,7 +213,7 @@ export function LoginPageNew({
               <Button
                 variant="link"
                 size="sm"
-                onClick={onNavigateToResgister}
+                onClick={() => router.push('/register')}
                 className="p-0 h-auto text-blue-600 hover:text-blue-700"
                 disabled={isLoading}
               >

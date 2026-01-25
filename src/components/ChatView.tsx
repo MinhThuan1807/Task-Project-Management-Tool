@@ -25,10 +25,15 @@ import {
 import { Project, User } from '@/lib/types'
 import { projectChatApi } from '@/lib/services/chat.service'
 import { useSocket } from '@/app/providers/SocketProvider'
-import EmojiPicker, { EmojiClickData } from 'emoji-picker-react'
+import { EmojiClickData } from 'emoji-picker-react'
+import dynamic from 'next/dynamic'
+const EmojiPicker = dynamic(
+  () => import('emoji-picker-react'),
+  { ssr: false }
+)
 import { toast } from 'sonner'
 import { fileToBase64, formatFileSize, getErrorMessage } from '@/lib/utils'
-import { Loader2 } from 'lucide-react' 
+import { Loader2 } from 'lucide-react'
 
 type ChatViewProps = {
   currentUser: User
@@ -52,8 +57,22 @@ type Message = {
     publicId: string
   }
 }
+type NewMessage = {
+  roomId: string
+  senderId: string
+  senderName: string
+  senderRole: string
+  senderAvatarUrl?: string
+  message: string
+  file?: {
+    base64: string
+    fileName: string
+    fileType: string
+    fileSize: number
+  }
+}
 
-interface IProjectChat {
+export interface IProjectChat {
   _id: string
   projectId: string
   roomId: string
@@ -82,7 +101,7 @@ export function ChatView({ currentUser, allProjects }: ChatViewProps) {
     Record<string, IProjectChat>
   >({})
   const [typingUsers, setTypingUsers] = useState<TypingUser[]>([])
-  const [typingTimeout, setTypingTimeout] = useState<NodeJS.Timeout | null>(
+  const [typingTimeout, setTypingTimeout] = useState<ReturnType<typeof setTimeout> | null>(
     null
   )
   const [showEmojiPicker, setShowEmojiPicker] = useState(false)
@@ -254,7 +273,7 @@ export function ChatView({ currentUser, allProjects }: ChatViewProps) {
 
       setProjectChats((prev) => {
         const updatedMessages =
-          prev[selectedProjectId]?.messages.map((m: any) =>
+          prev[selectedProjectId]?.messages.map((m: Message) =>
             m._id === data.messageId
               ? {
                   ...m,
@@ -279,10 +298,10 @@ export function ChatView({ currentUser, allProjects }: ChatViewProps) {
     socket.on('user_typing', handleUserTyping)
     socket.on('user_stop_typing', handleUserStopTyping)
     socket.on('message_deleted', handleMessageDeleted)
-    socket.on('error', (err: any) => {
+    socket.on('error', (err) => {
       toast.error(`Socket error: ${err.message || err}`)
     })
-    socket.on('warning', (msg: any) => {
+    socket.on('warning', (msg) => {
       toast.warning(`Socket warning: ${msg}`)
     })
 
@@ -329,7 +348,7 @@ export function ChatView({ currentUser, allProjects }: ChatViewProps) {
       }
     }
 
-    const newMessage: any = {
+    const newMessage: NewMessage = {
       roomId: projectChats[selectedProjectId]?._id,
       senderId: currentUser._id,
       senderName: currentUser.displayName,
@@ -566,7 +585,7 @@ export function ChatView({ currentUser, allProjects }: ChatViewProps) {
     }
   }
 
-  // Download file 
+  // Download file
   const handleDownloadFile = (
     attachment: Message['attachment'],
     fileName: string
@@ -714,7 +733,6 @@ export function ChatView({ currentUser, allProjects }: ChatViewProps) {
               {messages.length > 0 ? (
                 messages.map((message) => {
                   const isOwnMessage = message.senderId === currentUser._id
-
                   return (
                     <div
                       key={message._id}
@@ -967,6 +985,7 @@ export function ChatView({ currentUser, allProjects }: ChatViewProps) {
             )}
 
             <div className="flex items-end gap-3">
+              {/** File Input */}
               <input
                 ref={fileInputRef}
                 type="file"
@@ -981,7 +1000,10 @@ export function ChatView({ currentUser, allProjects }: ChatViewProps) {
               >
                 <Paperclip className="w-5 h-5" />
               </button>
+              {/** File Input */}
+
               <div className="flex-1 relative">
+                {/** Message Input */}
                 <textarea
                   value={messageInput}
                   onChange={(e) => {
@@ -1000,6 +1022,8 @@ export function ChatView({ currentUser, allProjects }: ChatViewProps) {
                   rows={1}
                   style={{ maxHeight: '120px' }}
                 />
+
+                {/**Emoji picker */}
                 <div className="absolute right-2 bottom-2" ref={emojiPickerRef}>
                   <button
                     onClick={() => setShowEmojiPicker(!showEmojiPicker)}
