@@ -20,7 +20,7 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
   const [isConnected, setIsConnected] = useState<boolean>(false)
   useEffect(() => {
     const socketInstance = io(
-      process.env.NEXT_PUBLIC_SOCKET_IO_URL || 'http://localhost:8080',
+      process.env.NEXT_PUBLIC_SOCKET_IO_URL || 'https://sprintos-api.onrender.com',
       {
         withCredentials: true
       }
