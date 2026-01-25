@@ -27,10 +27,7 @@ import { projectChatApi } from '@/lib/services/chat.service'
 import { useSocket } from '@/app/providers/SocketProvider'
 import { EmojiClickData } from 'emoji-picker-react'
 import dynamic from 'next/dynamic'
-const EmojiPicker = dynamic(
-  () => import('emoji-picker-react'),
-  { ssr: false }
-)
+const EmojiPicker = dynamic(() => import('emoji-picker-react'), { ssr: false })
 import { toast } from 'sonner'
 import { fileToBase64, formatFileSize, getErrorMessage } from '@/lib/utils'
 import { Loader2 } from 'lucide-react'
@@ -72,6 +69,25 @@ type NewMessage = {
   }
 }
 
+// Thêm type cho message tạm thời (pending)
+type PendingMessage = {
+  _id: string
+  senderId: string
+  senderName: string
+  senderRole: string
+  senderAvatarUrl?: string
+  message: string
+  timestamp: Date | number
+  isDeleted: boolean
+  isPending: boolean
+  attachment?: {
+    fileName: string
+    fileType: string
+    fileSize: number
+    // Không có fileUrl vì chưa upload xong
+  }
+}
+
 export interface IProjectChat {
   _id: string
   projectId: string
@@ -101,9 +117,9 @@ export function ChatView({ currentUser, allProjects }: ChatViewProps) {
     Record<string, IProjectChat>
   >({})
   const [typingUsers, setTypingUsers] = useState<TypingUser[]>([])
-  const [typingTimeout, setTypingTimeout] = useState<ReturnType<typeof setTimeout> | null>(
-    null
-  )
+  const [typingTimeout, setTypingTimeout] = useState<ReturnType<
+    typeof setTimeout
+  > | null>(null)
   const [showEmojiPicker, setShowEmojiPicker] = useState(false)
   const [showScrollButton, setShowScrollButton] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
@@ -183,15 +199,21 @@ export function ChatView({ currentUser, allProjects }: ChatViewProps) {
 
     // Handle incoming messages
     const handleNewMessage = (message: Message) => {
-      // Nếu là message vừa gửi file, thay thế message tạm thời
-      if (
-        pendingFileMessageId &&
-        message.senderId === currentUser._id &&
-        message.attachment
-      ) {
-        setMessages((prev) =>
-          prev.map((m) => (m._id === pendingFileMessageId ? message : m))
-        )
+      // Nếu là message vừa gửi file, thay thế hoặc xóa message tạm thời
+      if (message.senderId === currentUser._id && message.attachment) {
+        setMessages((prev) => {
+          // Xóa tất cả message pending của user này với cùng tên file
+          const filtered = prev.filter(
+            (m: any) =>
+              !(
+                m.isPending &&
+                m.senderId === currentUser._id &&
+                m.attachment?.fileName === message.attachment?.fileName
+              )
+          )
+          // Thêm message thật vào cuối
+          return [...filtered, message]
+        })
         setPendingFileMessageId(null)
       } else {
         // Kiểm tra duplicate
@@ -358,6 +380,29 @@ export function ChatView({ currentUser, allProjects }: ChatViewProps) {
         messageInput ||
         (selectedFile ? `Sent a file: ${selectedFile.name}` : ''),
       file: fileData
+    }
+
+    // Nếu có file, tạo message tạm thời với trạng thái loading
+    if (selectedFile) {
+      const tempId = `pending-${Date.now()}`
+      setPendingFileMessageId(tempId)
+      const pendingMsg: PendingMessage = {
+        _id: tempId,
+        senderId: currentUser._id,
+        senderName: currentUser.displayName,
+        senderRole: currentUser.role,
+        senderAvatarUrl: currentUser.avatar || '',
+        message: `Sent a file: ${selectedFile.name}`,
+        timestamp: new Date(),
+        isDeleted: false,
+        isPending: true,
+        attachment: {
+          fileName: selectedFile.name,
+          fileType: selectedFile.type,
+          fileSize: selectedFile.size
+        }
+      }
+      setMessages((prev) => [...prev, pendingMsg as any])
     }
 
     socket?.emit('send_message', newMessage)
@@ -733,12 +778,13 @@ export function ChatView({ currentUser, allProjects }: ChatViewProps) {
               {messages.length > 0 ? (
                 messages.map((message) => {
                   const isOwnMessage = message.senderId === currentUser._id
+                  // Kiểm tra message pending
+                  const isPending = (message as any).isPending
+
                   return (
                     <div
                       key={message._id}
-                      className={`flex gap-3 group ${
-                        isOwnMessage ? 'flex-row-reverse' : ''
-                      }`}
+                      className={`flex gap-3 group ${isOwnMessage ? 'flex-row-reverse' : ''}`}
                     >
                       {!isOwnMessage && (
                         <img
@@ -777,24 +823,30 @@ export function ChatView({ currentUser, allProjects }: ChatViewProps) {
                                 : 'bg-white text-gray-700 border border-gray-200'
                             }`}
                           >
-                            {/* File Attachment - Cập nhật để dùng attachment.fileUrl */}
+                            {/* File Attachment */}
                             {message.attachment && (
                               <div className="mb-2">
-                                {message.attachment.fileType.startsWith(
+                                {message.attachment.fileType?.startsWith(
                                   'image/'
                                 ) ? (
                                   <div className="max-w-xs cursor-pointer">
-                                    <img
-                                      src={message.attachment.fileUrl}
-                                      alt={message.attachment.fileName}
-                                      className="rounded-lg w-full h-auto max-h-64 object-cover"
-                                      onClick={() =>
-                                        handleDownloadFile(
-                                          message.attachment,
-                                          message.attachment!.fileName
-                                        )
-                                      }
-                                    />
+                                    {isPending ? (
+                                      <div className="w-full h-40 flex items-center justify-center bg-gray-200 rounded-lg">
+                                        <Loader2 className="animate-spin w-8 h-8 text-blue-500" />
+                                      </div>
+                                    ) : (
+                                      <img
+                                        src={message.attachment.fileUrl}
+                                        alt={message.attachment.fileName}
+                                        className="rounded-lg w-full h-auto max-h-64 object-cover"
+                                        onClick={() =>
+                                          handleDownloadFile(
+                                            message.attachment,
+                                            message.attachment!.fileName
+                                          )
+                                        }
+                                      />
+                                    )}
                                     <p className="text-xs mt-1 opacity-75">
                                       {message.attachment.fileName}
                                     </p>
@@ -807,6 +859,7 @@ export function ChatView({ currentUser, allProjects }: ChatViewProps) {
                                         : 'bg-gray-100 hover:bg-gray-200'
                                     }`}
                                     onClick={() =>
+                                      !isPending &&
                                       handleDownloadFile(
                                         message.attachment,
                                         message.attachment!.fileName
@@ -836,13 +889,17 @@ export function ChatView({ currentUser, allProjects }: ChatViewProps) {
                                         )}
                                       </p>
                                     </div>
-                                    <Download
-                                      className={`w-5 h-5 flex-shrink-0 ${
-                                        isOwnMessage
-                                          ? 'text-white'
-                                          : 'text-gray-600'
-                                      }`}
-                                    />
+                                    {isPending ? (
+                                      <Loader2 className="animate-spin w-5 h-5 text-blue-200" />
+                                    ) : (
+                                      <Download
+                                        className={`w-5 h-5 flex-shrink-0 ${
+                                          isOwnMessage
+                                            ? 'text-white'
+                                            : 'text-gray-600'
+                                        }`}
+                                      />
+                                    )}
                                   </div>
                                 )}
                               </div>
@@ -856,13 +913,21 @@ export function ChatView({ currentUser, allProjects }: ChatViewProps) {
                                 </p>
                               )}
 
+                            {/* Loading indicator cho message pending */}
+                            {isPending && (
+                              <div className="flex items-center gap-2 mt-1 text-blue-100">
+                                <Loader2 className="animate-spin w-4 h-4" />
+                                <span>Đang gửi file...</span>
+                              </div>
+                            )}
+
                             {isOwnMessage && (
                               <span className="text-xs text-blue-100 mt-1 block">
                                 {formatDate(new Date(message.timestamp))}
                               </span>
                             )}
                           </div>
-                          {isOwnMessage && !message.isDeleted && (
+                          {isOwnMessage && !message.isDeleted && !isPending && (
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
                                 <button className="p-1 text-gray-400 hover:text-gray-600 opacity-0 group-hover:opacity-100 transition-opacity">
