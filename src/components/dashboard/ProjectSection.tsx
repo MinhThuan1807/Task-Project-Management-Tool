@@ -1,5 +1,5 @@
 'use client'
-import { useDispatch } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 import { Plus } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -9,6 +9,7 @@ import { useAllProjects } from '@/lib/hooks/useProjects'
 import { openCreateModal } from '@/lib/features/project/projectSlice'
 import { useRouter } from 'next/navigation'
 import ProjectCardGrid from '../projects/ProjectCardGrid'
+import { selectCurrentUser } from '@/lib/features/auth/authSlice'
 
 
 function ProjectSection() {
@@ -16,6 +17,27 @@ function ProjectSection() {
   const [activeTab, setActiveTab] = useState('all')
   const { data: projects, ownedProjects, joinedProjects } = useAllProjects()
   const dispatch = useDispatch()
+  const currentUser = useSelector(selectCurrentUser)
+
+  const activeJoinedProjectCount =
+  joinedProjects?.filter((project) =>
+    project.members.some(
+      (member) =>
+        member.memberId === currentUser?._id && member.status === 'active'
+    )
+  ).length || 0
+
+  const activeProjects = projects.filter(project =>
+    project.members.some(
+      member => member.memberId === currentUser?._id && member.status === 'active'
+    )
+  )
+  const joinedProjectsActive = joinedProjects.filter(project =>
+    project.members.some(
+      member => member.memberId === currentUser?._id && member.status === 'active'
+    )
+  )
+  
   const handleDirect = (projectId: string) => {
     router.push(`/projects/${projectId}`)
   }
@@ -44,11 +66,13 @@ function ProjectSection() {
             <TabsList className="mb-6">
               <TabsTrigger value="all">All Projects ({projects.length})</TabsTrigger>
               <TabsTrigger value="my">My Projects ({ownedProjects.length})</TabsTrigger>
-              <TabsTrigger value="participating">Participating ({joinedProjects.length})</TabsTrigger>
+              <TabsTrigger value="participating">
+                Participating({activeJoinedProjectCount})
+                </TabsTrigger>
             </TabsList>
 
             <TabsContent value="all" className="space-y-4">
-              <ProjectCardGrid projects={projects} handleDirect={handleDirect} />
+              <ProjectCardGrid projects={activeProjects} handleDirect={handleDirect} />
             </TabsContent>
 
             <TabsContent value="my" className="space-y-4">
@@ -56,7 +80,7 @@ function ProjectSection() {
             </TabsContent>
 
             <TabsContent value="participating" className="space-y-4">
-              <ProjectCardGrid projects={joinedProjects} handleDirect={handleDirect} />
+              <ProjectCardGrid projects={joinedProjectsActive} handleDirect={handleDirect} />
             </TabsContent>
           </Tabs>
         </CardContent>

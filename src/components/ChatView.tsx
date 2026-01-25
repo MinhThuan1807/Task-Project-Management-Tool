@@ -31,6 +31,7 @@ const EmojiPicker = dynamic(() => import('emoji-picker-react'), { ssr: false })
 import { toast } from 'sonner'
 import { fileToBase64, formatFileSize, getErrorMessage } from '@/lib/utils'
 import { Loader2 } from 'lucide-react'
+import { isPending } from '@reduxjs/toolkit'
 
 type ChatViewProps = {
   currentUser: User
@@ -46,6 +47,7 @@ type Message = {
   message: string
   timestamp: Date | number
   isDeleted: boolean
+  isPending?: boolean
   attachment?: {
     fileName: string
     fileType: string
@@ -204,7 +206,7 @@ export function ChatView({ currentUser, allProjects }: ChatViewProps) {
         setMessages((prev) => {
           // Xóa tất cả message pending của user này với cùng tên file
           const filtered = prev.filter(
-            (m: any) =>
+            (m: Message) =>
               !(
                 m.isPending &&
                 m.senderId === currentUser._id &&
@@ -402,7 +404,7 @@ export function ChatView({ currentUser, allProjects }: ChatViewProps) {
           fileSize: selectedFile.size
         }
       }
-      setMessages((prev) => [...prev, pendingMsg as any])
+      setMessages((prev) => [...prev, pendingMsg as Message])
     }
 
     socket?.emit('send_message', newMessage)
@@ -779,7 +781,7 @@ export function ChatView({ currentUser, allProjects }: ChatViewProps) {
                 messages.map((message) => {
                   const isOwnMessage = message.senderId === currentUser._id
                   // Kiểm tra message pending
-                  const isPending = (message as any).isPending
+                  const isPending = (message as Message).isPending
 
                   return (
                     <div
