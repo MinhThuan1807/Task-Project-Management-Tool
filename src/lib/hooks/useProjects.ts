@@ -112,7 +112,7 @@ export function useCreateProject() {
             _id: 'temp-' + Date.now(),
             members: [],
             status: 'active' as const,
-            createdAt: new Date().toISOString(), // Sửa ở đây
+            createdAt: new Date().toISOString(),
             imageUrl:
               typeof newProject.imageUrl === 'string'
                 ? newProject.imageUrl

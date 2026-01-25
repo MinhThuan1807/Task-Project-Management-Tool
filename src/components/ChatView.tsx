@@ -10,7 +10,11 @@ import {
   MessageSquare,
   Trash2,
   MoreVertical,
-  ArrowDown
+  ArrowDown,
+  File,
+  Download,
+  X,
+  Image as ImageIcon
 } from 'lucide-react'
 import {
   DropdownMenu,
@@ -23,6 +27,8 @@ import { projectChatApi } from '@/lib/services/chat.service'
 import { useSocket } from '@/app/providers/SocketProvider'
 import EmojiPicker, { EmojiClickData } from 'emoji-picker-react'
 import { toast } from 'sonner'
+import { fileToBase64, formatFileSize, getErrorMessage } from '@/lib/utils'
+import { Loader2 } from 'lucide-react' 
 
 type ChatViewProps = {
   currentUser: User
@@ -38,7 +44,15 @@ type Message = {
   message: string
   timestamp: Date | number
   isDeleted: boolean
+  attachment?: {
+    fileName: string
+    fileType: string
+    fileUrl: string
+    fileSize: number
+    publicId: string
+  }
 }
+
 interface IProjectChat {
   _id: string
   projectId: string
@@ -76,6 +90,16 @@ export function ChatView({ currentUser, allProjects }: ChatViewProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const messagesContainerRef = useRef<HTMLDivElement>(null)
   const emojiPickerRef = useRef<HTMLDivElement>(null)
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const [filePreview, setFilePreview] = useState<string | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [fileUploadStatus, setFileUploadStatus] = useState<{
+    loading: boolean
+    error: string | null
+  }>({ loading: false, error: null })
+  const [pendingFileMessageId, setPendingFileMessageId] = useState<
+    string | null
+  >(null)
 
   const selectedProject = allProjects.find((p) => p._id === selectedProjectId)
 
@@ -95,10 +119,11 @@ export function ChatView({ currentUser, allProjects }: ChatViewProps) {
           const data = await projectChatApi.getAllProjectById(project._id)
           chatData[project._id] = data.data
         } catch (error) {
-          console.error(
-            `Error fetching chat for project ${project._id}:`,
-            error
-          )
+          // console.error(
+          //   `Error fetching chat for project ${project._id}:`,
+          //   error
+          // )
+          toast.error(getErrorMessage(error))
         }
       }
 
@@ -139,7 +164,25 @@ export function ChatView({ currentUser, allProjects }: ChatViewProps) {
 
     // Handle incoming messages
     const handleNewMessage = (message: Message) => {
-      setMessages((prev) => [...prev, message])
+      // Nếu là message vừa gửi file, thay thế message tạm thời
+      if (
+        pendingFileMessageId &&
+        message.senderId === currentUser._id &&
+        message.attachment
+      ) {
+        setMessages((prev) =>
+          prev.map((m) => (m._id === pendingFileMessageId ? message : m))
+        )
+        setPendingFileMessageId(null)
+      } else {
+        // Kiểm tra duplicate
+        setMessages((prev) => {
+          const exists = prev.find((m) => m._id === message._id)
+          if (exists) return prev
+          return [...prev, message]
+        })
+      }
+
       // Update last message in projectChats
       setProjectChats((prev) => ({
         ...prev,
@@ -261,23 +304,47 @@ export function ChatView({ currentUser, allProjects }: ChatViewProps) {
   )
 
   // Handle send message events
-  const handleSendMessage = () => {
-    if (!messageInput.trim() || !selectedProjectId) return
+  const handleSendMessage = async () => {
+    if (!messageInput.trim() && !selectedFile) return
+    if (!selectedProjectId) return
+
+    let fileData = undefined
+
+    if (selectedFile) {
+      setFileUploadStatus({ loading: true, error: null })
+      try {
+        const base64Full = await fileToBase64(selectedFile)
+        const base64 = base64Full.split(',')[1]
+        fileData = {
+          base64,
+          fileName: selectedFile.name,
+          fileType: selectedFile.type,
+          fileSize: selectedFile.size
+        }
+        setFileUploadStatus({ loading: false, error: null })
+      } catch (error) {
+        setFileUploadStatus({ loading: false, error: 'Failed to process file' })
+        toast.error('Failed to process file')
+        return
+      }
+    }
+
     const newMessage: any = {
       roomId: projectChats[selectedProjectId]?._id,
       senderId: currentUser._id,
       senderName: currentUser.displayName,
       senderRole: currentUser.role,
       senderAvatarUrl: currentUser.avatar || '',
-      message: messageInput
+      message:
+        messageInput ||
+        (selectedFile ? `Sent a file: ${selectedFile.name}` : ''),
+      file: fileData
     }
 
-    console.log('new message', newMessage)
-
-    // Emit message via socket
     socket?.emit('send_message', newMessage)
 
     setMessageInput('')
+    handleRemoveFile()
     handleStopTyping()
   }
 
@@ -299,6 +366,7 @@ export function ChatView({ currentUser, allProjects }: ChatViewProps) {
           ? {
               ...msg,
               message: 'This message has been deleted',
+              attachment: undefined,
               isDeleted: true
             }
           : msg
@@ -463,6 +531,56 @@ export function ChatView({ currentUser, allProjects }: ChatViewProps) {
       document.removeEventListener('mousedown', handleClickOutside)
     }
   }, [showEmojiPicker])
+
+  // Handle file selection
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    // Check file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('File size must be less than 5MB')
+      return
+    }
+
+    setSelectedFile(file)
+
+    // Create preview for images
+    if (file.type.startsWith('image/')) {
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        setFilePreview(e.target?.result as string)
+      }
+      reader.readAsDataURL(file)
+    } else {
+      setFilePreview(null)
+    }
+  }
+
+  // Remove selected file
+  const handleRemoveFile = () => {
+    setSelectedFile(null)
+    setFilePreview(null)
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ''
+    }
+  }
+
+  // Download file 
+  const handleDownloadFile = (
+    attachment: Message['attachment'],
+    fileName: string
+  ) => {
+    if (!attachment) return
+
+    const link = document.createElement('a')
+    link.href = attachment.fileUrl
+    link.download = fileName
+    link.target = '_blank'
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+  }
 
   return (
     <div className="flex-1 flex bg-white h-full">
@@ -641,16 +759,92 @@ export function ChatView({ currentUser, allProjects }: ChatViewProps) {
                                 : 'bg-white text-gray-700 border border-gray-200'
                             }`}
                           >
-                            <p className="text-sm leading-relaxed">
-                              {message.message}
-                            </p>
+                            {/* File Attachment - Cập nhật để dùng attachment.fileUrl */}
+                            {message.attachment && (
+                              <div className="mb-2">
+                                {message.attachment.fileType.startsWith(
+                                  'image/'
+                                ) ? (
+                                  <div className="max-w-xs cursor-pointer">
+                                    <img
+                                      src={message.attachment.fileUrl}
+                                      alt={message.attachment.fileName}
+                                      className="rounded-lg w-full h-auto max-h-64 object-cover"
+                                      onClick={() =>
+                                        handleDownloadFile(
+                                          message.attachment,
+                                          message.attachment!.fileName
+                                        )
+                                      }
+                                    />
+                                    <p className="text-xs mt-1 opacity-75">
+                                      {message.attachment.fileName}
+                                    </p>
+                                  </div>
+                                ) : (
+                                  <div
+                                    className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-colors ${
+                                      isOwnMessage
+                                        ? 'bg-blue-700 hover:bg-blue-800'
+                                        : 'bg-gray-100 hover:bg-gray-200'
+                                    }`}
+                                    onClick={() =>
+                                      handleDownloadFile(
+                                        message.attachment,
+                                        message.attachment!.fileName
+                                      )
+                                    }
+                                  >
+                                    <File
+                                      className={`w-8 h-8 flex-shrink-0 ${
+                                        isOwnMessage
+                                          ? 'text-white'
+                                          : 'text-gray-600'
+                                      }`}
+                                    />
+                                    <div className="flex-1 min-w-0">
+                                      <p className="text-sm font-medium truncate">
+                                        {message.attachment.fileName}
+                                      </p>
+                                      <p
+                                        className={`text-xs ${
+                                          isOwnMessage
+                                            ? 'text-blue-100'
+                                            : 'text-gray-500'
+                                        }`}
+                                      >
+                                        {formatFileSize(
+                                          message.attachment.fileSize
+                                        )}
+                                      </p>
+                                    </div>
+                                    <Download
+                                      className={`w-5 h-5 flex-shrink-0 ${
+                                        isOwnMessage
+                                          ? 'text-white'
+                                          : 'text-gray-600'
+                                      }`}
+                                    />
+                                  </div>
+                                )}
+                              </div>
+                            )}
+
+                            {/* Message Text - Ẩn message mặc định khi có file */}
+                            {message.message &&
+                              !message.message.startsWith('Sent a file:') && (
+                                <p className="text-sm leading-relaxed">
+                                  {message.message}
+                                </p>
+                              )}
+
                             {isOwnMessage && (
                               <span className="text-xs text-blue-100 mt-1 block">
                                 {formatDate(new Date(message.timestamp))}
                               </span>
                             )}
                           </div>
-                          {isOwnMessage && (
+                          {isOwnMessage && !message.isDeleted && (
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
                                 <button className="p-1 text-gray-400 hover:text-gray-600 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -723,8 +917,68 @@ export function ChatView({ currentUser, allProjects }: ChatViewProps) {
 
           {/* Message Input */}
           <div className="p-4 bg-white border-t border-gray-200">
+            {/* File Preview */}
+            {selectedFile && (
+              <div className="mb-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                <div className="flex items-center gap-3">
+                  {filePreview ? (
+                    <div className="relative w-16 h-16 flex-shrink-0">
+                      <img
+                        src={filePreview}
+                        alt={selectedFile.name}
+                        className="w-full h-full object-cover rounded"
+                      />
+                      <div className="absolute inset-0 bg-black bg-opacity-40 rounded flex items-center justify-center">
+                        <ImageIcon className="w-6 h-6 text-white" />
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="w-16 h-16 bg-gray-200 rounded flex items-center justify-center flex-shrink-0">
+                      <File className="w-8 h-8 text-gray-500" />
+                    </div>
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-gray-900 truncate">
+                      {selectedFile.name}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      {formatFileSize(selectedFile.size)}
+                    </p>
+                  </div>
+                  <button
+                    onClick={handleRemoveFile}
+                    className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-200 rounded-lg transition-colors"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* File upload status */}
+            {fileUploadStatus.loading && (
+              <div className="flex items-center gap-2 mb-2 text-blue-600">
+                <Loader2 className="animate-spin w-5 h-5" />
+                <span>Đang gửi file...</span>
+              </div>
+            )}
+            {fileUploadStatus.error && (
+              <div className="text-red-600 mb-2">{fileUploadStatus.error}</div>
+            )}
+
             <div className="flex items-end gap-3">
-              <button className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
+              <input
+                ref={fileInputRef}
+                type="file"
+                onChange={handleFileSelect}
+                className="hidden"
+                accept="image/*,.pdf,.doc,.docx,.txt,.zip,.rar"
+              />
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                title="Attach file"
+              >
                 <Paperclip className="w-5 h-5" />
               </button>
               <div className="flex-1 relative">
@@ -768,7 +1022,7 @@ export function ChatView({ currentUser, allProjects }: ChatViewProps) {
               </div>
               <button
                 onClick={handleSendMessage}
-                disabled={!messageInput.trim()}
+                disabled={!messageInput.trim() && !selectedFile}
                 className="p-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <Send className="w-5 h-5" />

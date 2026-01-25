@@ -33,7 +33,6 @@ import { RootState } from '@/lib/store'
 import Image from 'next/image'
 import { selectCurrentUser } from '@/lib/features/auth/authSlice'
 
-// Storage key for saved emails
 const SAVED_EMAILS_KEY = 'sprintos_invited_emails'
 
 // Validation schema
@@ -67,7 +66,6 @@ export function CreateProjectModal() {
   const [savedEmails, setSavedEmails] = useState<string[]>([])
   const [showSuggestions, setShowSuggestions] = useState(false)
 
-  // ✅ Sử dụng mutation hook thay vì isLoading state
   const createProject = useCreateProject()
 
   const {
