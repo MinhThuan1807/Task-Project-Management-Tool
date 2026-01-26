@@ -99,6 +99,7 @@ export function RegisterPageNew() {
     }
     catch (error) {
       toast.error(getErrorMessage(error))
+      setIsLoading(false)
     }
   }
 
