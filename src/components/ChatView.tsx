@@ -201,10 +201,10 @@ export function ChatView({ currentUser, allProjects }: ChatViewProps) {
 
     // Handle incoming messages
     const handleNewMessage = (message: Message) => {
-      // Nếu là message vừa gửi file, thay thế hoặc xóa message tạm thời
+      // If message is sent by current user and has attachment
       if (message.senderId === currentUser._id && message.attachment) {
         setMessages((prev) => {
-          // Xóa tất cả message pending của user này với cùng tên file
+          // Delete all pending messages from this user with the same file name
           const filtered = prev.filter(
             (m: Message) =>
               !(
@@ -213,12 +213,12 @@ export function ChatView({ currentUser, allProjects }: ChatViewProps) {
                 m.attachment?.fileName === message.attachment?.fileName
               )
           )
-          // Thêm message thật vào cuối
+          // Add the real message to the end
           return [...filtered, message]
         })
         setPendingFileMessageId(null)
       } else {
-        // Kiểm tra duplicate
+        // Check for duplicates
         setMessages((prev) => {
           const exists = prev.find((m) => m._id === message._id)
           if (exists) return prev
@@ -384,7 +384,7 @@ export function ChatView({ currentUser, allProjects }: ChatViewProps) {
       file: fileData
     }
 
-    // Nếu có file, tạo message tạm thời với trạng thái loading
+    // If have file, create a pending message with loading state
     if (selectedFile) {
       const tempId = `pending-${Date.now()}`
       setPendingFileMessageId(tempId)
@@ -603,8 +603,8 @@ export function ChatView({ currentUser, allProjects }: ChatViewProps) {
     const file = e.target.files?.[0]
     if (!file) return
 
-    // Check file size (max 5MB)
-    if (file.size > 5 * 1024 * 1024) {
+    // Check file size (max 10MB)
+    if (file.size > 10 * 1024 * 1024) {
       toast.error('File size must be less than 5MB')
       return
     }
@@ -669,7 +669,7 @@ export function ChatView({ currentUser, allProjects }: ChatViewProps) {
         <div className="flex-1 overflow-y-auto">
           {filteredProjects.map((project) => {
             const isSelected = selectedProjectId === project._id
-            const unreadCount = 0
+            // const unreadCount = 0
             const projectTypingUsers = typingUsers.filter(
               (user) => user.projectId === project._id
             )
@@ -721,11 +721,11 @@ export function ChatView({ currentUser, allProjects }: ChatViewProps) {
                     <p className="text-sm text-gray-400">No messages yet</p>
                   )}
                 </div>
-                {unreadCount > 0 && (
+                {/* {unreadCount > 0 && (
                   <span className="w-5 h-5 bg-blue-600 text-white text-xs rounded-full flex items-center justify-center flex-shrink-0">
                     {unreadCount}
                   </span>
-                )}
+                )} */}
               </button>
             )
           })}
