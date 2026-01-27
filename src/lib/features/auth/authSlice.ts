@@ -2,16 +2,7 @@ import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit'
 import axiosInstance from '@/lib/axios'
 import { toast } from 'sonner'
 import { getErrorMessage } from '@/lib/utils'
-
-
-interface User {
-  _id: string
-  email: string
-  displayName: string
-  role: string
-  avatar?: string
-  gender?: 'male' | 'female' | 'other'
-}
+import { User } from '@/lib/types'
 
 interface AuthState {
   isAuthenticated: boolean
@@ -130,7 +121,10 @@ const userSlice = createSlice({
           displayName: userData.displayName,
           role: userData.role,
           avatar: userData.avatar,
-          gender: userData.gender
+          gender: userData.gender,
+          isActive: userData.isActive,
+          createdAt: userData.createdAt,
+          updatedAt: userData.updatedAt
         }
         state.isAuthenticated = true
         state.error = null

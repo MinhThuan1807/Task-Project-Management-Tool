@@ -101,8 +101,8 @@ export function EditTaskModal({
   const [commentInput, setCommentInput] = useState('')
   const [isAssignMemberOpen, setIsAssignMemberOpen] = useState(false)
 
-  const param = useParams()
-  const projectId = param?.id as string
+  const param = useParams<{ id: string }>()
+  const projectId = param?.id
   const { data: project } = useProjectDetail(projectId)
 
   const formatDateForInput = (date?: Date | string | null) => {

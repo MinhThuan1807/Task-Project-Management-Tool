@@ -15,7 +15,7 @@ interface ProjectCardGridProps {
 const ProjectCardGrid = ({ projects, handleDirect }: ProjectCardGridProps) => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {projects.map((project) => (
+      {projects?.map((project) => (
         <Suspense key={project._id} fallback={<ProjectCardSkeleton />}>
           <ProjectCard project={project} handleDirect={() => handleDirect(project._id)} />
         </Suspense>

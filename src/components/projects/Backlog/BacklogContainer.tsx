@@ -11,17 +11,14 @@ import MainBacklogArea from './MainBacklogArea'
 import BlacklogSprintPlanning from './BlacklogSprintPlanning'
 import BacklogContainerSkeleton from './BacklogContainerSkeleton'
 
-function BacklogContainer() {
-  const params = useParams()
+function BacklogContainer({ projectId }: { projectId: string }) {
   const router = useRouter()
-  const projectId = params.id as string
-
   const { data: allProjects } = useAllProjects()
   const { data: sprints } = useSprintsByProject(projectId)
 
   const [isCreateSprintOpen, setIsCreateSprintOpen] = useState(false)
 
-  const project = allProjects.find((p) => p._id === projectId)
+  const project = allProjects?.find((p) => p._id === projectId)
   const projectSprints = sprints?.filter((s) => s.projectId === projectId) || []
   const plannedSprint = sprints?.find((s) => s.status === 'planned')
   const sprintPlannedId = plannedSprint ? plannedSprint._id : ''

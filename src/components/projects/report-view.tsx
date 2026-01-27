@@ -37,8 +37,8 @@ import { useSprintsByProject } from '@/lib/hooks/useSprints'
 import { useParams } from 'next/navigation'
 
 export function ReportsView() {
-  const param = useParams()
-  const projectId = param.id as string
+  const param = useParams<{ id: string }>()
+  const projectId = param.id
   const { data: projects } = useAllProjects()
   const project = projects?.find((p) => p._id === projectId)
   const { data: sprints } = useSprintsByProject(projectId)

@@ -16,20 +16,25 @@ import { useProjectDetail } from '@/lib/hooks/useProjects'
 import { useSprintsByProject } from '@/lib/hooks/useSprints'
 import { useParams } from 'next/navigation'
 import ProjectHeader from '@/components/projects/Overview/ProjectHeader'
-import { useCurrentUser } from '@/lib/hooks/useAuth'
 import ProjectStats from './ProjectStats'
 import ProjectTabs from './ProjectTabs'
 import ProjectContainerSkeleton from './ProjectContainerSkeleton'
+import { selectCurrentUser } from '@/lib/features/auth/authSlice'
+import { useSelector } from 'react-redux'
 
-function ProjectContainer() {
+interface ProjectContainerProps {
+  projectId: string
+}
+
+function ProjectContainer(
+  { projectId }: ProjectContainerProps
+) {
   const router = useRouter()
-  const params = useParams()
-  const projectId = params.id as string
 
   const [isInviteTeamOpen, setIsInviteTeamOpen] = useState(false)
   const [isEditProjectOpen, setIsEditProjectOpen] = useState(false)
 
-  const { data: user } = useCurrentUser()
+  const user = useSelector(selectCurrentUser)
   const { data: sprints = [] } = useSprintsByProject(projectId)
   const { data: project } = useProjectDetail(projectId)
 

@@ -4,10 +4,10 @@ import { useAllProjects } from '@/lib/hooks/useProjects'
 import { useParams } from 'next/navigation'
 
 function TitleTopBar() {
-  const param = useParams()
+  const param = useParams<{ id: string; view?: string }>()
   const { data: allProjects } = useAllProjects()
-  const selectedProjectId = param.id as string
-  const selectedProject = allProjects.find(
+  const selectedProjectId = param.id
+  const selectedProject = allProjects?.find(
     (p) => p._id === selectedProjectId || p._id === selectedProjectId
   )
   const getViewTitle = () => {
