@@ -1,7 +1,13 @@
 'use client'
 import { useDispatch, useSelector } from 'react-redux'
 import { Plus } from 'lucide-react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle
+} from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useState } from 'react'
@@ -11,33 +17,25 @@ import { useRouter } from 'next/navigation'
 import ProjectCardGrid from '../projects/ProjectCardGrid'
 import { selectCurrentUser } from '@/lib/features/auth/authSlice'
 
-
 function ProjectSection() {
   const router = useRouter()
   const [activeTab, setActiveTab] = useState('all')
-  const { data: projects, ownedProjects, joinedProjects } = useAllProjects()
   const dispatch = useDispatch()
   const currentUser = useSelector(selectCurrentUser)
+  const { data: projects } = useAllProjects()
 
-  const activeJoinedProjectCount =
-  joinedProjects?.filter((project) =>
+  const ownedProjects =
+    projects?.filter((project) => project.ownerId === currentUser?._id) || []
+
+  const activeProjects = projects?.filter((project) =>
     project.members.some(
       (member) =>
         member.memberId === currentUser?._id && member.status === 'active'
     )
-  ).length || 0
+  )
+  const joinedProjectsActive =
+    projects?.filter((project) => project.ownerId !== currentUser?._id) || []
 
-  const activeProjects = projects.filter(project =>
-    project.members.some(
-      member => member.memberId === currentUser?._id && member.status === 'active'
-    )
-  )
-  const joinedProjectsActive = joinedProjects.filter(project =>
-    project.members.some(
-      member => member.memberId === currentUser?._id && member.status === 'active'
-    )
-  )
-  
   const handleDirect = (projectId: string) => {
     router.push(`/projects/${projectId}`)
   }
@@ -48,7 +46,7 @@ function ProjectSection() {
           <div className="flex items-center justify-between">
             <div>
               <CardTitle className="text-2xl bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                  Projects
+                Projects
               </CardTitle>
               <CardDescription>Manage and track your projects</CardDescription>
             </div>
@@ -57,35 +55,47 @@ function ProjectSection() {
               onClick={() => dispatch(openCreateModal())}
             >
               <Plus className="w-4 h-4 mr-2" />
-                New Project
+              New Project
             </Button>
           </div>
         </CardHeader>
         <CardContent>
           <Tabs value={activeTab} onValueChange={setActiveTab}>
             <TabsList className="mb-6">
-              <TabsTrigger value="all">All Projects ({projects.length})</TabsTrigger>
-              <TabsTrigger value="my">My Projects ({ownedProjects.length})</TabsTrigger>
+              <TabsTrigger value="all">
+                All Projects ({projects?.length})
+              </TabsTrigger>
+              <TabsTrigger value="my">
+                My Projects ({ownedProjects.length})
+              </TabsTrigger>
               <TabsTrigger value="participating">
-                Participating({activeJoinedProjectCount})
-                </TabsTrigger>
+                Participating({joinedProjectsActive.length})
+              </TabsTrigger>
             </TabsList>
 
             <TabsContent value="all" className="space-y-4">
-              <ProjectCardGrid projects={activeProjects} handleDirect={handleDirect} />
+              <ProjectCardGrid
+                projects={activeProjects || []}
+                handleDirect={handleDirect}
+              />
             </TabsContent>
 
             <TabsContent value="my" className="space-y-4">
-              <ProjectCardGrid projects={ownedProjects} handleDirect={handleDirect} />
+              <ProjectCardGrid
+                projects={ownedProjects}
+                handleDirect={handleDirect}
+              />
             </TabsContent>
 
             <TabsContent value="participating" className="space-y-4">
-              <ProjectCardGrid projects={joinedProjectsActive} handleDirect={handleDirect} />
+              <ProjectCardGrid
+                projects={joinedProjectsActive || []}
+                handleDirect={handleDirect}
+              />
             </TabsContent>
           </Tabs>
         </CardContent>
       </Card>
-
     </div>
   )
 }

@@ -1,3 +1,4 @@
+import { get } from 'http'
 import axiosInstance from '../axios'
 import type {
   CreateProjectRequest,
@@ -35,13 +36,15 @@ export const projectApi = {
       })
     }
 
-    const response = await axiosInstance.post<ProjectResponse>('/projects', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data'
-      },
-      withCredentials: true
-    })
-
+    const response = await axiosInstance.post<ProjectResponse>('/projects', formData)
+    return response.data
+  },
+  /**
+   * Get all projects  
+   * @returns 
+   */
+  getAll: async (): Promise<ProjectsResponse> => {
+    const response = await axiosInstance.get<ProjectsResponse>('/projects')
     return response.data
   },
 

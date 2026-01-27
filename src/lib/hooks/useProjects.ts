@@ -1,64 +1,20 @@
 'use client'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
-  useQuery,
-  useMutation,
-  useQueryClient,
-  queryOptions
-} from '@tanstack/react-query'
+  ownedProjectsOptions,
+  joinedProjectsOptions,
+  projectDetailOptions,
+  projectKeys,
+  allProjectsOptions 
+} from '@/lib/queries/project.queries'
 import { projectApi } from '@/lib/services/project.service'
 import { toast } from 'sonner'
-import { getErrorMessage } from '@/lib/utils'
-import type {
-  Project,
+import { getErrorMessage } from '../utils'
+import {
   CreateProjectRequest,
+  Project,
   UpdateProjectRequest
 } from '@/lib/types'
-
-// Query keys
-export const projectKeys = {
-  all: ['projects'] as const,
-  lists: () => [...projectKeys.all, 'list'] as const,
-  list: (filters: string) => [...projectKeys.lists(), { filters }] as const,
-  owned: () => [...projectKeys.lists(), 'owned'] as const,
-  joined: () => [...projectKeys.lists(), 'joined'] as const,
-  details: () => [...projectKeys.all, 'detail'] as const,
-  detail: (id: string) => [...projectKeys.details(), id] as const
-}
-
-// Query Options
-export function ownedProjectsOptions() {
-  return queryOptions({
-    queryKey: projectKeys.owned(),
-    queryFn: async () => {
-      const response = await projectApi.getOwnedProjects()
-      return response.data
-    },
-    staleTime: 5 * 60 * 1000 // 5 minutes
-  })
-}
-
-export function joinedProjectsOptions() {
-  return queryOptions({
-    queryKey: projectKeys.joined(),
-    queryFn: async () => {
-      const response = await projectApi.getJoinedProjects()
-      return response.data
-    },
-    staleTime: 5 * 60 * 1000
-  })
-}
-
-export function projectDetailOptions(projectId: string) {
-  return queryOptions({
-    queryKey: projectKeys.detail(projectId),
-    queryFn: async () => {
-      const response = await projectApi.getById(projectId)
-      return response.data
-    },
-    staleTime: 5 * 60 * 1000,
-    enabled: !!projectId
-  })
-}
 
 // Hooks
 export function useOwnedProjects() {
@@ -73,21 +29,25 @@ export function useProjectDetail(projectId: string) {
   return useQuery(projectDetailOptions(projectId))
 }
 
-export function useAllProjects() {
-  const owned = useOwnedProjects()
-  const joined = useJoinedProjects()
+// export function useAllProjects() {
+//   const owned = useOwnedProjects()
+//   const joined = useJoinedProjects()
 
-  return {
-    data: [...(owned.data || []), ...(joined.data || [])],
-    ownedProjects: owned.data || [],
-    joinedProjects: joined.data || [],
-    isLoading: owned.isLoading || joined.isLoading,
-    error: owned.error || joined.error,
-    refetch: () => {
-      owned.refetch()
-      joined.refetch()
-    }
-  }
+//   return {
+//     data: [...(owned.data || []), ...(joined.data || [])],
+//     ownedProjects: owned.data || [],
+//     joinedProjects: joined.data || [],
+//     isLoading: owned.isLoading || joined.isLoading,
+//     error: owned.error || joined.error,
+//     refetch: () => {
+//       owned.refetch()
+//       joined.refetch()
+//     }
+//   }
+// }
+
+export function useAllProjects() {
+  return useQuery(allProjectsOptions())
 }
 
 export function useCreateProject() {

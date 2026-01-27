@@ -2,9 +2,15 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { TrendingUp, FolderKanban, Calendar, CheckCircle2, Users } from 'lucide-react'
 import { useAllProjects } from '@/lib/hooks/useProjects'
+import { useDispatch, useSelector } from 'react-redux'
+import { selectCurrentUser } from '@/lib/features/auth/authSlice'
 
 const StatusOverview = () => {
-  const { data: projects = [], ownedProjects = [] } = useAllProjects()
+  const { data: projects = []} = useAllProjects()
+    const dispatch = useDispatch()
+  const currentUser = useSelector(selectCurrentUser)
+  const ownedProjects =
+    projects?.filter((project) => project.ownerId === undefined) || []
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">

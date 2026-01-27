@@ -20,9 +20,9 @@ import { useSelector } from 'react-redux'
 function ParticipatedProjects() {
   const [openProjectId, setOpenProjectId] = useState<string | null>(null)
 
-  const param = useParams()
+  const param = useParams<{ id: string }>()
   const router = useRouter()
-  const selectedProjectId = param.id as string
+  const selectedProjectId = param.id
 
   const { data: joinedProjects } = useJoinedProjects()
   const { data: sprints } = useSprintsByProject(selectedProjectId)

@@ -21,8 +21,8 @@ function MyProject() {
   const dispatch = useDispatch()
   const [openProjectId, setOpenProjectId] = useState<string | null>(null)
   const router = useRouter()
-  const param = useParams()
-  const selectedProjectId = param.id as string
+  const param = useParams<{ id: string }>()
+  const selectedProjectId = param.id
 
   const { data: ownedProjects } = useOwnedProjects()
   const { data: sprints } = useSprintsByProject(selectedProjectId)

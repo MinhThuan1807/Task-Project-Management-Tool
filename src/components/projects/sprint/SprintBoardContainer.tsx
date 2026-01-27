@@ -5,7 +5,6 @@ import { useAllProjects } from '@/lib/hooks/useProjects'
 import { useSprintsByProject, useUpdateSprint } from '@/lib/hooks/useSprints'
 import { useTasksBySprint, useMoveTask } from '@/lib/hooks/useTasks'
 import { useBoardColumnsBySprint } from '@/lib/hooks/useBoardColumns'
-import { useCurrentUser } from '@/lib/hooks/useAuth'
 import { DragStartEvent, DragOverEvent, DragEndEvent } from '@dnd-kit/core'
 import { ToggleGroup, ToggleGroupItem } from '../../ui/toggle-group'
 import { Progress } from '../../ui/progress'
@@ -21,6 +20,8 @@ import BoardViewSkeleton from './BoardView/BoardViewSkeleton'
 import SprintHeaderSkeleton from './SprintHeaderSkeleton'
 import SprintListViewSkeleton from './CalendarView/SprintCalendarViewSkeleton'
 import SprintCalendarViewSkeleton from './CalendarView/SprintCalendarViewSkeleton'
+import { selectCurrentUser } from '@/lib/features/auth/authSlice'
+import { useSelector } from 'react-redux'
 
 const BoardView = dynamic(() => import('./BoardView/BoardView'), {
   ssr: false,
@@ -54,18 +55,18 @@ const SprintBoardContainer = () => {
     assigneeIds: []
   })
 
-  const params = useParams()
   const router = useRouter()
-  const projectId = typeof params.id === 'string' ? params.id : undefined
-  const sprintId =
-    typeof params.sprintId === 'string' ? params.sprintId : undefined
+  const params = useParams<{ id: string; sprintId: string }>()
+  const projectId = params.id
+  const sprintId = params.sprintId
 
   // Fetch data
   const allProjectsQuery = useAllProjects()
   const sprintsQuery = useSprintsByProject(projectId)
   const tasksQuery = useTasksBySprint(sprintId!)
   const columnsQuery = useBoardColumnsBySprint(sprintId!)
-  const { data: currentUser } = useCurrentUser()
+
+  const currentUser = useSelector(selectCurrentUser)
 
   const allProjects = useMemo(
     () => allProjectsQuery.data ?? [],
@@ -97,7 +98,7 @@ const SprintBoardContainer = () => {
 
   // Nếu sprintId không thuộc project hiện tại, redirect về backlog
   useEffect(() => {
-    if(!projectId) return
+    if (!projectId) return
     if (
       !sprintsQuery.isLoading &&
       sprintId &&

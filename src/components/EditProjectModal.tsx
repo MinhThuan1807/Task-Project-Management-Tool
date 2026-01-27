@@ -43,9 +43,11 @@ export function EditProjectModal({
 }: EditProjectModalProps) {
   const { data: user } = useCurrentUser()
   const { data: allProjects } = useAllProjects()
-  const params = useParams()
-  const projectId = params.id as string
-  const project = allProjects.find((p) => p._id === projectId)
+
+  const params = useParams<{ id: string }>()
+  const projectId = params.id
+  
+  const project = allProjects?.find((p) => p._id === projectId)
   const isOwner = project?.ownerId === user?._id
   const router = useRouter()
 
