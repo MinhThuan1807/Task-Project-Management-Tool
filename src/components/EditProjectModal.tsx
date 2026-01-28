@@ -25,28 +25,31 @@ import { Textarea } from './ui/textarea'
 import { Label } from './ui/label'
 import { Badge } from './ui/badge'
 import { useCurrentUser } from '@/lib/hooks/useAuth'
-import { useAllProjects, useDeleteProject } from '@/lib/hooks/useProjects'
+import { useAllProjects, useDeleteProject, useUpdateProject } from '@/lib/hooks/useProjects'
 import { useParams, useRouter } from 'next/navigation'
 import { formatDate } from '@/lib/utils'
 import Image from 'next/image'
+import { UpdateProjectRequest } from '@/lib/types'
 
 type EditProjectModalProps = {
   open: boolean
   onOpenChange: (open: boolean) => void
-  // onSave: (projectId: string, updates: Partial<Project>) => void
+  onSave: (data: UpdateProjectRequest) => void
+  isPending?: boolean
 }
 
 export function EditProjectModal({
   open,
-  onOpenChange
-  // onSave
+  onOpenChange,
+  onSave,
+  isPending
 }: EditProjectModalProps) {
   const { data: user } = useCurrentUser()
   const { data: allProjects } = useAllProjects()
 
   const params = useParams<{ id: string }>()
   const projectId = params.id
-  
+
   const project = allProjects?.find((p) => p._id === projectId)
   const isOwner = project?.ownerId === user?._id
   const router = useRouter()
@@ -57,16 +60,20 @@ export function EditProjectModal({
   const [description, setDescription] = useState(project?.description || '')
   // const [status, setStatus] = useState<'active' | 'archived' | 'completed'>(project?.status);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+  const [imageFile, setImageFile] = useState<File | null>(null)
+  const [imagePreview, setImagePreview] = useState<string | null>(null)
+  
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    // onSave(project._id, {
-    //   name,
-    //   description,
-    //   status,
-    // });
-    // onOpenChange(false);
+     onSave({
+      name,
+      description,
+      // status,
+      imageUrl: imageFile
+    } as UpdateProjectRequest)
   }
+
 
   const handleDelete = () => {
     deleteProject.mutate(projectId, {
@@ -169,17 +176,18 @@ export function EditProjectModal({
               <div className="space-y-2">
                 <Label>Project Image</Label>
                 <div className="flex items-center gap-4">
-                  {project?.imageUrl && (
+                  {/* Preview image: ưu tiên ảnh mới chọn, nếu không có thì lấy ảnh cũ */}
+                  {(imagePreview || project?.imageUrl) && (
                     <Image
-                      src={project.imageUrl}
-                      alt={project.name}
+                      src={imagePreview || project?.imageUrl || ''}
+                      alt={project?.name || 'Project Image'}
                       className="w-20 h-20 rounded-lg object-cover border border-gray-200"
                       width={80}
                       height={80}
                     />
                   )}
                   <div className="flex-1">
-                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-400 transition-colors cursor-pointer">
+                    <label className="block border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-400 transition-colors cursor-pointer">
                       <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
                       <p className="text-sm text-gray-600">
                         Click to upload or drag and drop
@@ -187,7 +195,21 @@ export function EditProjectModal({
                       <p className="text-xs text-gray-500 mt-1">
                         PNG, JPG up to 10MB
                       </p>
-                    </div>
+                      <input
+                        id="imageUrl"
+                        type="file"
+                        accept="image/png, image/jpeg"
+                        className="hidden"
+                        disabled={!isOwner}
+                        onChange={(e) => {
+                          const file = e.target.files?.[0]
+                          if (file) {
+                            setImageFile(file)
+                            setImagePreview(URL.createObjectURL(file))
+                          }
+                        }}
+                      />
+                    </label>
                   </div>
                 </div>
               </div>
@@ -237,10 +259,10 @@ export function EditProjectModal({
               {isOwner && (
                 <Button
                   type="submit"
-                  disabled={!name.trim()}
+                  disabled={!name.trim() || isPending}
                   className="bg-gradient-to-r from-blue-600 to-purple-600"
                 >
-                  Save Changes
+                  {isPending ? 'Saving...' : 'Save Changes'}
                 </Button>
               )}
             </DialogFooter>

@@ -12,7 +12,7 @@ import { CheckCircle2, Plus, UserPlus } from 'lucide-react'
 import { InviteTeamModal } from '@/components/modal/InviteTeamModal'
 import { useRouter } from 'next/navigation'
 import { EditProjectModal } from '@/components/EditProjectModal'
-import { useProjectDetail } from '@/lib/hooks/useProjects'
+import { useProjectDetail, useUpdateProject } from '@/lib/hooks/useProjects'
 import { useSprintsByProject } from '@/lib/hooks/useSprints'
 import { useParams } from 'next/navigation'
 import ProjectHeader from '@/components/projects/Overview/ProjectHeader'
@@ -21,22 +21,26 @@ import ProjectTabs from './ProjectTabs'
 import ProjectContainerSkeleton from './ProjectContainerSkeleton'
 import { selectCurrentUser } from '@/lib/features/auth/authSlice'
 import { useSelector } from 'react-redux'
+import { UpdateProjectRequest } from '@/lib/types/project.types'
 
 interface ProjectContainerProps {
   projectId: string
 }
 
-function ProjectContainer(
-  { projectId }: ProjectContainerProps
-) {
+function ProjectContainer({ projectId }: ProjectContainerProps) {
   const router = useRouter()
 
   const [isInviteTeamOpen, setIsInviteTeamOpen] = useState(false)
   const [isEditProjectOpen, setIsEditProjectOpen] = useState(false)
+  const [isUpdatePending, setIsUpdatePending] = useState(false)
 
   const user = useSelector(selectCurrentUser)
   const { data: sprints = [] } = useSprintsByProject(projectId)
   const { data: project } = useProjectDetail(projectId)
+
+  const updateProject = useUpdateProject(projectId)
+
+  const { mutateAsync, isPending } = useUpdateProject(projectId)
 
   const sprintStats = useMemo(() => {
     if (!project || !sprints) {
@@ -59,9 +63,13 @@ function ProjectContainer(
     return <ProjectContainerSkeleton />
   }
 
-  // const handleEditProject = (projectId: string, projectData: any) => {
-  // toast.success('Project updated successfully')
-  // }
+  const handleEditProject = async (data: UpdateProjectRequest) => {
+    await mutateAsync(data, {
+      onSuccess: () => {
+        setIsEditProjectOpen(false)
+      }
+    })
+  }
   const handleOpenEditModal = () => {
     setIsEditProjectOpen(true)
   }
@@ -136,7 +144,8 @@ function ProjectContainer(
       <EditProjectModal
         open={isEditProjectOpen}
         onOpenChange={setIsEditProjectOpen}
-        // onSave={handleEditProject}
+        onSave={handleEditProject}
+        isPending={isPending}
       />
     </div>
   )

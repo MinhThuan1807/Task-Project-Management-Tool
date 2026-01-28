@@ -21,8 +21,9 @@ function ProjectSection() {
   const router = useRouter()
   const [activeTab, setActiveTab] = useState('all')
   const dispatch = useDispatch()
-  const currentUser = useSelector(selectCurrentUser)
   const { data: projects } = useAllProjects()
+  const currentUser = useSelector(selectCurrentUser)
+  if(!currentUser) return null
 
   const ownedProjects =
     projects?.filter((project) => project.ownerId === currentUser?._id) || []
@@ -77,6 +78,7 @@ function ProjectSection() {
               <ProjectCardGrid
                 projects={activeProjects || []}
                 handleDirect={handleDirect}
+                currentUser={currentUser}
               />
             </TabsContent>
 
@@ -84,6 +86,7 @@ function ProjectSection() {
               <ProjectCardGrid
                 projects={ownedProjects}
                 handleDirect={handleDirect}
+                currentUser={currentUser}
               />
             </TabsContent>
 
@@ -91,6 +94,7 @@ function ProjectSection() {
               <ProjectCardGrid
                 projects={joinedProjectsActive || []}
                 handleDirect={handleDirect}
+                currentUser={currentUser}
               />
             </TabsContent>
           </Tabs>

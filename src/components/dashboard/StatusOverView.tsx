@@ -2,15 +2,33 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { TrendingUp, FolderKanban, Calendar, CheckCircle2, Users } from 'lucide-react'
 import { useAllProjects } from '@/lib/hooks/useProjects'
-import { useDispatch, useSelector } from 'react-redux'
+import { useSelector } from 'react-redux'
 import { selectCurrentUser } from '@/lib/features/auth/authSlice'
+import { useQueries } from 'node_modules/@tanstack/react-query/build/modern/useQueries'
+import { sprintsByProjectOptions } from '@/lib/queries/sprint.queries'
+import { Sprint } from '@/lib/types'
 
 const StatusOverview = () => {
   const { data: projects = []} = useAllProjects()
-    const dispatch = useDispatch()
   const currentUser = useSelector(selectCurrentUser)
   const ownedProjects =
-    projects?.filter((project) => project.ownerId === undefined) || []
+    projects?.filter((project) => project.ownerId === currentUser?._id) || []
+  
+  const sprintsQueries = useQueries({
+    queries: projects.map((project) => {
+      const options = sprintsByProjectOptions(project._id)
+      return {
+        queryKey: options.queryKey,
+        queryFn: options.queryFn,
+        enabled: !!project._id,
+      }
+    }),
+  })
+
+  const countActiveSprints = sprintsQueries.reduce((total, query) => {
+    const sprints = query.data || []
+    return total + sprints.filter((sprint: Sprint) => sprint.status === 'active').length
+  }, 0)
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
@@ -35,7 +53,7 @@ const StatusOverview = () => {
         </CardHeader>
         <CardContent>
           <div className="flex items-center justify-between">
-            <div className="text-3xl font-bold">8</div>
+            <div className="text-3xl font-bold">{countActiveSprints}</div>
             <Calendar className="w-8 h-8 opacity-80" />
           </div>
           <div className="flex items-center gap-1 mt-2 text-sm opacity-90">

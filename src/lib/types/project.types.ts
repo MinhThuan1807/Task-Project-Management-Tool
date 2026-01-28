@@ -45,7 +45,7 @@ export type UpdateProjectRequest = Partial<Pick<Project,
   | 'description'
   | 'status'
 >> & {
-  imageUrl?: File;
+  imageUrl?: File | string;
 };
 
 export type InviteMemberRequest = {

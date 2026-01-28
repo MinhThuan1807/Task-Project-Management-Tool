@@ -62,19 +62,12 @@ function ProjectHeader({ project, onEdit, user }: ProjectHeaderProps) {
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          {isOwner && (
             <>
-              <DropdownMenuItem onClick={onEdit}>
+              <DropdownMenuItem onClick={onEdit} disabled={!isOwner}>
                 <Edit className="w-4 h-4 mr-2" />
                   Edit Details
               </DropdownMenuItem>
             </>
-          )}
-          {!isOwner && (
-            <DropdownMenuItem className="text-red-600">
-                Leave Project
-            </DropdownMenuItem>
-          )}
         </DropdownMenuContent>
       </DropdownMenu>
     </div>
