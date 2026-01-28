@@ -9,14 +9,15 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu'
-import { Project } from '@/lib/types'
+import { Project, User } from '@/lib/types'
 
 interface ProjectCardProps {
   project: Project;
   handleDirect?: () => void;
+  currentUser: User;
 }
 
-const ProjectCard = ({ project, handleDirect }: ProjectCardProps) => {
+const ProjectCard = ({ project, handleDirect, currentUser }: ProjectCardProps) => {
 
   return (
     <Card className="hover:shadow-xl transition-all cursor-pointer group border-0 shadow-md hover:-translate-y-1">
@@ -81,7 +82,7 @@ const ProjectCard = ({ project, handleDirect }: ProjectCardProps) => {
         {/* Footer */}
         <div className="flex items-center justify-between pt-2 border-t">
           <Badge variant="outline" className="text-xs">
-            {project.ownerId ? 'Owner' : 'Member'}
+            {project.ownerId === currentUser?._id ? 'Owner' : 'Member'}
           </Badge>
           <Button
             variant="ghost"

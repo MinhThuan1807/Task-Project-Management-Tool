@@ -73,6 +73,7 @@ export function InviteTeamModal({
   const [role, setRole] = useState<'owner' | 'member' | 'viewer'>('member')
   const [pendingInvites, setPendingInvites] = useState<PendingInvite[]>([])
   const [emailError, setEmailError] = useState('')
+  const [isSending, setIsSending] = useState(false)
 
   const validateEmail = (email: string) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -118,6 +119,7 @@ export function InviteTeamModal({
     if (pendingInvites.length === 0) {
       return
     }
+    setIsSending(true)
     try {
       const invitations: InviteMemberRequest[] = pendingInvites.map((inv) => ({
         email: inv.email,
@@ -133,8 +135,10 @@ export function InviteTeamModal({
       setRole('member')
       setEmailError('')
       onOpenChange(false)
+      setIsSending(false)
     } catch (error) {
       toast.error(getErrorMessage(error) || 'Failed to send invitations')
+      setIsSending(false)
     }
 
   }
@@ -312,8 +316,7 @@ export function InviteTeamModal({
             disabled={pendingInvites.length === 0}
             className="bg-gradient-to-r from-blue-600 to-purple-600"
           >
-            Send {pendingInvites.length > 0 ? `${pendingInvites.length} ` : ''}Invitation
-            {pendingInvites.length !== 1 ? 's' : ''}
+            {isSending ? '...' : 'Send Invitations'}
           </Button>
         </DialogFooter>
       </DialogContent>
