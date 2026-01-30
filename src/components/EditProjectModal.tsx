@@ -28,7 +28,6 @@ import { useCurrentUser } from '@/lib/hooks/useAuth'
 import { useAllProjects, useDeleteProject, useUpdateProject } from '@/lib/hooks/useProjects'
 import { useParams, useRouter } from 'next/navigation'
 import { formatDate } from '@/lib/utils'
-import Image from 'next/image'
 import { UpdateProjectRequest } from '@/lib/types'
 
 type EditProjectModalProps = {
@@ -178,12 +177,10 @@ export function EditProjectModal({
                 <div className="flex items-center gap-4">
                   {/* Preview image: ưu tiên ảnh mới chọn, nếu không có thì lấy ảnh cũ */}
                   {(imagePreview || project?.imageUrl) && (
-                    <Image
+                    <img
                       src={imagePreview || project?.imageUrl || ''}
                       alt={project?.name || 'Project Image'}
                       className="w-20 h-20 rounded-lg object-cover border border-gray-200"
-                      width={80}
-                      height={80}
                     />
                   )}
                   <div className="flex-1">

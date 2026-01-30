@@ -14,7 +14,6 @@ import { useRouter } from 'next/navigation'
 import { EditProjectModal } from '@/components/EditProjectModal'
 import { useProjectDetail, useUpdateProject } from '@/lib/hooks/useProjects'
 import { useSprintsByProject } from '@/lib/hooks/useSprints'
-import { useParams } from 'next/navigation'
 import ProjectHeader from '@/components/projects/Overview/ProjectHeader'
 import ProjectStats from './ProjectStats'
 import ProjectTabs from './ProjectTabs'
@@ -22,6 +21,8 @@ import ProjectContainerSkeleton from './ProjectContainerSkeleton'
 import { selectCurrentUser } from '@/lib/features/auth/authSlice'
 import { useSelector } from 'react-redux'
 import { UpdateProjectRequest } from '@/lib/types/project.types'
+import { useProjectPermissions } from '@/lib/hooks/useProjectPermissions'
+
 
 interface ProjectContainerProps {
   projectId: string
@@ -32,13 +33,12 @@ function ProjectContainer({ projectId }: ProjectContainerProps) {
 
   const [isInviteTeamOpen, setIsInviteTeamOpen] = useState(false)
   const [isEditProjectOpen, setIsEditProjectOpen] = useState(false)
-  const [isUpdatePending, setIsUpdatePending] = useState(false)
 
-  const user = useSelector(selectCurrentUser)
   const { data: sprints = [] } = useSprintsByProject(projectId)
   const { data: project } = useProjectDetail(projectId)
+  const currentUser = useSelector(selectCurrentUser)
 
-  const updateProject = useUpdateProject(projectId)
+  const { canEdit } = useProjectPermissions(project)
 
   const { mutateAsync, isPending } = useUpdateProject(projectId)
 
@@ -59,7 +59,7 @@ function ProjectContainer({ projectId }: ProjectContainerProps) {
     }
   }, [project, sprints])
 
-  if (!project || !user) {
+  if (!project || !currentUser) {
     return <ProjectContainerSkeleton />
   }
 
@@ -82,19 +82,14 @@ function ProjectContainer({ projectId }: ProjectContainerProps) {
         {/* Project Header */}
         <ProjectHeader
           project={project}
-          user={user}
+          user={currentUser}
           onEdit={handleOpenEditModal}
         />
 
         {/* Stats Cards */}
-        {/** sprints gọi dựa trên id projects
-         * Lấy data id project từ params
-         * Hiển thị các thẻ thông tin về sprint trong project đó
-         */}
         <ProjectStats sprintStats={sprintStats} />
 
         {/* Quick Actions */}
-        {/** các useState */}
         <Card className="border-0 shadow-lg">
           <CardHeader>
             <CardTitle>Quick Actions</CardTitle>
@@ -109,13 +104,19 @@ function ProjectContainer({ projectId }: ProjectContainerProps) {
                 <CheckCircle2 className="w-4 h-4 mr-2" />
                 View Product Backlog
               </Button>
-              <Button variant="outline" onClick={() => handleDirectToBacklog()}>
+              <Button 
+                variant="outline" 
+                onClick={() => handleDirectToBacklog()}
+                disabled={!canEdit}
+
+              >
                 <Plus className="w-4 h-4 mr-2" />
                 Create New Sprint
               </Button>
               <Button
                 variant="outline"
                 onClick={() => setIsInviteTeamOpen(true)}
+                disabled={!canEdit}
               >
                 <UserPlus className="w-4 h-4 mr-2" />
                 Invite Team Members
@@ -128,7 +129,7 @@ function ProjectContainer({ projectId }: ProjectContainerProps) {
         <ProjectTabs
           project={project}
           sprints={sprints}
-          user={user}
+          user={currentUser}
           onDirect={() => handleDirectToBacklog()}
           openInviteModal={() => setIsInviteTeamOpen(true)}
         />
