@@ -87,3 +87,14 @@ export type {
   // ChannelsResponse,
   // ChatEvent
 } from './chat.types'
+
+// Report types
+export type {
+  SprintProgressReport,
+  VelocityReportItem,
+  SprintMemberDistributionReport,
+  SprintProgressPayload,
+  VelocityProjectPayload,
+  SprintMemberDistributionPayload,
+  ReportResponse
+} from './report.types'
