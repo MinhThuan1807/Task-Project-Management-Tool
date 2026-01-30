@@ -16,22 +16,38 @@ import { authApi } from '@/lib/services/auth.service'
 import { useRouter } from 'next/dist/client/components/navigation'
 import { getErrorMessage } from '@/lib/utils'
 
-const registerSchema = z.object({
-  email: z
-    .string()
-    .min(1, 'Email is required')
-    .email('Invalid email address'),
-  password: z
-    .string()
-    .min(1, 'Password is required')
-    .min(8, 'Password must be at least 8 characters')
-    .regex(/[a-z]/, 'Password must contain at least one lowercase letter')
-    .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
-    .regex(/\d/, 'Password must contain at least one number'),
-  agreedToTerms: z
-    .boolean()
-    .refine((val) => val === true, 'You must agree to the terms and conditions')
-})
+const registerSchema = z
+  .object({
+    email: z
+      .string()
+      .min(1, 'Email is required')
+      .email('Invalid email address'),
+    password: z
+      .string()
+      .min(1, 'Password is required')
+      .min(8, 'Password must be between 8 and 256 characters')
+      .max(256, 'Password must be between 8 and 256 characters')
+      .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
+      .regex(/\d/, 'Password must contain at least one number')
+      .regex(/[^a-zA-Z\d]/, 'Password must contain at least one special character'),
+    agreedToTerms: z
+      .boolean()
+      .refine((val) => val === true, 'You must agree to the terms and conditions'),
+    confirmPassword: z
+      .string()
+      .min(1, 'Confirm Password is required')
+      .min(8, 'Confirm Password must be between 8 and 256 characters')
+      .max(256, 'Confirm Password must be between 8 and 256 characters')
+      .regex(/[A-Z]/, 'Confirm Password must contain at least one uppercase letter')
+      .regex(/\d/, 'Confirm Password must contain at least one number')
+      .regex(/[^a-zA-Z\d]/, 'Confirm Password must contain at least one special character')
+  })
+  // Super-refine at the object level to compare password fields
+  .refine((data) => data.password === data.confirmPassword, {
+    message: 'Passwords do not match',
+    path: ['confirmPassword'],
+  })
+
 
 type RegisterFormData = z.infer<typeof registerSchema>;
 
@@ -51,7 +67,8 @@ export function RegisterPageNew() {
     defaultValues: {
       email: '',
       password: '',
-      agreedToTerms: false
+      agreedToTerms: false,
+      confirmPassword: ''
     }
   })
 
@@ -187,8 +204,7 @@ export function RegisterPageNew() {
               {errors.password && (
                 <p className="text-sm text-red-500">{errors.password.message}</p>
               )}
-
-              {/* Password Strength */}
+                            {/* Password Strength */}
               {password && (
                 <div className="space-y-1">
                   <div className="flex items-center justify-between text-xs">
@@ -204,6 +220,38 @@ export function RegisterPageNew() {
                     />
                   </div>
                 </div>
+              )}
+            </div>
+            {/* Confirm Password */}
+            <div className="space-y-2">
+              <Label htmlFor="confirmPassword">Confirm Password</Label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <Input
+                  id="confirmPassword"
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder="••••••••"
+                  className="pl-10 pr-10"
+                  disabled={isLoading}
+                  {...register('confirmPassword')}
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 p-0"
+                  disabled={isLoading}
+                >
+                  {showPassword ? (
+                    <EyeOff className="w-4 h-4 text-gray-400" />
+                  ) : (
+                    <Eye className="w-4 h-4 text-gray-400" />
+                  )}
+                </Button>
+              </div>
+              {errors.confirmPassword && (
+                <p className="text-sm text-red-500">{errors.confirmPassword.message}</p>
               )}
             </div>
 

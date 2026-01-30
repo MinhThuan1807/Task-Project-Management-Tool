@@ -15,9 +15,10 @@ interface BacklogTaskListProps {
   sprints: Sprint[];
   handleCreateTask: () => void;
   handleEditTaskOpen: (task: Task) => void;
+  canEdit: boolean;
   // handleDeleteTask: (task: Task) => void;
 }
-function BacklogTaskList({ tasks, searchQuery, sprints, handleCreateTask, handleEditTaskOpen }: BacklogTaskListProps) {
+function BacklogTaskList({ tasks, searchQuery, sprints, handleCreateTask, handleEditTaskOpen, canEdit }: BacklogTaskListProps) {
   return (
     <div className="p-6 space-y-3 max-w-4xl">
       {tasks?.length === 0 ? (
@@ -48,7 +49,7 @@ function BacklogTaskList({ tasks, searchQuery, sprints, handleCreateTask, handle
             task={task}
             Click={() => handleEditTaskOpen(task)}
             sprints={sprints}
-            canEdit={true}
+            canEdit={canEdit}
           />
         ))
       )}

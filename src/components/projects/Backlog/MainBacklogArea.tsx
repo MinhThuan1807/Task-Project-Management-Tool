@@ -1,6 +1,6 @@
 import { useTasksBySprint } from '@/lib/hooks/useTasks'
 import { useState } from 'react'
-import { Sprint, Task } from '@/lib/types'
+import { Sprint, Task, Project } from '@/lib/types'
 import { AlertCircle, Filter, Plus, Search } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -18,16 +18,16 @@ import {
   AlertDialogHeader,
   AlertDialogTitle
 } from '@/components/ui/alert-dialog'
-
+import { useProjectPermissions } from '@/lib/hooks/useProjectPermissions'
 interface MainBacklogAreaProps {
   sprints: Sprint[]
   onCreateSprint: () => void
-  // project: Project
+  project: Project
 }
 function MainBacklogArea({
   sprints,
-  onCreateSprint
-  // project
+  onCreateSprint,
+  project
 }: MainBacklogAreaProps) {
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedTask, setSelectedTask] = useState<Task>()
@@ -46,7 +46,8 @@ function MainBacklogArea({
     /^[a-f\d]{24}$/i.test(s._id)
   )
   const sprintId = validUpcomingSprint?._id
-
+  const { canEdit } = useProjectPermissions(project)
+  
   const { data: tasks, isError } = useTasksBySprint(sprintId || '')
   const filteredTasks =
     tasks?.filter((task) =>
@@ -108,6 +109,7 @@ function MainBacklogArea({
             <Button
               onClick={handleCreateTask}
               className="bg-gradient-to-r from-blue-600 to-purple-600"
+              disabled={!canEdit}
             >
               <Plus className="w-4 h-4 mr-2" />
               Create Task
@@ -136,6 +138,7 @@ function MainBacklogArea({
           sprints={sprints}
           handleCreateTask={handleCreateTask}
           handleEditTaskOpen={handleEditTaskOpen}
+          canEdit={canEdit}
           // handleDeleteTask={handleDeleteTask}
         />
       </ScrollArea>

@@ -1,4 +1,4 @@
-import { Sprint } from '@/lib/types'
+import { Project, Sprint } from '@/lib/types'
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Plus, Calendar, TrendingUp, Play, CheckCircle2 } from 'lucide-react'
@@ -11,17 +11,22 @@ import {
   TooltipContent,
   TooltipTrigger
 } from '@/components/ui/tooltip'
+import { useProjectPermissions } from '@/lib/hooks/useProjectPermissions'
 interface BlacklogSprintPlanningProps {
   sprints: Sprint[]
+  project: Project
   onCreateSprint: () => void
   onStartSprint: (sprint: Sprint) => void
 }
 
 function BlacklogSprintPlanning({
   sprints,
+  project,
   onCreateSprint,
   onStartSprint
 }: BlacklogSprintPlanningProps) {
+  const { canEdit } = useProjectPermissions(project)
+
   const existSprintActive = sprints.some((s) => s.status === 'active')
   const activeSprints = sprints
     .map((s) => (s.status === 'active' ? s : null))
@@ -29,6 +34,7 @@ function BlacklogSprintPlanning({
   const upcomingSprints = sprints
     .map((s) => (s.status === 'planned' ? s : null))
     .filter(Boolean) as Sprint[]
+
   return (
     <div className="w-96 bg-white border-l border-gray-200 flex flex-col">
       <div className="p-6 border-b border-gray-200">
@@ -43,7 +49,7 @@ function BlacklogSprintPlanning({
             onClick={onCreateSprint}
             variant="outline"
             className="w-full border-dashed border-2 h-auto py-4"
-            disabled={sprints.some((s) => s.status === 'planned')}
+            disabled={sprints.some((s) => s.status === 'planned') || !canEdit}
           >
             <Plus className="w-5 h-5 mr-2" />
             {sprints.some((s) => s.status === 'planned')
@@ -138,7 +144,7 @@ function BlacklogSprintPlanning({
                                 variant="outline"
                                 className="w-full"
                                 onClick={() => onStartSprint(sprint)}
-                                disabled={existSprintActive}
+                                disabled={existSprintActive || !canEdit}
                               >
                                 <Play className="w-3 h-3 mr-1" />
                                 Start Sprint

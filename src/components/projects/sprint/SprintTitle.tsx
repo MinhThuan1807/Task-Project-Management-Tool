@@ -71,6 +71,7 @@ function SprintTitle({
             onClick={handleUpdateStatusSprint}
             className="bg-gradient-to-r"
             variant="outline"
+            disabled={!canEditTask}
           >
             {sprint?.status === 'planned' ? (
               <>

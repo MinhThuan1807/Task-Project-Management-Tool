@@ -4,7 +4,7 @@ import { useParams, useRouter } from 'next/navigation'
 import { Sprint } from '@/lib/types'
 import { CreateSprintModal } from '@/components/CreateSprintModal'
 import { toast } from 'sonner'
-import { useAllProjects } from '@/lib/hooks/useProjects'
+import { useAllProjects, useProjectDetail } from '@/lib/hooks/useProjects'
 import { useSprintsByProject, useUpdateSprint } from '@/lib/hooks/useSprints'
 import { getErrorMessage } from '@/lib/utils'
 import MainBacklogArea from './MainBacklogArea'
@@ -13,12 +13,11 @@ import BacklogContainerSkeleton from './BacklogContainerSkeleton'
 
 function BacklogContainer({ projectId }: { projectId: string }) {
   const router = useRouter()
-  const { data: allProjects } = useAllProjects()
-  const { data: sprints } = useSprintsByProject(projectId)
-
   const [isCreateSprintOpen, setIsCreateSprintOpen] = useState(false)
 
-  const project = allProjects?.find((p) => p._id === projectId)
+  const { data: sprints } = useSprintsByProject(projectId)
+  const { data: project } = useProjectDetail(projectId)
+  
   const projectSprints = sprints?.filter((s) => s.projectId === projectId) || []
   const plannedSprint = sprints?.find((s) => s.status === 'planned')
   const sprintPlannedId = plannedSprint ? plannedSprint._id : ''
@@ -27,7 +26,7 @@ function BacklogContainer({ projectId }: { projectId: string }) {
 
   const handleStartSprint = async (sprint: Sprint) => {
     if (sprint.status === 'planned') {
-      await updateStatusSprint.mutate(
+      updateStatusSprint.mutate(
         { status: 'active' },
         {
           onSuccess: () => {
@@ -54,7 +53,7 @@ function BacklogContainer({ projectId }: { projectId: string }) {
       <MainBacklogArea
         sprints={projectSprints}
         onCreateSprint={() => setIsCreateSprintOpen(true)}
-        // project={project}
+        project={project}
       />
 
       {/* Sprint Planning Sidebar */}
@@ -62,6 +61,7 @@ function BacklogContainer({ projectId }: { projectId: string }) {
         sprints={projectSprints}
         onCreateSprint={() => setIsCreateSprintOpen(true)}
         onStartSprint={handleStartSprint}
+        project={project}
       />
       {/* Modals */}
       <CreateSprintModal

@@ -10,6 +10,7 @@ import {
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu'
 import { Project, User } from '@/lib/types'
+import { useProjectPermissions } from '@/lib/hooks/useProjectPermissions'
 
 interface ProjectCardProps {
   project: Project;
@@ -18,7 +19,8 @@ interface ProjectCardProps {
 }
 
 const ProjectCard = ({ project, handleDirect, currentUser }: ProjectCardProps) => {
-
+  const { isOwner, isMember, isViewer } = useProjectPermissions(project)
+  const canEdit = project.ownerId === currentUser?._id
   return (
     <Card className="hover:shadow-xl transition-all cursor-pointer group border-0 shadow-md hover:-translate-y-1">
       <CardHeader>
@@ -37,13 +39,15 @@ const ProjectCard = ({ project, handleDirect, currentUser }: ProjectCardProps) =
                   size="icon"
                   className="h-8 w-8"
                   onClick={(e) => e.stopPropagation()}
+                  disabled={!canEdit}
                 >
                   <MoreVertical className="w-4 h-4" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem>Edit Project</DropdownMenuItem>
-                <DropdownMenuItem>View Details</DropdownMenuItem>
+                <DropdownMenuItem>
+                  Edit Project
+                </DropdownMenuItem>
                 <DropdownMenuItem className="text-red-600">
                   Delete Project
                 </DropdownMenuItem>
@@ -81,8 +85,11 @@ const ProjectCard = ({ project, handleDirect, currentUser }: ProjectCardProps) =
 
         {/* Footer */}
         <div className="flex items-center justify-between pt-2 border-t">
-          <Badge variant="outline" className="text-xs">
-            {project.ownerId === currentUser?._id ? 'Owner' : 'Member'}
+          <Badge 
+            variant="outline" 
+            className="text-xs"
+          >
+            {isOwner ? 'Owner' : isMember ? 'Member' : 'Viewer'}
           </Badge>
           <Button
             variant="ghost"
