@@ -8,9 +8,8 @@ import {
   CardDescription
 } from '../../ui/card'
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts'
-
-type Item = { name: string; value: number; color: string }
-type Props = { progressData: Item[] }
+import { SprintProgressReport } from '@/lib/types'
+type Props = { progressData: SprintProgressReport[] }
 
 type LabelProps = {
   name?: string

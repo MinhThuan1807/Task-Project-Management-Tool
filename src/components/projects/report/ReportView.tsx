@@ -1,7 +1,6 @@
 'use client'
 import { useState, useEffect } from 'react'
 import dynamic from 'next/dynamic'
-import { Card, CardContent } from '../../ui/card'
 import { Button } from '../../ui/button'
 import {
   Select,
@@ -13,25 +12,58 @@ import {
 import { Download, FileText } from 'lucide-react'
 import { useAllProjects } from '@/lib/hooks/useProjects'
 import { useSprintsByProject } from '@/lib/hooks/useSprints'
+import {
+  useSprintProgressReport,
+  useProjectVelocityReport,
+  useSprintMemberDistributionReport
+} from '@/lib/hooks/useReports'
 import { useParams } from 'next/navigation'
+import {
+  StatsCardsSkeleton,
+  BurndownChartSkeleton,
+  SprintProgressSkeleton,
+  MemberDistributionSkeleton,
+  VelocityChartSkeleton,
+  InsightsSkeleton
+} from './LoadingSkeletons'
 
-const StatsCards = dynamic(() => import('./StatsCards'), { ssr: false })
-const BurndownChart = dynamic(() => import('./BurndownChart'), { ssr: false })
-const SprintProgress = dynamic(() => import('./SprintProgress'), { ssr: false })
-const VelocityChart = dynamic(() => import('./VelocityChart'), { ssr: false })
-const MemberDistribution = dynamic(() => import('./MemberDistribution'), {
-  ssr: false
+const StatsCards = dynamic(() => import('./StatsCards'), {
+  ssr: false,
+  loading: () => <StatsCardsSkeleton />
 })
-const Insights = dynamic(() => import('./Insights'), { ssr: false })
+
+const BurndownChart = dynamic(() => import('./BurndownChart'), {
+  ssr: false,
+  loading: () => <BurndownChartSkeleton />
+})
+const SprintProgress = dynamic(() => import('./SprintProgress'), {
+  ssr: false,
+  loading: () => <SprintProgressSkeleton />
+})
+const VelocityChart = dynamic(() => import('./VelocityChart'), {
+  ssr: false,
+  loading: () => <VelocityChartSkeleton />
+})
+const MemberDistribution = dynamic(() => import('./MemberDistribution'), {
+  ssr: false,
+  loading: () => <MemberDistributionSkeleton />
+})
+const Insights = dynamic(() => import('./Insights'), {
+  ssr: false,
+  loading: () => <InsightsSkeleton />
+})
 
 export function ReportsView() {
   const param = useParams<{ id: string }>()
   const projectId = param.id
+  const [selectedSprintId, setSelectedSprintId] = useState<string>('')
   const { data: projects } = useAllProjects()
   const project = projects?.find((p) => p._id === projectId)
   const { data: sprints } = useSprintsByProject(projectId)
-
-  const [selectedSprintId, setSelectedSprintId] = useState<string>('')
+  const sprintProgress = useSprintProgressReport(selectedSprintId)
+  const projectVelocity = useProjectVelocityReport(projectId)
+  const sprintMemberDistribution =
+    useSprintMemberDistributionReport(selectedSprintId)
 
   useEffect(() => {
     if (sprints?.length) setSelectedSprintId(sprints[0]._id)
@@ -55,69 +87,56 @@ export function ReportsView() {
     { day: 'Day 14', ideal: 7, actual: 8 },
     { day: 'Day 15', ideal: 0, actual: 0 }
   ]
-  // 2. SPRINT PROGRESS PIE CHART DATA
-  const progressData = [
-    { name: 'Backlog', value: 5, color: '#94a3b8' },
-    { name: 'Todo', value: 8, color: '#3b82f6' },
-    { name: 'In Process', value: 12, color: '#f59e0b' },
-    { name: 'Review', value: 6, color: '#8b5cf6' },
-    { name: 'Done', value: 15, color: '#10b981' }
+  // 2. SPRINT PROGRESS PIE CHART DATA (from API)
+  const defaultProgress = [
+    { name: 'Backlog', value: 0, color: '#94a3b8' },
+    { name: 'Todo', value: 0, color: '#3b82f6' },
+    { name: 'In Process', value: 0, color: '#f59e0b' },
+    { name: 'Review', value: 0, color: '#8b5cf6' },
+    { name: 'Done', value: 0, color: '#10b981' }
   ]
 
-  const totalTasks = progressData.reduce((sum, item) => sum + item.value, 0)
+  const progressData = sprintProgress?.data
+    ? sprintProgress.data
+    : defaultProgress
+
+  const totalTasks = progressData.reduce(
+    (sum, item) => sum + (Number(item?.value) || 0),
+    0
+  )
   const completedTasks =
-    progressData.find((item) => item.name === 'Done')?.value || 0
-  const completionRate = ((completedTasks / totalTasks) * 100).toFixed(1)
+    progressData.find(
+      (item) => String(item?.name || '').toLowerCase() === 'done'
+    )?.value || 0
+
+  const completionRate = totalTasks
+    ? ((Number(completedTasks) / totalTasks) * 100).toFixed(1)
+    : '0.0'
 
   // 3. VELOCITY CHART DATA
-  const velocityData = [
-    { sprint: 'Sprint 1', planned: 80, completed: 75 },
-    { sprint: 'Sprint 2', planned: 85, completed: 82 },
-    { sprint: 'Sprint 3', planned: 90, completed: 88 },
-    { sprint: 'Sprint 4', planned: 85, completed: 85 },
-    { sprint: 'Sprint 5', planned: 95, completed: 92 },
-    { sprint: 'Sprint 6', planned: 100, completed: 0 } // Current sprint
-  ]
+  const velocityData = projectVelocity?.data ? projectVelocity.data : []
 
   const avgVelocity = (
-    velocityData.slice(0, -1).reduce((sum, s) => sum + s.completed, 0) /
-    (velocityData.length - 1)
+    velocityData.length > 1
+      ? velocityData
+          .slice(0, -1)
+          .reduce((sum, s) => sum + (s.completed || 0), 0) /
+        (velocityData.length - 1)
+      : velocityData.reduce((sum, s) => sum + (s.completed || 0), 0) /
+        (velocityData.length || 1)
   ).toFixed(1)
 
   // 4. TASK DISTRIBUTION BY MEMBER DATA
-  const memberDistribution = [
-    {
-      name: 'Alice Johnson',
-      done: 12,
-      inProgress: 4,
-      todo: 3
-    },
-    {
-      name: 'Bob Smith',
-      done: 10,
-      inProgress: 5,
-      todo: 2
-    },
-    {
-      name: 'Carol White',
-      done: 8,
-      inProgress: 3,
-      todo: 4
-    },
-    {
-      name: 'David Brown',
-      done: 7,
-      inProgress: 2,
-      todo: 3
-    }
-  ]
+  const memberDistribution = sprintMemberDistribution?.data
+    ? sprintMemberDistribution.data
+    : []
 
   // Calculate team stats
   const teamStats = {
     totalMembers: memberDistribution.length,
     totalCompleted: memberDistribution.reduce((sum, m) => sum + m.done, 0),
     totalInProgress: memberDistribution.reduce(
-      (sum, m) => sum + m.inProgress,
+      (sum, m) => sum + (m.inProgress || 0),
       0
     )
   }
