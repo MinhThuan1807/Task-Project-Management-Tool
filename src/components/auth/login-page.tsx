@@ -222,7 +222,7 @@ export function LoginPageNew() {
           {/* Sign up link */}
           <div className="text-center mt-6">
             <p className="text-sm text-gray-600">
-              {"Don't have an account? "}
+              {'Don\'t have an account? '}
               <Button
                 variant="link"
                 size="sm"
