@@ -112,6 +112,7 @@ export function useMoveTask() {
     onSuccess: () => {
       // Chỉ invalidate các queries liên quan đến sprint và task detail
       queryClient.invalidateQueries({ queryKey: taskKeys.all })
+      toast.success('Task moved successfully!')
     },
     onError: (error) => {
       toast.error(getErrorMessage(error) || 'Failed to move task')

@@ -87,7 +87,7 @@ export const projectApi = {
 
     if (data.name) formData.append('name', data.name)
     if (data.description) formData.append('description', data.description)
-    if (data.status) formData.append('status', data.status)
+    // if (data.status) formData.append('status', data.status)
     if (data.imageUrl) formData.append('image', data.imageUrl)
 
     const response = await axiosInstance.put<ProjectResponse>(

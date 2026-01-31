@@ -22,7 +22,7 @@ export type Project = {
   imageUrl?: string;
   imagePublicId?: string;
   members: ProjectMember[];
-  status: 'active' | 'archived';
+  // status: 'active' | 'archived';
   createdAt: string | Date;
   updatedAt?: string | Date | null;
 };
@@ -43,7 +43,7 @@ export type CreateProjectRequest = {
 export type UpdateProjectRequest = Partial<Pick<Project,
   | 'name'
   | 'description'
-  | 'status'
+  // | 'status'
 >> & {
   imageUrl?: File | string;
 };
@@ -100,7 +100,7 @@ export type ProjectFormData = {
  * Query/Filter types
  */
 export type ProjectFilters = {
-  status?: Project['status'];
+  // status?: Project['status'];
   search?: string;
   ownedOnly?: boolean;
   joinedOnly?: boolean;

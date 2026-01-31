@@ -36,7 +36,6 @@ import { useDeleteTask, useUpdateTask } from '@/lib/hooks/useTasks'
 import { EditTaskModal } from '../../../../../modal/EditTaskModal'
 import { toast } from 'sonner'
 
-
 type TaskCardProps = {
   task: Task
   Click?: () => void
@@ -114,10 +113,10 @@ export function TaskCard({
         ref={setNodeRef}
         style={style}
         className={cn(
-          'pt-1 pb-1 border border-gray-200 shadow-sm hover:shadow-md transition-all cursor-pointer group bg-white',
+          'select-none pt-1 pb-1 border border-gray-200 shadow-sm hover:shadow-md transition-all cursor-pointer group bg-white',
           isDragging && 'shadow-2xl rotate-3 scale-105 ring-2 ring-blue-500',
           isOverdue && 'border-red-200 bg-red-50/30',
-          !canEdit && 'opacity-75' // Visual indicator for read-only
+          !canEdit && 'opacity-75'
         )}
         onClick={() => {
           Click?.()

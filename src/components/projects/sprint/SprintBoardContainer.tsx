@@ -88,7 +88,6 @@ const SprintBoardContainer = () => {
     [sprints, sprintId]
   )
 
-  // Reset state khi projectId/sprintId thay đổi
   useEffect(() => {
     setIsCreateTaskOpen(false)
     setIsFilterOpen(false)
@@ -96,7 +95,6 @@ const SprintBoardContainer = () => {
     setFilters({ priority: [], assigneeIds: [] })
   }, [projectId, sprintId])
 
-  // Nếu sprintId không thuộc project hiện tại, redirect về backlog
   useEffect(() => {
     if (!projectId) return
     if (
@@ -160,10 +158,21 @@ const SprintBoardContainer = () => {
   const doneColumn = boardColumns.find(
     (col) => col.title.toLowerCase() === 'done'
   )
+
   const completedTasks = doneColumn
     ? filteredTasks.filter((t) => t.boardColumnId === doneColumn._id).length
     : 0
-  const progress = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0
+
+  const storyPointsCompleted = doneColumn
+    ? filteredTasks.filter((t) => t.boardColumnId === doneColumn._id)
+    : []
+  const getStoryPoints = (t: Task) => t.storyPoint
+
+  const totalStoryPoints = storyPointsCompleted.reduce(
+    (sum, t) => sum + Number(getStoryPoints(t)),
+    0
+  )
+  const progress = (totalStoryPoints / (sprint?.maxStoryPoint || 1)) * 100
 
   const daysLeft = sprint?.endDate
     ? Math.ceil(
@@ -252,6 +261,7 @@ const SprintBoardContainer = () => {
             totalTasks={totalTasks}
             isActiveSprint={isActiveSprint}
             daysLeft={daysLeft}
+            totalStoryPoints={totalStoryPoints}
             // searchQuery={searchQuery}
             // setSearchQuery={setSearchQuery}
           />
