@@ -30,7 +30,6 @@ import { toast } from 'sonner'
 import { useDispatch, useSelector } from 'react-redux'
 import { closeCreateModal } from '@/lib/features/project/projectSlice'
 import { RootState } from '@/lib/store'
-import Image from 'next/image'
 import { selectCurrentUser } from '@/lib/features/auth/authSlice'
 
 const SAVED_EMAILS_KEY = 'sprintos_invited_emails'
@@ -45,7 +44,8 @@ const createProjectSchema = z.object({
   description: z
     .string()
     .max(500, 'Description must be less than 500 characters')
-    .optional()
+    .optional(),
+  imageUrl: z.any().optional()
 })
 
 type CreateProjectFormData = z.infer<typeof createProjectSchema>
@@ -167,7 +167,6 @@ export function CreateProjectModal() {
   }
 
   const onSubmit = async (data: CreateProjectFormData) => {
-    //Only allow "member" and "viewer" roles in payload
     const filteredMembers = invitedMembers
       .filter((m) => m.role === 'member' || m.role === 'viewer')
       .map((m) => ({
@@ -185,7 +184,7 @@ export function CreateProjectModal() {
       description: data.description,
       members: filteredMembers.length > 0 ? filteredMembers : undefined,
       imageUrl: imageFile || undefined,
-      ownerId: currentUser._id // Đảm bảo luôn là string
+      ownerId: currentUser._id 
     }
 
     createProject.mutate(payload, {
@@ -251,7 +250,7 @@ export function CreateProjectModal() {
                 placeholder="Enter project name"
                 {...register('name')}
                 className={errors.name ? 'border-red-500' : ''}
-                disabled={createProject.isPending} // ✅ Dùng isPending từ mutation
+                disabled={createProject.isPending}
               />
               {errors.name && (
                 <p className="text-sm text-red-500">{errors.name.message}</p>
@@ -267,7 +266,7 @@ export function CreateProjectModal() {
                 rows={4}
                 {...register('description')}
                 className={errors.description ? 'border-red-500' : ''}
-                disabled={createProject.isPending} // ✅ Dùng isPending
+                disabled={createProject.isPending} 
               />
               {errors.description && (
                 <p className="text-sm text-red-500">
@@ -282,18 +281,16 @@ export function CreateProjectModal() {
               <div className="flex items-start gap-4">
                 {imagePreview ? (
                   <div className="relative">
-                    <Image
+                    <img
                       src={imagePreview}
                       alt="Project preview"
                       className="w-24 h-24 rounded-lg object-cover border border-gray-200"
-                      width={96}
-                      height={96}
                     />
                     <button
                       type="button"
                       onClick={handleRemoveImage}
                       className="absolute -top-2 -right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600"
-                      disabled={createProject.isPending} // ✅ Dùng isPending
+                      disabled={createProject.isPending}
                     >
                       <X className="w-3 h-3" />
                     </button>
@@ -326,7 +323,7 @@ export function CreateProjectModal() {
                     accept="image/*"
                     onChange={handleImageChange}
                     className="hidden"
-                    disabled={createProject.isPending} // ✅ Dùng isPending
+                    disabled={createProject.isPending}
                   />
                 </div>
               </div>
@@ -361,7 +358,7 @@ export function CreateProjectModal() {
                           onValueChange={(value: MemberRole) =>
                             handleUpdateMemberRole(member.email, value)
                           }
-                          disabled={createProject.isPending} // ✅ Dùng isPending
+                          disabled={createProject.isPending}
                         >
                           <SelectTrigger className="w-24 h-8">
                             <SelectValue />
@@ -375,7 +372,7 @@ export function CreateProjectModal() {
                           type="button"
                           onClick={() => handleRemoveMember(member.email)}
                           className="p-1 hover:text-red-600 transition-colors"
-                          disabled={createProject.isPending} // ✅ Dùng isPending
+                          disabled={createProject.isPending} 
                         >
                           <X className="w-4 h-4" />
                         </button>
@@ -403,7 +400,7 @@ export function CreateProjectModal() {
                       }
                       onKeyDown={handleKeyDown}
                       className="pl-10"
-                      disabled={createProject.isPending} // ✅ Dùng isPending
+                      disabled={createProject.isPending}
                     />
 
                     {/* Email Suggestions Dropdown */}
@@ -438,7 +435,7 @@ export function CreateProjectModal() {
                     onValueChange={(value: MemberRole) =>
                       setSelectedRole(value)
                     }
-                    disabled={createProject.isPending} // ✅ Dùng isPending
+                    disabled={createProject.isPending} 
                   >
                     <SelectTrigger className="w-28">
                       <SelectValue />
@@ -453,7 +450,7 @@ export function CreateProjectModal() {
                     type="button"
                     variant="outline"
                     onClick={() => handleAddMember()}
-                    disabled={!emailInput.trim() || createProject.isPending} // ✅ Dùng isPending
+                    disabled={!emailInput.trim() || createProject.isPending} 
                   >
                     Add
                   </Button>
@@ -475,16 +472,16 @@ export function CreateProjectModal() {
                 type="button"
                 variant="outline"
                 onClick={handleClose}
-                disabled={createProject.isPending} // ✅ Dùng isPending
+                disabled={createProject.isPending} 
               >
                 Cancel
               </Button>
               <Button
                 type="submit"
-                disabled={createProject.isPending} // ✅ Dùng isPending
+                disabled={createProject.isPending} 
                 className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
               >
-                {createProject.isPending ? ( // ✅ Dùng isPending
+                {createProject.isPending ? ( 
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                     Creating...

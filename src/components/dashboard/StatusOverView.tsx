@@ -68,7 +68,7 @@ const StatusOverview = () => {
         </CardHeader>
         <CardContent>
           <div className="flex items-center justify-between">
-            <div className="text-3xl font-bold">156</div>
+            <div className="text-3xl font-bold">56</div>
             <CheckCircle2 className="w-8 h-8 opacity-80" />
           </div>
           <div className="flex items-center gap-1 mt-2 text-sm opacity-90">

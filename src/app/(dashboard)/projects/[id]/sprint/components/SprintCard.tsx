@@ -1,7 +1,7 @@
 'use client'
 import { useTasksBySprint } from '@/lib/hooks/useTasks'
 import { useBoardColumnsBySprint } from '@/lib/hooks/useBoardColumns'
-import { Sprint } from '@/lib/types'
+import { Sprint, Task } from '@/lib/types'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Calendar, TrendingUp } from 'lucide-react'
@@ -10,16 +10,29 @@ import { formatDate } from '@/lib/utils'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 
-export default function SprintCard({ sprint, projectId }: { sprint: Sprint; projectId: string }) {
+export default function SprintCard({
+  sprint,
+  projectId
+}: {
+  sprint: Sprint
+  projectId: string
+}) {
   const { data: tasks = [] } = useTasksBySprint(sprint._id)
   const { data: boardColumns = [] } = useBoardColumnsBySprint(sprint._id)
 
-  const totalTasks = tasks.length
-  const doneColumn = boardColumns.find((col) => col.title?.toLowerCase() === 'done')
-  const completedTasks = doneColumn
-    ? tasks.filter((t) => t.boardColumnId === doneColumn._id).length
-    : 0
-  const progress = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0
+  const doneColumn = boardColumns.find(
+    (col) => col.title?.toLowerCase() === 'done'
+  )
+  const storyPointsCompleted = doneColumn
+    ? tasks.filter((t) => t.boardColumnId === doneColumn._id)
+    : []
+  const getStoryPoints = (t: Task) => t.storyPoint
+
+  const totalStoryPoints = storyPointsCompleted.reduce(
+    (sum, t) => sum + Number(getStoryPoints(t)),
+    0
+  )
+  const progress = (totalStoryPoints / (sprint?.maxStoryPoint || 1)) * 100
 
   const router = useRouter()
 
@@ -54,7 +67,9 @@ export default function SprintCard({ sprint, projectId }: { sprint: Sprint; proj
           <Button
             variant="outline"
             size="sm"
-            onClick={() => router.push(`/projects/${projectId}/sprint/${sprint._id}`)}
+            onClick={() =>
+              router.push(`/projects/${projectId}/sprint/${sprint._id}`)
+            }
           >
             View Board
           </Button>

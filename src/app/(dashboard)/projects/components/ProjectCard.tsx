@@ -19,7 +19,7 @@ interface ProjectCardProps {
 }
 
 const ProjectCard = ({ project, handleDirect, currentUser }: ProjectCardProps) => {
-  const { isOwner, isMember, isViewer } = useProjectPermissions(project)
+  const { isOwner, isMember } = useProjectPermissions(project)
   const canEdit = project.ownerId === currentUser?._id
   return (
     <Card className="hover:shadow-xl transition-all cursor-pointer group border-0 shadow-md hover:-translate-y-1">
@@ -67,7 +67,7 @@ const ProjectCard = ({ project, handleDirect, currentUser }: ProjectCardProps) =
         <div>
           <div className="flex items-center justify-between mb-2 text-sm">
             <span className="text-gray-600">Progress</span>
-            <span className="font-semibold text-gray-900">60%</span>
+            <span className="font-semibold text-gray-900">20%</span>
           </div>
         </div>
 

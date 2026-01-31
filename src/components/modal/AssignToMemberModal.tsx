@@ -118,7 +118,6 @@ export function AssignToMemberModal({
             </Badge>
           </div>
 
-          {/* Multi-select using Popover (replaces Select to allow checkbox interaction) */}
           <div>
             <Popover>
               <PopoverTrigger asChild>

@@ -1,5 +1,4 @@
 'use client'
-import { Badge } from '../ui/badge'
 import { useAllProjects } from '@/lib/hooks/useProjects'
 import { useParams } from 'next/navigation'
 
@@ -31,11 +30,11 @@ function TitleTopBar() {
   return (
     <div className="flex items-center gap-3">
       <h2 className="text-xl text-gray-900">{getViewTitle()}</h2>
-      {selectedProject && (
+      {/* {selectedProject && (
         <Badge variant="outline" className="text-xs">
           {selectedProject.status}
         </Badge>
-      )}
+      )} */}
     </div>
   )
 }
