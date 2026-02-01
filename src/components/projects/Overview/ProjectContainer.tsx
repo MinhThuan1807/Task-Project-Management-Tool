@@ -21,6 +21,7 @@ import { useSelector } from 'react-redux'
 import { UpdateProjectRequest } from '@/lib/types/project.types'
 import { useProjectPermissions } from '@/lib/hooks/useProjectPermissions'
 import dynamic from 'next/dynamic'
+import Link from 'next/link'
 const InviteTeamModal = dynamic(
   () => import('@/components/modal/InviteTeamModal'),
   { ssr: false }
@@ -63,7 +64,7 @@ function ProjectContainer({ projectId }: ProjectContainerProps) {
       completedSprints: sprints.filter((s) => s.status === 'completed'),
       totalSprints: sprints.length
     }
-  }, [project, sprints])
+  }, [sprints])
 
   if (!project || !currentUser) {
     return <ProjectContainerSkeleton />
@@ -103,21 +104,20 @@ function ProjectContainer({ projectId }: ProjectContainerProps) {
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <Button
-                onClick={() => handleDirectToBacklog()}
-                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+              <Link 
+                href={`/projects/${projectId}/backlog`}
+                className="cursor-pointer inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*=\'size-\'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive bg-gradient-to-r text-white from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
               >
                 <CheckCircle2 className="w-4 h-4 mr-2" />
                 View Product Backlog
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => handleDirectToBacklog()}
-                disabled={!canEdit}
+              </Link>
+              <Link
+                href={`/projects/${projectId}/backlog`}
+                className=" cursor-pointer inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*=\'size-\'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive bg-white border border-gray-300 hover:bg-gray-100"
               >
                 <Plus className="w-4 h-4 mr-2" />
                 Create New Sprint
-              </Button>
+              </Link>
               <Button
                 variant="outline"
                 onClick={() => setIsInviteTeamOpen(true)}

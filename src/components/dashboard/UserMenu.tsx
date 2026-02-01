@@ -41,9 +41,11 @@ export function UserMenu() {
             <span>Profile</span>
           </Link>
         </DropdownMenuItem>
-        <DropdownMenuItem>
-          <Settings className="w-4 h-4 mr-2" />
-          <span>Settings</span>
+        <DropdownMenuItem asChild>
+          <Link href="/security">
+            <Settings className="w-4 h-4 mr-2" />
+            <span>Settings</span>
+          </Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem

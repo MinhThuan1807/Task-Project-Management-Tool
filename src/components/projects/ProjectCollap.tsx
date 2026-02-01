@@ -38,12 +38,12 @@ const ProjectCollap = ({
   >
     <SidebarMenuItem>
       <CollapsibleTrigger asChild>
-        <SidebarMenuButton
-          isActive={isSelected}
-          tooltip={project.name}
-          asChild
-        >
-         <Link href={`/projects/${project._id}`} className="flex items-center w-full">
+        <SidebarMenuButton isActive={isSelected} tooltip={project.name} asChild>
+          <Link
+            href={`/projects/${project._id}`}
+            className="flex items-center w-full"
+            prefetch
+          >
             <Avatar className="w-4 h-4">
               <AvatarImage src={project.imageUrl} />
               <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-[10px]">
@@ -52,7 +52,7 @@ const ProjectCollap = ({
             </Avatar>
             <span className="truncate">{project.name}</span>
             <ChevronRight className="ml-auto w-4 h-4 transition-transform group-data-[state=open]/collapsible:rotate-90" />
-         </Link>
+          </Link>
         </SidebarMenuButton>
       </CollapsibleTrigger>
       <CollapsibleContent>
@@ -81,6 +81,7 @@ const ProjectCollap = ({
                 onClick={(e) => {
                   if (!sprintLink) e.preventDefault()
                 }}
+                prefetch
               >
                 <FolderKanban className="w-4 h-4" />
                 <span>Sprint Board</span>
@@ -89,7 +90,7 @@ const ProjectCollap = ({
           </SidebarMenuSubItem>
           <SidebarMenuSubItem>
             <SidebarMenuSubButton asChild>
-              <Link href={`/projects/${project._id}/report`}>
+              <Link href={`/projects/${project._id}/report`} prefetch>
                 <BarChart2 className="w-4 h-4" />
                 <span>Reports</span>
               </Link>
