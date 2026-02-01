@@ -27,7 +27,7 @@ export const TopBar = () => {
       {/* Actions */}
       <div className="flex items-center gap-2">
         {/* Notifications */}
-        {/* <Notification/> */}
+        <Notification/>
 
         {/* User Menu */}
           <UserMenu />

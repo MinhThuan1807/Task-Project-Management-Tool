@@ -13,9 +13,13 @@ import { FilterSortPanel } from '../FilterSortPanel'
 import SprintTitle from './SprintTitle'
 import SprintSearch from './SprintSearch'
 import dynamic from 'next/dynamic'
-const CreateTaskModal = dynamic(() => import('@/components/modal/CreateTaskModal'), {
-  ssr: false
-})
+import { Suspense } from 'react'
+const CreateTaskModal = dynamic(
+  () => import('@/components/modal/CreateTaskModal'),
+  {
+    ssr: false
+  }
+)
 import { toast } from 'sonner'
 import { Task } from '@/lib/types'
 import BoardViewSkeleton from './BoardView/BoardViewSkeleton'
@@ -31,15 +35,12 @@ const BoardView = dynamic(() => import('./BoardView/BoardView'), {
 })
 const SprintCalendarView = dynamic(
   () => import('./CalendarView/SprintCalendarView'),
-  {
-    ssr: false,
-    loading: () => <SprintCalendarViewSkeleton />
-  }
+  { ssr: false }
 )
-const SprintListView = dynamic(() => import('./ListView/SprintListView'), {
-  ssr: false,
-  loading: () => <SprintListViewSkeleton />
-})
+const SprintListView = dynamic(
+  () => import('./ListView/SprintListView'),
+  { ssr: false }
+)
 
 const SprintBoardContainer = () => {
   const [viewMode, setViewMode] = useState<'board' | 'list' | 'calendar'>(
@@ -123,11 +124,11 @@ const SprintBoardContainer = () => {
     allProjectsQuery.isLoading ||
     sprintsQuery.isLoading
   ) {
-    return (
-      <div className="h-full flex flex-col bg-gray-50">
+  return (
+    <div className="h-full flex flex-col bg-gray-50">
         <SprintHeaderSkeleton />
-      </div>
-    )
+    </div>
+  )
   }
 
   // Not found state

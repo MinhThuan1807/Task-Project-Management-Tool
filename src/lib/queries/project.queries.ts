@@ -44,7 +44,8 @@ export function projectDetailOptions(projectId: string) {
       return response.data
     },
     staleTime: 5 * 60 * 1000,
-    enabled: !!projectId
+    enabled: !!projectId,
+    gcTime: 10 * 60 * 1000,
   })
 }
 
