@@ -76,4 +76,4 @@ export const boardColumnApi = {
     )
     return response.data
   }
-} as const
+}

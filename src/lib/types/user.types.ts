@@ -9,8 +9,8 @@ export type User = {
   isActive: boolean;
   avatar?: string;
   avatarPublicId?: string;
-  gender?: 'male' | 'female' | 'other';
-  dob?: string | number | null;
+  gender?: 'male' | 'female' | 'other' | string;
+  dob?: Date | string;
   address?: string | null;
   createdAt: string | number;
   updatedAt?: string | number | null;

@@ -35,11 +35,15 @@ const BoardView = dynamic(() => import('./BoardView/BoardView'), {
 })
 const SprintCalendarView = dynamic(
   () => import('./CalendarView/SprintCalendarView'),
-  { ssr: false }
+  { ssr: false,
+    loading: () => <SprintCalendarViewSkeleton />
+  }
 )
 const SprintListView = dynamic(
   () => import('./ListView/SprintListView'),
-  { ssr: false }
+  { ssr: false,
+    loading: () => <SprintListViewSkeleton />
+   }
 )
 
 const SprintBoardContainer = () => {

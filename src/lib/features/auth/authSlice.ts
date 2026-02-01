@@ -2,7 +2,7 @@ import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit'
 import axiosInstance from '@/lib/axios'
 import { toast } from 'sonner'
 import { getErrorMessage } from '@/lib/utils'
-import { User } from '@/lib/types'
+import { UpdateUserProfileRequest, User } from '@/lib/types'
 
 interface AuthState {
   isAuthenticated: boolean
@@ -87,7 +87,7 @@ const userSlice = createSlice({
       }
     },
     // ✅ Thêm action để update user profile
-    updateUserProfile: (state, action: PayloadAction<Partial<User>>) => {
+    updateUserProfile: (state, action: PayloadAction<UpdateUserProfileRequest>) => {
       if (state.currentUser) {
         state.currentUser = {
           ...state.currentUser,
