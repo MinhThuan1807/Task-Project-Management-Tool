@@ -7,14 +7,14 @@ import { Button } from '@/components/ui/button'
 import { Loader2, CheckCircle2, XCircle, Mail, Shield } from 'lucide-react'
 import { projectApi } from '@/lib/services/project.service'
 import { toast } from 'sonner'
-import { useCurrentUser } from '@/lib/hooks/useAuth'
 import { getErrorMessage } from '@/lib/utils'
+import { selectCurrentUser } from '@/lib/features/auth/authSlice'
+import { useSelector } from 'react-redux'
 
 export default function InvitePage() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const { data: currentUser, isLoading: userLoading } = useCurrentUser()
-
+  const currentUser = useSelector(selectCurrentUser)
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading')
   const [errorMessage, setErrorMessage] = useState('')
   const [projectName, setProjectName] = useState('')
@@ -34,10 +34,10 @@ export default function InvitePage() {
           return
         }
 
-        // Wait for user to be loaded
-        if (userLoading) {
-          return
-        }
+        // // Wait for user to be loaded
+        // if (userLoading) {
+        //   return
+        // }
 
         // Check if user is logged in
         if (!currentUser) {
@@ -79,9 +79,9 @@ export default function InvitePage() {
     }
 
     acceptInvitation()
-  }, [searchParams, currentUser, userLoading, router])
+  }, [searchParams, currentUser, router])
 
-  if (userLoading || status === 'loading') {
+  if (status === 'loading') {
     return (
       <div className="h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-blue-50">
         <Card className="w-full max-w-md border-0 shadow-xl">

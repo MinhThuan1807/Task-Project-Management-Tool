@@ -57,7 +57,7 @@ interface InvitedMember {
   role: MemberRole
 }
 
-export function CreateProjectModal() {
+export default function CreateProjectModal() {
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [imagePreview, setImagePreview] = useState<string | null>(null)
   const [invitedMembers, setInvitedMembers] = useState<InvitedMember[]>([])

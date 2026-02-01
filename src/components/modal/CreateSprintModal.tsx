@@ -1,290 +1,283 @@
-// import { useState } from 'react';
-// import {
-//   Dialog,
-//   DialogContent,
-//   DialogDescription,
-//   DialogFooter,
-//   DialogHeader,
-//   DialogTitle,
-// } from '../ui/dialog';
-// import { Button } from '../ui/button';
-// import { Input } from '../ui/input';
-// import { Label } from '../ui/label';
-// import { Textarea } from '../ui/textarea';
-// import {
-//   Select,
-//   SelectContent,
-//   SelectItem,
-//   SelectTrigger,
-//   SelectValue,
-// } from '../ui/select';
-// import { Calendar, Target, TrendingUp } from 'lucide-react';
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { z } from 'zod'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle
+} from '../ui/dialog'
+import { Button } from '../ui/button'
+import { Input } from '../ui/input'
+import { Textarea } from '../ui/textarea'
+import { Label } from '../ui/label'
+import { Calendar, Target, TrendingUp, Loader2 } from 'lucide-react'
+import { useCreateSprint } from '@/lib/hooks/useSprints'
+import type { CreateSprintRequest } from '@/lib/types'
+import { toast } from 'sonner'
 
-// type CreateSprintModalProps = {
-//   open: boolean;
-//   onOpenChange: (open: boolean) => void;
-//   projectId: string;
-// };
+// Validation schema
+const createSprintSchema = z
+  .object({
+    name: z
+      .string()
+      .min(1, 'Sprint name is required')
+      .min(3, 'Sprint name must be at least 3 characters')
+      .max(100, 'Sprint name must be less than 100 characters'),
+    goal: z
+      .string()
+      .max(500, 'Goal must be less than 500 characters')
+      .optional(),
+    maxStoryPoint: z
+      .number()
+      .min(0, 'Story points must be positive')
+      .optional(),
+    startDate: z
+      .string()
+      .min(1, 'Start date is required')
+      .refine((date) => {
+        const selectedDate = new Date(date)
+        const today = new Date()
+        today.setHours(0, 0, 0, 0)
+        return selectedDate >= today
+      }, 'Start date cannot be in the past'),
+    endDate: z.string().min(1, 'End date is required')
+  })
+  .refine(
+    (data) => {
+      if (data.startDate && data.endDate) {
+        return new Date(data.endDate) > new Date(data.startDate)
+      }
+      return true
+    },
+    {
+      message: 'End date must be after start date',
+      path: ['endDate']
+    }
+  )
 
-// export type SprintFormData = {
-//   name: string;
-//   goal: string;
-//   maxStoryPoint: number;
-//   startDate: string;
-//   endDate: string;
-//   status: 'planned' | 'active' | 'completed';
-// };
+type CreateSprintFormData = z.infer<typeof createSprintSchema>
 
-// export function CreateSprintModal({
-//   open,
-//   onOpenChange,
-//   projectId,
-// }: CreateSprintModalProps) {
-//   const today = new Date().toISOString().split('T')[0];
-//   const twoWeeksLater = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000)
-//     .toISOString()
-//     .split('T')[0];
+type CreateSprintModalProps = {
+  projectId: string
+  open: boolean
+  onOpenChange: (open: boolean) => void
+}
 
-//   const [formData, setFormData] = useState<SprintFormData>({
-//     name: '',
-//     goal: '',
-//     maxStoryPoint: 0,
-//     startDate: today,
-//     endDate: twoWeeksLater,
-//     status: 'planned',
-//   });
+export default function CreateSprintModal({
+  projectId,
+  open,
+  onOpenChange
+}: CreateSprintModalProps) {
+  // Get default dates (today and 2 weeks from now)
+  const today = new Date().toISOString().split('T')[0]
+  const twoWeeksLater = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000)
+    .toISOString()
+    .split('T')[0]
 
-//   const [errors, setErrors] = useState<Partial<Record<keyof SprintFormData, string>>>({});
+  // Setup react-hook-form with Zod validation
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors }
+  } = useForm<CreateSprintFormData>({
+    resolver: zodResolver(createSprintSchema),
+    defaultValues: {
+      name: '',
+      goal: '',
+      maxStoryPoint: 0,
+      startDate: today,
+      endDate: twoWeeksLater
+    }
+  })
 
-//   const handleSubmit = (e: React.FormEvent) => {
-//     e.preventDefault();
+  // Use TanStack Query mutation
+  const createSprintMutation = useCreateSprint()
 
-//     // Validation
-//     const newErrors: Partial<Record<keyof SprintFormData, string>> = {};
+  // Handle form submission
+  const onSubmit = async (data: CreateSprintFormData) => {
+    const payload: CreateSprintRequest = {
+      projectId,
+      name: data.name,
+      goal: data.goal || '',
+      maxStoryPoint: data.maxStoryPoint,
+      startDate: new Date(data.startDate).toISOString(),
+      endDate: new Date(data.endDate).toISOString()
+    }
 
-//     if (!formData.name.trim()) {
-//       newErrors.name = 'Sprint name is required';
-//     }
+    // console.log('📤 Sending payload:', payload)
+    createSprintMutation.mutate(payload, {
+      onSuccess: () => {
+        toast.success('Sprint created successfully!')
+        reset()
+        onOpenChange(false)
+      }
+    })
+  }
 
-//     if (!formData.goal.trim()) {
-//       newErrors.goal = 'Sprint goal is required';
-//     }
+  // Handle modal close
+  const handleOpenChange = (isOpen: boolean) => {
+    if (!isOpen && !createSprintMutation.isPending) {
+      reset()
+      onOpenChange(false)
+    }
+  }
 
-//     if (formData.maxStoryPoint <= 0) {
-//       newErrors.maxStoryPoint = 'Story points must be greater than 0';
-//     }
+  return (
+    <Dialog open={open} onOpenChange={handleOpenChange}>
+      <DialogContent className="max-w-2xl">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+              <Calendar className="w-5 h-5 text-white" />
+            </div>
+            Create New Sprint
+          </DialogTitle>
+          <DialogDescription>
+            Set up a new sprint for your project. Define goals, timeline, and
+            capacity.
+          </DialogDescription>
+        </DialogHeader>
 
-//     if (new Date(formData.startDate) > new Date(formData.endDate)) {
-//       newErrors.endDate = 'End date must be after start date';
-//     }
+        <form onSubmit={handleSubmit(onSubmit)}>
+          <div className="space-y-4 py-4">
+            {/* Sprint Name */}
+            <div className="space-y-2">
+              <Label htmlFor="name">
+                Sprint Name <span className="text-red-500">*</span>
+              </Label>
+              <Input
+                id="name"
+                placeholder="e.g., Sprint 1, November Sprint"
+                {...register('name')}
+                className={errors.name ? 'border-red-500' : ''}
+                disabled={createSprintMutation.isPending}
+              />
+              {errors.name && (
+                <p className="text-xs text-red-500">{errors.name.message}</p>
+              )}
+            </div>
 
-//     if (Object.keys(newErrors).length > 0) {
-//       setErrors(newErrors);
-//       return;
-//     }
-//     // Reset form
-//     setFormData({
-//       name: '',
-//       goal: '',
-//       maxStoryPoint: 0,
-//       startDate: today,
-//       endDate: twoWeeksLater,
-//       status: 'planned',
-//     });
-//     setErrors({});
-//     onOpenChange(false);
-//   };
+            {/* Sprint Goal */}
+            <div className="space-y-2">
+              <Label htmlFor="goal" className="flex items-center gap-2">
+                <Target className="w-4 h-4" />
+                Sprint Goal
+              </Label>
+              <Textarea
+                id="goal"
+                placeholder="What do you want to achieve in this sprint?"
+                rows={3}
+                {...register('goal')}
+                className={errors.goal ? 'border-red-500' : ''}
+                disabled={createSprintMutation.isPending}
+              />
+              {errors.goal && (
+                <p className="text-xs text-red-500">{errors.goal.message}</p>
+              )}
+            </div>
 
-//   const handleChange = (field: keyof SprintFormData, value: string | number) => {
-//     setFormData((prev) => ({ ...prev, [field]: value }));
-//     // Clear error for this field
-//     if (errors[field]) {
-//       setErrors((prev) => {
-//         const newErrors = { ...prev };
-//         delete newErrors[field];
-//         return newErrors;
-//       });
-//     }
-//   };
+            {/* Story Points */}
+            <div className="space-y-2">
+              <Label
+                htmlFor="maxStoryPoint"
+                className="flex items-center gap-2"
+              >
+                <TrendingUp className="w-4 h-4" />
+                Maximum Story Points
+              </Label>
+              <Input
+                id="maxStoryPoint"
+                type="number"
+                placeholder="40"
+                min="0"
+                {...register('maxStoryPoint', {
+                  setValueAs: (v) => (v === '' ? undefined : parseInt(v, 10))
+                })}
+                className={errors.maxStoryPoint ? 'border-red-500' : ''}
+                disabled={createSprintMutation.isPending}
+              />
+              {errors.maxStoryPoint && (
+                <p className="text-xs text-red-500">
+                  {errors.maxStoryPoint.message}
+                </p>
+              )}
+              <p className="text-xs text-gray-500">
+                Optional: Set a story point limit for this sprint
+              </p>
+            </div>
 
-//   return (
-//     <Dialog open={open} onOpenChange={onOpenChange}>
-//       <DialogContent className="max-w-2xl">
-//         <DialogHeader>
-//           <DialogTitle className="flex items-center gap-2">
-//             <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-//               <Calendar className="w-5 h-5 text-white" />
-//             </div>
-//             Create New Sprint
-//           </DialogTitle>
-//           <DialogDescription>
-//             Set up a new sprint for your project. Define goals, timeline, and capacity.
-//           </DialogDescription>
-//         </DialogHeader>
+            {/* Date Range */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="startDate">
+                  Start Date <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  id="startDate"
+                  type="date"
+                  {...register('startDate')}
+                  className={errors.startDate ? 'border-red-500' : ''}
+                  disabled={createSprintMutation.isPending}
+                />
+                {errors.startDate && (
+                  <p className="text-xs text-red-500">
+                    {errors.startDate.message}
+                  </p>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="endDate">
+                  End Date <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  id="endDate"
+                  type="date"
+                  {...register('endDate')}
+                  className={errors.endDate ? 'border-red-500' : ''}
+                  disabled={createSprintMutation.isPending}
+                />
+                {errors.endDate && (
+                  <p className="text-xs text-red-500">
+                    {errors.endDate.message}
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
 
-//         <form onSubmit={handleSubmit}>
-//           <div className="space-y-4 py-4">
-//             {/* Sprint Name */}
-//             <div className="space-y-2">
-//               <Label htmlFor="name">
-//                 Sprint Name <span className="text-red-500">*</span>
-//               </Label>
-//               <Input
-//                 id="name"
-//                 placeholder="e.g., Sprint 1, November Sprint"
-//                 value={formData.name}
-//                 onChange={(e) => handleChange('name', e.target.value)}
-//                 className={errors.name ? 'border-red-500' : ''}
-//               />
-//               {errors.name && (
-//                 <p className="text-xs text-red-500">{errors.name}</p>
-//               )}
-//             </div>
-
-//             {/* Sprint Goal */}
-//             <div className="space-y-2">
-//               <Label htmlFor="goal">
-//                 Sprint Goal <span className="text-red-500">*</span>
-//               </Label>
-//               <Textarea
-//                 id="goal"
-//                 placeholder="e.g., Complete user authentication and profile management features"
-//                 value={formData.goal}
-//                 onChange={(e) => handleChange('goal', e.target.value)}
-//                 rows={3}
-//                 className={errors.goal ? 'border-red-500' : ''}
-//               />
-//               {errors.goal && (
-//                 <p className="text-xs text-red-500">{errors.goal}</p>
-//               )}
-//             </div>
-
-//             {/* Max Story Points */}
-//             <div className="space-y-2">
-//               <Label htmlFor="maxStoryPoint" className="flex items-center gap-2">
-//                 <TrendingUp className="w-4 h-4" />
-//                 Max Story Points <span className="text-red-500">*</span>
-//               </Label>
-//               <Input
-//                 id="maxStoryPoint"
-//                 type="number"
-//                 min="0"
-//                 placeholder="e.g., 50"
-//                 value={formData.maxStoryPoint || ''}
-//                 onChange={(e) => handleChange('maxStoryPoint', parseInt(e.target.value) || 0)}
-//                 className={errors.maxStoryPoint ? 'border-red-500' : ''}
-//               />
-//               {errors.maxStoryPoint && (
-//                 <p className="text-xs text-red-500">{errors.maxStoryPoint}</p>
-//               )}
-//               <p className="text-xs text-gray-500">
-//                 The maximum story points this sprint can handle
-//               </p>
-//             </div>
-
-//             {/* Date Range */}
-//             <div className="grid grid-cols-2 gap-4">
-//               <div className="space-y-2">
-//                 <Label htmlFor="startDate">
-//                   Start Date <span className="text-red-500">*</span>
-//                 </Label>
-//                 <Input
-//                   id="startDate"
-//                   type="date"
-//                   value={formData.startDate}
-//                   onChange={(e) => handleChange('startDate', e.target.value)}
-//                 />
-//               </div>
-
-//               <div className="space-y-2">
-//                 <Label htmlFor="endDate">
-//                   End Date <span className="text-red-500">*</span>
-//                 </Label>
-//                 <Input
-//                   id="endDate"
-//                   type="date"
-//                   value={formData.endDate}
-//                   onChange={(e) => handleChange('endDate', e.target.value)}
-//                   className={errors.endDate ? 'border-red-500' : ''}
-//                 />
-//                 {errors.endDate && (
-//                   <p className="text-xs text-red-500">{errors.endDate}</p>
-//                 )}
-//               </div>
-//             </div>
-
-//             {/* Status */}
-//             <div className="space-y-2">
-//               <Label htmlFor="status">Sprint Status</Label>
-//               <Select
-//                 value={formData.status}
-//                 onValueChange={(value: 'planned' | 'active' | 'completed') =>
-//                   handleChange('status', value)
-//                 }
-//               >
-//                 <SelectTrigger>
-//                   <SelectValue />
-//                 </SelectTrigger>
-//                 <SelectContent>
-//                   <SelectItem value="planned">
-//                     <div className="flex items-center gap-2">
-//                       <div className="w-2 h-2 rounded-full bg-blue-500" />
-//                       Planned
-//                     </div>
-//                   </SelectItem>
-//                   <SelectItem value="active">
-//                     <div className="flex items-center gap-2">
-//                       <div className="w-2 h-2 rounded-full bg-green-500" />
-//                       Active
-//                     </div>
-//                   </SelectItem>
-//                   <SelectItem value="completed">
-//                     <div className="flex items-center gap-2">
-//                       <div className="w-2 h-2 rounded-full bg-gray-500" />
-//                       Completed
-//                     </div>
-//                   </SelectItem>
-//                 </SelectContent>
-//               </Select>
-//               <p className="text-xs text-gray-500">
-//                 Default is &quot;planned&quot; - change to &quot;active&quot; to start immediately
-//               </p>
-//             </div>
-
-//             {/* Info Box */}
-//             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-//               <div className="flex items-start gap-3">
-//                 <Target className="w-5 h-5 text-blue-600 mt-0.5" />
-//                 <div>
-//                   <h4 className="text-sm text-blue-900 mb-1">Sprint Planning Tips</h4>
-//                   <ul className="text-xs text-blue-700 space-y-1">
-//                     <li>• Choose a clear, achievable goal for your sprint</li>
-//                     <li>• Typical sprints run for 1-4 weeks</li>
-//                     <li>• Set story points based on your team&apos;s velocity</li>
-//                     <li>• You can always adjust tasks and timeline later</li>
-//                   </ul>
-//                 </div>
-//               </div>
-//             </div>
-//           </div>
-
-//           <DialogFooter>
-//             <Button
-//               type="button"
-//               variant="outline"
-//               onClick={() => onOpenChange(false)}
-//             >
-//               Cancel
-//             </Button>
-//             <Button
-//               type="submit"
-//               className="bg-gradient-to-r from-blue-600 to-purple-600"
-//             >
-//               Create Sprint
-//             </Button>
-//           </DialogFooter>
-//         </form>
-//       </DialogContent>
-//     </Dialog>
-//   );
-// }
+          <DialogFooter className="gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => handleOpenChange(false)}
+              disabled={createSprintMutation.isPending}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              disabled={createSprintMutation.isPending}
+              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+            >
+              {createSprintMutation.isPending ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Creating...
+                </>
+              ) : (
+                <>
+                  <Calendar className="w-4 h-4 mr-2" />
+                  Create Sprint
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  )
+}

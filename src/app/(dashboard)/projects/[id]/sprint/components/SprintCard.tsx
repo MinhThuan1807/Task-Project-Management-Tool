@@ -17,22 +17,22 @@ export default function SprintCard({
   sprint: Sprint
   projectId: string
 }) {
-  const { data: tasks = [] } = useTasksBySprint(sprint._id)
-  const { data: boardColumns = [] } = useBoardColumnsBySprint(sprint._id)
+  // const { data: tasks = [] } = useTasksBySprint(sprint._id)
+  // const { data: boardColumns = [] } = useBoardColumnsBySprint(sprint._id)
 
-  const doneColumn = boardColumns.find(
-    (col) => col.title?.toLowerCase() === 'done'
-  )
-  const storyPointsCompleted = doneColumn
-    ? tasks.filter((t) => t.boardColumnId === doneColumn._id)
-    : []
-  const getStoryPoints = (t: Task) => t.storyPoint
+  // const doneColumn = boardColumns.find(
+  //   (col) => col.title?.toLowerCase() === 'done'
+  // )
+  // const storyPointsCompleted = doneColumn
+  //   ? tasks.filter((t) => t.boardColumnId === doneColumn._id)
+  //   : []
+  // const getStoryPoints = (t: Task) => t.storyPoint
 
-  const totalStoryPoints = storyPointsCompleted.reduce(
-    (sum, t) => sum + Number(getStoryPoints(t)),
-    0
-  )
-  const progress = (totalStoryPoints / (sprint?.maxStoryPoint || 1)) * 100
+  // const totalStoryPoints = storyPointsCompleted.reduce(
+  //   (sum, t) => sum + Number(getStoryPoints(t)),
+  //   0
+  // )
+  // const progress = (totalStoryPoints / (sprint?.maxStoryPoint || 1)) * 100
 
   const router = useRouter()
 
@@ -78,9 +78,9 @@ export default function SprintCard({
         <div className="space-y-2">
           <div className="flex items-center justify-between text-sm">
             <span className="text-gray-600">Progress</span>
-            <span className="text-gray-900">{Math.round(progress)}%</span>
+            {/* <span className="text-gray-900">{Math.round(progress)}%</span> */}
           </div>
-          <Progress value={progress} />
+          {/* <Progress value={progress} /> */}
         </div>
       </CardContent>
     </Card>

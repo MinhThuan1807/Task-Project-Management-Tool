@@ -1,15 +1,19 @@
 'use client'
 import { useState } from 'react'
-import { useParams, useRouter } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import { Sprint } from '@/lib/types'
-import { CreateSprintModal } from '@/components/CreateSprintModal'
 import { toast } from 'sonner'
-import { useAllProjects, useProjectDetail } from '@/lib/hooks/useProjects'
+import { useProjectDetail } from '@/lib/hooks/useProjects'
 import { useSprintsByProject, useUpdateSprint } from '@/lib/hooks/useSprints'
 import { getErrorMessage } from '@/lib/utils'
 import MainBacklogArea from './MainBacklogArea'
 import BlacklogSprintPlanning from './BlacklogSprintPlanning'
 import BacklogContainerSkeleton from './BacklogContainerSkeleton'
+import dynamic from 'next/dynamic'
+const CreateSprintModal = dynamic(
+  () => import('@/components/modal/CreateSprintModal'),
+  { ssr: false }
+)
 
 function BacklogContainer({ projectId }: { projectId: string }) {
   const router = useRouter()
@@ -17,12 +21,15 @@ function BacklogContainer({ projectId }: { projectId: string }) {
 
   const { data: sprints } = useSprintsByProject(projectId)
   const { data: project } = useProjectDetail(projectId)
-  
+
   const projectSprints = sprints?.filter((s) => s.projectId === projectId) || []
   const plannedSprint = sprints?.find((s) => s.status === 'planned')
   const sprintPlannedId = plannedSprint ? plannedSprint._id : ''
 
-  const updateStatusSprint = useUpdateSprint({ sprintId: sprintPlannedId, projectId })
+  const updateStatusSprint = useUpdateSprint({
+    sprintId: sprintPlannedId,
+    projectId
+  })
 
   const handleStartSprint = async (sprint: Sprint) => {
     if (sprint.status === 'planned') {
@@ -42,9 +49,7 @@ function BacklogContainer({ projectId }: { projectId: string }) {
   }
 
   if (!project) {
-    return (
-      <BacklogContainerSkeleton />
-    )
+    return <BacklogContainerSkeleton />
   }
 
   return (
@@ -69,7 +74,6 @@ function BacklogContainer({ projectId }: { projectId: string }) {
         open={isCreateSprintOpen}
         onOpenChange={setIsCreateSprintOpen}
       />
-
     </div>
   )
 }

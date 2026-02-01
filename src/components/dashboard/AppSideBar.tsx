@@ -11,12 +11,10 @@ import {
 } from '../ui/sidebar'
 import { Separator } from '../ui/separator'
 import Link from 'next/link'
-import { CreateProjectModal } from '@/app/(dashboard)/projects/components/CreateProjectModal'
-import { Suspense } from 'react'
 import MyProject from '../projects/MyProject'
 import ParticipatedProjects from '../projects/ParticipatedProjects'
-import UserFooter from '../UserFooter'
-
+import UserFooter from './UserFooter'
+import CreateProjectModal from '@/components/modal/CreateProjectModal'
 export function AppSidebar() {
   return (
     <>
@@ -73,11 +71,7 @@ export function AppSidebar() {
         </SidebarContent>
 
         {/* User Profile Footer */}
-        <Suspense
-          fallback={<div className="p-2 text-sm text-center">Loading...</div>}
-        >
-          <UserFooter />
-        </Suspense>
+        <UserFooter />
       </Sidebar>
 
       {/* Create Project Modal */}

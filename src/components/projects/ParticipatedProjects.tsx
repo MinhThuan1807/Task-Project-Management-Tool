@@ -7,7 +7,7 @@ import {
   SidebarGroupLabel,
   SidebarMenu
 } from '../ui/sidebar'
-import { useParams, useRouter } from 'next/navigation'
+import { useParams } from 'next/navigation'
 import { useJoinedProjects } from '@/lib/hooks/useProjects'
 import { Project } from '@/lib/types'
 import { useSprintsByProject } from '@/lib/hooks/useSprints'
@@ -21,7 +21,6 @@ function ParticipatedProjects() {
   const [openProjectId, setOpenProjectId] = useState<string | null>(null)
 
   const param = useParams<{ id: string }>()
-  const router = useRouter()
   const selectedProjectId = param.id
 
   const { data: joinedProjects } = useJoinedProjects()
@@ -71,18 +70,15 @@ function ParticipatedProjects() {
                     : 'backlog'
 
                   return (
-                    <Suspense key={project._id} fallback={<div>Loading</div>}>
                       <ProjectCollap
                         project={project}
                         isSelected={isSelected}
-                        onSelect={() => router.push(`/projects/${project._id}`)}
                         sprintLink={sprintLink}
                         onOpenChange={(open: boolean) =>
                           setOpenProjectId(open ? project._id : null)
                         }
                         isOpen={openProjectId === project._id}
                       />
-                    </Suspense>
                   )
                 })}
               </SidebarMenu>

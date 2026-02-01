@@ -6,7 +6,11 @@ import { Button } from '../../../../ui/button'
 import { Plus } from 'lucide-react'
 import { TaskCard } from './TaskCard/TaskCard'
 import { useState } from 'react'
-import { CreateTaskModal } from '../../../../modal/CreateTaskModal'
+import dynamic from 'next/dynamic'
+const CreateTaskModal = dynamic(
+  () => import('@/components/modal/CreateTaskModal'),
+  { ssr: false }
+)
 
 type ColumnProps = {
   boardColumn: BoardColumn

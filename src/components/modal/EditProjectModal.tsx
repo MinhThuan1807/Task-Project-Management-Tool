@@ -8,7 +8,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle
-} from './ui/dialog'
+} from '../ui/dialog'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -18,17 +18,18 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle
-} from './ui/alert-dialog'
-import { Button } from './ui/button'
-import { Input } from './ui/input'
-import { Textarea } from './ui/textarea'
-import { Label } from './ui/label'
-import { Badge } from './ui/badge'
-import { useCurrentUser } from '@/lib/hooks/useAuth'
-import { useAllProjects, useDeleteProject, useUpdateProject } from '@/lib/hooks/useProjects'
+} from '../ui/alert-dialog'
+import { Button } from '../ui/button'
+import { Input } from '../ui/input'
+import { Textarea } from '../ui/textarea'
+import { Label } from '../ui/label'
+import { Badge } from '../ui/badge'
+import { useAllProjects, useDeleteProject } from '@/lib/hooks/useProjects'
 import { useParams, useRouter } from 'next/navigation'
 import { formatDate } from '@/lib/utils'
 import { UpdateProjectRequest } from '@/lib/types'
+import { useSelector } from 'react-redux'
+import { selectCurrentUser } from '@/lib/features/auth/authSlice'
 
 type EditProjectModalProps = {
   open: boolean
@@ -37,13 +38,14 @@ type EditProjectModalProps = {
   isPending?: boolean
 }
 
-export function EditProjectModal({
+export default function EditProjectModal({
   open,
   onOpenChange,
   onSave,
   isPending
 }: EditProjectModalProps) {
-  const { data: user } = useCurrentUser()
+  const user = useSelector(selectCurrentUser)
+
   const { data: allProjects } = useAllProjects()
 
   const params = useParams<{ id: string }>()
@@ -61,18 +63,16 @@ export function EditProjectModal({
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [imagePreview, setImagePreview] = useState<string | null>(null)
-  
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-     onSave({
+    onSave({
       name,
       description,
       // status,
       imageUrl: imageFile
     } as UpdateProjectRequest)
   }
-
 
   const handleDelete = () => {
     deleteProject.mutate(projectId, {

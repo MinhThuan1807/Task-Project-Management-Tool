@@ -9,9 +9,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { useState, useMemo } from 'react'
 import { CheckCircle2, Plus, UserPlus } from 'lucide-react'
-import { InviteTeamModal } from '@/components/modal/InviteTeamModal'
 import { useRouter } from 'next/navigation'
-import { EditProjectModal } from '@/components/EditProjectModal'
 import { useProjectDetail, useUpdateProject } from '@/lib/hooks/useProjects'
 import { useSprintsByProject } from '@/lib/hooks/useSprints'
 import ProjectHeader from '@/components/projects/Overview/ProjectHeader'
@@ -22,7 +20,15 @@ import { selectCurrentUser } from '@/lib/features/auth/authSlice'
 import { useSelector } from 'react-redux'
 import { UpdateProjectRequest } from '@/lib/types/project.types'
 import { useProjectPermissions } from '@/lib/hooks/useProjectPermissions'
-
+import dynamic from 'next/dynamic'
+const InviteTeamModal = dynamic(
+  () => import('@/components/modal/InviteTeamModal'),
+  { ssr: false }
+)
+const EditProjectModal = dynamic(
+  () => import('@/components/modal/EditProjectModal'),
+  { ssr: false }
+)
 
 interface ProjectContainerProps {
   projectId: string
@@ -104,11 +110,10 @@ function ProjectContainer({ projectId }: ProjectContainerProps) {
                 <CheckCircle2 className="w-4 h-4 mr-2" />
                 View Product Backlog
               </Button>
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 onClick={() => handleDirectToBacklog()}
                 disabled={!canEdit}
-
               >
                 <Plus className="w-4 h-4 mr-2" />
                 Create New Sprint

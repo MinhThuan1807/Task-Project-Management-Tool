@@ -1,19 +1,13 @@
 import ProjectSection from '@/components/dashboard/ProjectSection'
-import { CreateProjectModal } from '../projects/components/CreateProjectModal'
 import StatusOverView from '@/components/dashboard/StatusOverView'
 import RecentActivity from '@/components/dashboard/RecentActivity'
-import { Suspense } from 'react'
 import { getQueryClient } from '@/app/get-query-client'
-import { joinedProjectsOptions, ownedProjectsOptions } from '@/lib/queries/project.queries'
+import { allProjectsOptions } from '@/lib/queries/project.queries'
 import { dehydrate, HydrationBoundary } from '@tanstack/react-query'
-
+import CreateProjectModal from '@/components/modal/CreateProjectModal'
 export default async function DashboardPage() {
-
   const queryClient = getQueryClient()
-  await Promise.all([
-    queryClient.prefetchQuery(ownedProjectsOptions()),
-    queryClient.prefetchQuery(joinedProjectsOptions()),
-  ])
+  await Promise.all([queryClient.prefetchQuery(allProjectsOptions())])
 
   const dehydratedState = dehydrate(queryClient)
   return (
@@ -21,22 +15,17 @@ export default async function DashboardPage() {
       <HydrationBoundary state={dehydratedState}>
         <div className="p-8 max-w-7xl mx-auto">
           {/* Stats Overview */}
-          <Suspense fallback={<div>Loading Overview...</div>}>
-            <StatusOverView />
-          </Suspense>
-  
+
+          <StatusOverView />
+
           {/* Projects Section */}
-          <Suspense fallback={<div>Loading Projects...</div>}>
-            <ProjectSection/>
-          </Suspense>
-  
+          <ProjectSection />
+
           {/* Recent Activity */}
-          <Suspense fallback={<div>Loading Recent Activity...</div>}>
-            <RecentActivity />
-          </Suspense>
-  
+          <RecentActivity />
+
           {/* Create Project Modal */}
-          <CreateProjectModal/>
+          <CreateProjectModal />
         </div>
       </HydrationBoundary>
     </div>

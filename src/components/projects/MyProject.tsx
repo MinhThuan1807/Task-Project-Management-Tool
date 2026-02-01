@@ -11,7 +11,7 @@ import { openCreateModal } from '@/lib/features/project/projectSlice'
 import { Plus } from 'lucide-react'
 import { useOwnedProjects } from '@/lib/hooks/useProjects'
 import { Project } from '@/lib/types'
-import { useParams, useRouter } from 'next/navigation'
+import { useParams } from 'next/navigation'
 import { useSprintsByProject } from '@/lib/hooks/useSprints'
 import { Suspense, useState } from 'react'
 import ProjectCollap from './ProjectCollap'
@@ -20,7 +20,6 @@ import ProjectCollapSkeleton from './ProjectCollapSkeleton'
 function MyProject() {
   const dispatch = useDispatch()
   const [openProjectId, setOpenProjectId] = useState<string | null>(null)
-  const router = useRouter()
   const param = useParams<{ id: string }>()
   const selectedProjectId = param.id
 
@@ -74,7 +73,6 @@ function MyProject() {
                     setOpenProjectId(open ? project._id : null)
                   }
                   sprintLink={sprintLink}
-                  onSelect={() => router.push(`/projects/${project._id}`)}
                 />
               </Suspense>
             )

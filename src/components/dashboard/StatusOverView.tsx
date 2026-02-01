@@ -4,7 +4,7 @@ import { TrendingUp, FolderKanban, Calendar, CheckCircle2, Users } from 'lucide-
 import { useAllProjects } from '@/lib/hooks/useProjects'
 import { useSelector } from 'react-redux'
 import { selectCurrentUser } from '@/lib/features/auth/authSlice'
-import { useQueries } from 'node_modules/@tanstack/react-query/build/modern/useQueries'
+import { useQueries } from '@tanstack/react-query'
 import { sprintsByProjectOptions } from '@/lib/queries/sprint.queries'
 import { Sprint } from '@/lib/types'
 
@@ -18,9 +18,8 @@ const StatusOverview = () => {
     queries: projects.map((project) => {
       const options = sprintsByProjectOptions(project._id)
       return {
-        queryKey: options.queryKey,
-        queryFn: options.queryFn,
-        enabled: !!project._id,
+        ...options,
+        enabled: !!project._id
       }
     }),
   })
