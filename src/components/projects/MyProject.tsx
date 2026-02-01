@@ -64,17 +64,16 @@ function MyProject() {
               : 'backlog'
 
             return (
-              <Suspense key={project._id} fallback={<ProjectCollapSkeleton />}>
-                <ProjectCollap
-                  project={project}
-                  isSelected={isSelected}
-                  isOpen={openProjectId === project._id}
-                  onOpenChange={(open: boolean) =>
-                    setOpenProjectId(open ? project._id : null)
-                  }
-                  sprintLink={sprintLink}
-                />
-              </Suspense>
+              <ProjectCollap
+                key={project._id}
+                project={project}
+                isSelected={isSelected}
+                isOpen={openProjectId === project._id}
+                onOpenChange={(open: boolean) =>
+                  setOpenProjectId(open ? project._id : null)
+                }
+                sprintLink={sprintLink}
+              />
             )
           })}
         </SidebarMenu>

@@ -71,6 +71,7 @@ function ParticipatedProjects() {
 
                   return (
                       <ProjectCollap
+                        key={project._id}
                         project={project}
                         isSelected={isSelected}
                         sprintLink={sprintLink}
