@@ -20,7 +20,6 @@ interface ProjectCollapProps {
   isSelected: boolean
   isOpen: boolean
   onOpenChange: (open: boolean) => void
-  onSelect: () => void
   sprintLink: string
 }
 
@@ -29,7 +28,6 @@ const ProjectCollap = ({
   isSelected,
   isOpen,
   onOpenChange,
-  onSelect,
   sprintLink
 }: ProjectCollapProps) => (
   <Collapsible
@@ -42,17 +40,19 @@ const ProjectCollap = ({
       <CollapsibleTrigger asChild>
         <SidebarMenuButton
           isActive={isSelected}
-          onClick={onSelect}
           tooltip={project.name}
+          asChild
         >
-          <Avatar className="w-4 h-4">
-            <AvatarImage src={project.imageUrl} />
-            <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-[10px]">
-              {project.name.substring(0, 2).toUpperCase()}
-            </AvatarFallback>
-          </Avatar>
-          <span className="truncate">{project.name}</span>
-          <ChevronRight className="ml-auto w-4 h-4 transition-transform group-data-[state=open]/collapsible:rotate-90" />
+         <Link href={`/projects/${project._id}`} className="flex items-center w-full">
+            <Avatar className="w-4 h-4">
+              <AvatarImage src={project.imageUrl} />
+              <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-[10px]">
+                {project.name.substring(0, 2).toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+            <span className="truncate">{project.name}</span>
+            <ChevronRight className="ml-auto w-4 h-4 transition-transform group-data-[state=open]/collapsible:rotate-90" />
+         </Link>
         </SidebarMenuButton>
       </CollapsibleTrigger>
       <CollapsibleContent>

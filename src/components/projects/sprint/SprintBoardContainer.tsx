@@ -9,11 +9,13 @@ import { DragStartEvent, DragOverEvent, DragEndEvent } from '@dnd-kit/core'
 import { ToggleGroup, ToggleGroupItem } from '../../ui/toggle-group'
 import { Progress } from '../../ui/progress'
 import { LayoutGrid, List, CalendarDays } from 'lucide-react'
-import { CreateTaskModal } from '../../modal/CreateTaskModal'
 import { FilterSortPanel } from '../FilterSortPanel'
 import SprintTitle from './SprintTitle'
 import SprintSearch from './SprintSearch'
 import dynamic from 'next/dynamic'
+const CreateTaskModal = dynamic(() => import('@/components/modal/CreateTaskModal'), {
+  ssr: false
+})
 import { toast } from 'sonner'
 import { Task } from '@/lib/types'
 import BoardViewSkeleton from './BoardView/BoardViewSkeleton'

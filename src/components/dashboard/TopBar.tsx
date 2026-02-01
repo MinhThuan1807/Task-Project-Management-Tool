@@ -10,9 +10,7 @@ export const TopBar = () => {
   return (
     <div className="flex items-center gap-4 flex-1">
       {/* Title */}
-      <Suspense fallback={<div>Loading...</div>}>
         <TitleTopBar />
-      </Suspense>
 
       {/* Search */}
       <div className="flex-1 max-w-md ml-auto">
@@ -29,13 +27,10 @@ export const TopBar = () => {
       {/* Actions */}
       <div className="flex items-center gap-2">
         {/* Notifications */}
-        <Notification/>
+        {/* <Notification/> */}
 
         {/* User Menu */}
-        <Suspense fallback={<div>Loading...</div>}>
           <UserMenu />
-        </Suspense>
-
       </div>
     </div>
   )

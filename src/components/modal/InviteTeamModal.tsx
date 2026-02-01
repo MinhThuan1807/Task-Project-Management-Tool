@@ -63,7 +63,7 @@ const roleInfo = {
   }
 }
 
-export function InviteTeamModal({
+export default function InviteTeamModal({
   open,
   onOpenChange,
   projectId

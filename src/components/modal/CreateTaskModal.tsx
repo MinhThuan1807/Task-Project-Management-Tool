@@ -55,7 +55,7 @@ type CreateTaskModalProps = {
   boardColumn?: BoardColumn
 }
 
-export function CreateTaskModal({
+export default function CreateTaskModal({
   open,
   onClose,
   sprintId,

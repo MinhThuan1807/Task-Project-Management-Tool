@@ -5,7 +5,6 @@ import axios, {
   InternalAxiosRequestConfig
 } from 'axios'
 import { logoutUserAPI } from '@/lib/features/auth/authSlice'
-import { toast } from 'sonner'
 
 type ReduxStoreLike = {
   dispatch: (action: unknown) => unknown
@@ -91,9 +90,9 @@ axiosInstance.interceptors.response.use(
     const errorMessage =
       error.response?.data?.message ?? error.message ?? 'Unknown error'
 
-    if (status !== 410) {
-      toast.error(errorMessage)
-    }
+    // if (status !== 410) {
+    //   toast.error(errorMessage)
+    // }
 
     return Promise.reject(error)
   }

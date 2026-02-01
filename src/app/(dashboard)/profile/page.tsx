@@ -16,10 +16,11 @@ import {
   Briefcase,
   Calendar
 } from 'lucide-react'
-import { useCurrentUser } from '@/lib/hooks/useAuth'
+import { selectCurrentUser } from '@/lib/features/auth/authSlice'
+import { useSelector } from 'react-redux'
 
 export default function ProfilePage() {
-  const { data: currentUser } = useCurrentUser()
+  const currentUser = useSelector(selectCurrentUser)
   const [isEditing, setIsEditing] = useState(false)
   const [formData, setFormData] = useState({
     displayName: currentUser?.displayName || 'John Doe',

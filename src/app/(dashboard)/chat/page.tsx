@@ -1,11 +1,12 @@
 'use client'
 
 import { ChatView } from '@/components/ChatView'
+import { selectCurrentUser } from '@/lib/features/auth/authSlice'
 import { useAllProjects } from '@/lib/hooks/useProjects'
-import { useCurrentUser } from '@/lib/hooks/useAuth'
+import { useSelector } from 'react-redux'
 
 export default function ChatPage() {
-  const { data: currentUser } = useCurrentUser()
+  const currentUser = useSelector(selectCurrentUser)
   const { data: allProjects } = useAllProjects()
 
   // Load data from localStorage

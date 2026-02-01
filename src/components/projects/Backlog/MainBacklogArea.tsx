@@ -7,7 +7,6 @@ import { Input } from '@/components/ui/input'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import BacklogTaskList from './BacklogTaskList'
 import { toast } from 'sonner'
-import { CreateTaskModal } from '../../modal/CreateTaskModal'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -19,6 +18,11 @@ import {
   AlertDialogTitle
 } from '@/components/ui/alert-dialog'
 import { useProjectPermissions } from '@/lib/hooks/useProjectPermissions'
+import dynamic from 'next/dynamic'
+const CreateTaskModal = dynamic(
+  () => import('@/components/modal/CreateTaskModal'),
+  { ssr: false }
+)
 interface MainBacklogAreaProps {
   sprints: Sprint[]
   onCreateSprint: () => void
