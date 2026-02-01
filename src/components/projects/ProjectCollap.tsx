@@ -91,7 +91,7 @@ const ProjectCollap = ({
           <SidebarMenuSubItem>
             <SidebarMenuSubButton asChild>
               <Link href={`/projects/${project._id}/report`} prefetch>
-                <BarChart2 className="w-4 h-4" />
+               <BarChart2 className="w-4 h-4" />
                 <span>Reports</span>
               </Link>
             </SidebarMenuSubButton>
