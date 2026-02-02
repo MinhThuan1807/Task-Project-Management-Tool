@@ -40,16 +40,22 @@ export function ProfileContainer() {
       setIsLoading(true)
 
       // Call API to update profile
+      const response = await authApi.updateProfile({
+        displayName: formData.displayName,
+        address: formData.address,
+        dob: formData.dob,
+        gender: formData.gender
+      })
 
       // Update Redux state with the response data
-      // dispatch(
-      //   updateUserProfile({
-      //     displayName: response.data.displayName,
-      //     address: response.data.address,
-      //     dob: response.data.dob,
-      //     gender: response.data.gender
-      //   })
-      // )
+      dispatch(
+        updateUserProfile({
+          displayName: response.data.displayName,
+          address: response.data.address,
+          dob: response.data.dob,
+          gender: response.data.gender
+        })
+      )
 
       toast.success('Profile updated successfully')
       setIsEditing(false)
