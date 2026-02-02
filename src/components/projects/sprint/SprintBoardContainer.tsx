@@ -3,9 +3,8 @@ import { useMemo, useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { useAllProjects } from '@/lib/hooks/useProjects'
 import { useSprintsByProject, useUpdateSprint } from '@/lib/hooks/useSprints'
-import { useTasksBySprint, useMoveTask } from '@/lib/hooks/useTasks'
+import { useTasksBySprint } from '@/lib/hooks/useTasks'
 import { useBoardColumnsBySprint } from '@/lib/hooks/useBoardColumns'
-import { DragStartEvent, DragOverEvent, DragEndEvent } from '@dnd-kit/core'
 import { ToggleGroup, ToggleGroupItem } from '../../ui/toggle-group'
 import { Progress } from '../../ui/progress'
 import { LayoutGrid, List, CalendarDays } from 'lucide-react'
@@ -13,7 +12,6 @@ import { FilterSortPanel } from '../FilterSortPanel'
 import SprintTitle from './SprintTitle'
 import SprintSearch from './SprintSearch'
 import dynamic from 'next/dynamic'
-import { Suspense } from 'react'
 const CreateTaskModal = dynamic(
   () => import('@/components/modal/CreateTaskModal'),
   {
@@ -35,22 +33,17 @@ const BoardView = dynamic(() => import('./BoardView/BoardView'), {
 })
 const SprintCalendarView = dynamic(
   () => import('./CalendarView/SprintCalendarView'),
-  { ssr: false,
-    loading: () => <SprintCalendarViewSkeleton />
-  }
+  { ssr: false, loading: () => <SprintCalendarViewSkeleton /> }
 )
-const SprintListView = dynamic(
-  () => import('./ListView/SprintListView'),
-  { ssr: false,
-    loading: () => <SprintListViewSkeleton />
-   }
-)
+const SprintListView = dynamic(() => import('./ListView/SprintListView'), {
+  ssr: false,
+  loading: () => <SprintListViewSkeleton />
+})
 
 const SprintBoardContainer = () => {
   const [viewMode, setViewMode] = useState<'board' | 'list' | 'calendar'>(
     'board'
   )
-  const [activeId, setActiveId] = useState<string | null>(null)
   const [isCreateTaskOpen, setIsCreateTaskOpen] = useState(false)
   const [isFilterOpen, setIsFilterOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
@@ -115,7 +108,6 @@ const SprintBoardContainer = () => {
   }, [sprints, sprintId, projectId, sprintsQuery.isLoading, router])
 
   // Mutations
-  const moveTaskMutation = useMoveTask()
   const updateSprintMutation = useUpdateSprint({
     sprintId: sprintId,
     projectId: projectId
@@ -128,11 +120,11 @@ const SprintBoardContainer = () => {
     allProjectsQuery.isLoading ||
     sprintsQuery.isLoading
   ) {
-  return (
-    <div className="h-full flex flex-col bg-gray-50">
+    return (
+      <div className="h-full flex flex-col bg-gray-50">
         <SprintHeaderSkeleton />
-    </div>
-  )
+      </div>
+    )
   }
 
   // Not found state
@@ -188,48 +180,8 @@ const SprintBoardContainer = () => {
       )
     : 0
 
-  // Drag handlers
-  function handleDragStart(event: DragStartEvent) {
-    setActiveId(event.active.id as string)
-  }
-  function handleDragOver(event: DragOverEvent) {
-    const { over } = event
-    if (!over || !canEditTasks) {
-      if (!canEditTasks) toast.error('You do not have permission to edit tasks')
-      return
-    }
-  }
-  function handleDragEnd(event: DragEndEvent) {
-    const { active, over } = event
-    setActiveId(null)
-    if (!over || !canEditTasks) {
-      if (!canEditTasks) toast.error('You do not have permission to edit tasks')
-      return
-    }
-    const activeTaskId = active.id as string
-    const overId = over.id as string
-    const activeTask = tasks.find((t) => t._id === activeTaskId)
-    if (!activeTask) return
-    const targetColumn = boardColumns.find((col) => col._id === overId)
-    if (targetColumn && activeTask.boardColumnId !== targetColumn._id) {
-      moveTaskMutation.mutate({
-        taskId: activeTask._id,
-        data: { boardColumnId: targetColumn._id }
-      })
-    } else {
-      const targetTask = tasks.find((t) => t._id === overId)
-      if (targetTask && activeTask.boardColumnId !== targetTask.boardColumnId) {
-        moveTaskMutation.mutate({
-          taskId: activeTask._id,
-          data: { boardColumnId: targetTask.boardColumnId }
-        })
-      }
-    }
-  }
-
   const handleTaskClick = () => true
 
-  const activeTask = tasks.find((t) => t._id === activeId)
   const isActiveSprint = sprint?.status === 'active'
 
   const handleUpdateStatusSprint = () => {
@@ -269,8 +221,8 @@ const SprintBoardContainer = () => {
             isActiveSprint={isActiveSprint}
             daysLeft={daysLeft}
             totalStoryPoints={totalStoryPoints}
-            // searchQuery={searchQuery}
-            // setSearchQuery={setSearchQuery}
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
           />
           <div className="space-y-2 mb-4">
             <div className="flex items-center justify-between text-sm">
@@ -315,18 +267,12 @@ const SprintBoardContainer = () => {
             project={project}
             boardColumns={boardColumns}
             canEditTasks={canEditTasks}
-            handleTaskClick={handleTaskClick}
-            handleDragStart={handleDragStart}
-            handleDragOver={handleDragOver}
-            handleDragEnd={handleDragEnd}
-            activeTask={activeTask}
             filteredTasks={filteredTasks}
           />
         )}
         {viewMode === 'list' && (
           <SprintListView
             tasks={filteredTasks}
-            onTaskClick={handleTaskClick}
             canEdit={canEditTasks}
           />
         )}

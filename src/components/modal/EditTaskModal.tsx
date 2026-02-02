@@ -90,7 +90,7 @@ type UpdateTaskForm = {
   assigneeIds?: string[]
 }
 
-export function EditTaskModal({
+export default function EditTaskModal({
   open,
   task,
   boardColumns,
@@ -326,7 +326,7 @@ export function EditTaskModal({
                         <Input
                           id="dueDate"
                           type="date"
-                          value={field.value || ''}
+                          value={field.value}
                           onChange={(e) => field.onChange(e.target.value)}
                         />
                       )}

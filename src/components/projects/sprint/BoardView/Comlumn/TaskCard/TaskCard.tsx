@@ -2,10 +2,10 @@
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { Sprint, Task, UpdateTaskRequest } from '@/lib/types'
-import { Card, CardContent } from '../../../../../ui/card'
-import { Badge } from '../../../../../ui/badge'
-import { Avatar, AvatarFallback, AvatarImage } from '../../../../../ui/avatar'
-import { Button } from '../../../../../ui/button'
+import { Card, CardContent } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { Button } from '@/components/ui/button'
 import {
   MoreVertical,
   MessageSquare,
@@ -19,7 +19,7 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger
-} from '../../../../../ui/dropdown-menu'
+} from '@/components/ui/dropdown-menu'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -29,16 +29,17 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle
-} from '../../../../../ui/alert-dialog'
+} from '@/components/ui/alert-dialog'
 import { cn, formatDate, getPriorityColor } from '@/lib/utils'
 import { useState } from 'react'
 import { useDeleteTask, useUpdateTask } from '@/lib/hooks/useTasks'
-import { EditTaskModal } from '../../../../../modal/EditTaskModal'
 import { toast } from 'sonner'
+import dynamic from 'next/dynamic'
+const EditTaskModal = dynamic(() => import('@/components/modal/EditTaskModal'), { ssr: false })
 
 type TaskCardProps = {
   task: Task
-  Click?: () => void
+  onClick?: () => boolean
   sprints?: Sprint[]
   isDragging?: boolean
   onDuplicate?: (task: Task) => void
@@ -47,7 +48,7 @@ type TaskCardProps = {
 
 export function TaskCard({
   task,
-  Click,
+  onClick,
   isDragging = false,
   onDuplicate,
   canEdit,
@@ -94,9 +95,9 @@ export function TaskCard({
     })
   }
 
-  const handleEditTask = (taskId: string, taskData: UpdateTaskRequest) => {
+  const handleEditTask = ( taskData: UpdateTaskRequest) => {
     updateTaskMutation.mutate(
-      taskData, // chỉ truyền data, vì useUpdateTask đã biết taskId
+      taskData,
       {
         onSuccess: () => {
           setIsEditTaskOpen(false)
@@ -119,7 +120,7 @@ export function TaskCard({
           !canEdit && 'opacity-75'
         )}
         onClick={() => {
-          Click?.()
+          onClick?.()
           setIsSelectedTask(task)
         }}
       >
@@ -324,14 +325,14 @@ export function TaskCard({
       {/* Edit task modal */}
       {(isSelectedTask || isEditTaskOpen) && canEdit && (
         <EditTaskModal
-          open={isEditTaskOpen || Boolean(Click)}
+          open={isEditTaskOpen || Boolean(onClick)}
           task={task}
           // boardColumns={task?.boardColumnId}
           onClose={() => {
             setIsEditTaskOpen(false)
             setIsSelectedTask(null)
           }}
-          onSave={(taskData) => handleEditTask(task._id, taskData)}
+          onSave={(taskData) => handleEditTask(taskData)}
         />
       )}
     </>

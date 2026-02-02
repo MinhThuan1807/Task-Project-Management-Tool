@@ -4,7 +4,7 @@ import { Project, User } from '@/lib/types'
 import ProjectCardSkeleton from './ProjectCardSkeleton'
 
 const ProjectCard = dynamic(
-  () => import('@/app/(dashboard)/projects/components/ProjectCard')
+  () => import('@/components/projects/ProjectCard')
 )
 
 interface ProjectCardGridProps {

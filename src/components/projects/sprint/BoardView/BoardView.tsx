@@ -15,32 +15,28 @@ import {
 import { sortableKeyboardCoordinates } from '@dnd-kit/sortable'
 import { Sprint, Project, BoardColumn, Task } from '@/lib/types'
 import { getColumnColor } from '@/lib/utils'
+import { useMoveTask } from '@/lib/hooks/index'
+import { toast } from 'sonner'
+import { useState } from 'react'
 
 interface BoardViewProps {
   sprint: Sprint
   project: Project
   boardColumns: BoardColumn[]
   canEditTasks: boolean
-  handleTaskClick: (task: Task) => void
-  handleDragStart: (event: DragStartEvent) => void
-  handleDragOver: (event: DragOverEvent) => void
-  handleDragEnd: (event: DragEndEvent) => void
-  activeTask: Task | undefined
   filteredTasks: Task[]
 }
 
 function BoardView({
   sprint,
-  // project,
   boardColumns,
   canEditTasks,
-  handleTaskClick,
-  handleDragStart,
-  handleDragOver,
-  handleDragEnd,
-  activeTask,
   filteredTasks
 }: BoardViewProps) {
+  const [activeId, setActiveId] = useState<string | null>(null)
+  const activeTask = filteredTasks.find((t) => t._id === activeId)
+  const moveTaskMutation = useMoveTask()
+
   // Disable sensors if user doesn't have permission
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -53,6 +49,48 @@ function BoardView({
     })
   )
   const disabledSensors = useSensors()
+  // Drag handlers
+  function handleDragStart(event: DragStartEvent) {
+    setActiveId(event.active.id as string)
+  }
+  function handleDragOver(event: DragOverEvent) {
+    const { over } = event
+    if (!over || !canEditTasks) {
+      if (!canEditTasks) toast.error('You do not have permission to edit tasks')
+      return
+    }
+  }
+  function handleDragEnd(event: DragEndEvent) {
+    const { active, over } = event
+    setActiveId(null)
+    if (!over || !canEditTasks) {
+      if (!canEditTasks) toast.error('You do not have permission to edit tasks')
+      return
+    }
+    const activeTaskId = active.id as string
+    const overId = over.id as string
+    const activeTask = filteredTasks.find((t) => t._id === activeTaskId)
+
+    if (!activeTask) return
+    
+    const targetColumn = boardColumns.find((col) => col._id === overId)
+    
+    if (targetColumn && activeTask.boardColumnId !== targetColumn._id) {
+      moveTaskMutation.mutate({
+        taskId: activeTask._id,
+        data: { boardColumnId: targetColumn._id }
+      })
+    } else {
+      const targetTask = filteredTasks.find((t) => t._id === overId)
+      
+      if (targetTask && activeTask.boardColumnId !== targetTask.boardColumnId) {
+        moveTaskMutation.mutate({
+          taskId: activeTask._id,
+          data: { boardColumnId: targetTask.boardColumnId }
+        })
+      }
+    }
+  }
   return (
     <div className="flex-1 p-3 overflow-auto">
       <DndContext
@@ -80,9 +118,7 @@ function BoardView({
                   canEdit={canEditTasks}
                   boardColumn={column}
                   tasks={columnTasks}
-                  onTaskClick={handleTaskClick}
                   sprint={sprint}
-                  // project={project}
                 />
               )
             })}
