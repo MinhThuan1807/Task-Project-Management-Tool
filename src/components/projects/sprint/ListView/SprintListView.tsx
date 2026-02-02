@@ -6,13 +6,11 @@ import { Plus } from 'lucide-react'
 
 type SprintListViewProps = {
   tasks: Task[]
-  onTaskClick: (task: Task) => void
   canEdit?: boolean
 }
 
 const SprintListView = ({
   tasks,
-  onTaskClick,
   canEdit
 }: SprintListViewProps) => {
   return (
@@ -40,7 +38,7 @@ const SprintListView = ({
               <TaskCard
                 task={task}
                 key={task._id}
-                Click={() => onTaskClick(task)}
+                onClick={() => true}
                 canEdit={canEdit}
               />
             )

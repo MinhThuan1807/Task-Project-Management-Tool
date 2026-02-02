@@ -1,8 +1,8 @@
 import { useDroppable } from '@dnd-kit/core'
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
-import { BoardColumn, Sprint, Task } from '../../../../../lib/types'
-import { ScrollArea } from '../../../../ui/scroll-area'
-import { Button } from '../../../../ui/button'
+import { BoardColumn, Sprint, Task } from '@/lib/types'
+import { ScrollArea } from '@/components/ui/scroll-area'
+import { Button } from '@/components/ui/button'
 import { Plus } from 'lucide-react'
 import { TaskCard } from './TaskCard/TaskCard'
 import { useState } from 'react'
@@ -20,20 +20,16 @@ type ColumnProps = {
     color: string
   }
   tasks: Task[]
-  onTaskClick: (task: Task) => void
   canEdit?: boolean
   sprint: Sprint
-  // project: Project
 }
 
 export function Column({
   boardColumn,
   column,
   tasks,
-  onTaskClick,
   canEdit,
   sprint
-  // project
 }: ColumnProps) {
   const { setNodeRef } = useDroppable({
     id: column.id,
@@ -79,7 +75,7 @@ export function Column({
                 <TaskCard
                   key={task._id}
                   task={task}
-                  Click={() => onTaskClick(task)}
+                  onClick={() => true}
                   canEdit={canEdit} // Pass permission down
                 />
               ))}
@@ -108,7 +104,6 @@ export function Column({
       <CreateTaskModal
         open={isColumnSelected}
         onClose={() => setColumnIsSelected(false)}
-        // projectId={project._id}
         sprintId={sprint._id}
         boardColumn={boardColumn}
       />

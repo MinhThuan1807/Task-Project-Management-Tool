@@ -11,7 +11,7 @@ export default async function SprintPage({ params }: PageProps) {
   const { sprintId } = await params
 
   await Promise.all([
-    queryClient.prefetchQuery(allProjectsOptions()),
+    // queryClient.prefetchQuery(allProjectsOptions()),
     // queryClient.prefetchQuery(sprintsByProjectOptions(projectId)),
     queryClient.prefetchQuery(tasksBySprintOptions(sprintId)),
     queryClient.prefetchQuery(boardColumnsBySprintOptions(sprintId))

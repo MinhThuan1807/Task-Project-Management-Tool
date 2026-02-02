@@ -79,10 +79,10 @@ function MainBacklogArea({
       onCreateSprint()
     } else setIsCreateTaskOpen(true)
   }
-  const handleEditTaskOpen = (task: Task) => {
-    setSelectedTask(task)
-    // setIsEditTaskOpen(true)
-  }
+  // const handleEditTaskOpen = (task: Task) => {
+  //   setSelectedTask(task)
+  //   // setIsEditTaskOpen(true)
+  // }
 
   // const handleDeleteTask = (task: Task) => {
   //   setSelectedTask(task)
@@ -141,7 +141,7 @@ function MainBacklogArea({
           searchQuery={searchQuery}
           sprints={sprints}
           handleCreateTask={handleCreateTask}
-          handleEditTaskOpen={handleEditTaskOpen}
+          // handleEditTaskOpen={handleEditTaskOpen}
           canEdit={canEdit}
           // handleDeleteTask={handleDeleteTask}
         />

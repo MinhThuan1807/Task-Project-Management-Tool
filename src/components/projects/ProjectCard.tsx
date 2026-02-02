@@ -1,4 +1,10 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle
+} from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
@@ -9,18 +15,31 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu'
-import { Project, User } from '@/lib/types'
+import { Project, Sprint, User } from '@/lib/types'
 import { useProjectPermissions } from '@/lib/hooks/useProjectPermissions'
-
+import { sprintsByProjectOptions } from '@/lib/queries/sprint.queries'
+import { useSuspenseQuery } from '@tanstack/react-query'
+import Link from 'next/link'
 interface ProjectCardProps {
-  project: Project;
-  handleDirect?: () => void;
-  currentUser: User;
+  project: Project
+  handleDirect?: () => void
+  currentUser: User
 }
 
-const ProjectCard = ({ project, handleDirect, currentUser }: ProjectCardProps) => {
+const ProjectCard = ({
+  project,
+  handleDirect,
+  currentUser
+}: ProjectCardProps) => {
   const { isOwner, isMember } = useProjectPermissions(project)
   const canEdit = project.ownerId === currentUser?._id
+  const sprintsByProject = useSuspenseQuery(
+    sprintsByProjectOptions(project._id)
+  )
+  const sprints = sprintsByProject?.data || []
+  const countSprintCompleted =
+    sprints.filter((sprint: Sprint) => sprint.status === 'completed').length ||
+    0
   return (
     <Card className="hover:shadow-xl transition-all cursor-pointer group border-0 shadow-md hover:-translate-y-1">
       <CardHeader>
@@ -45,9 +64,7 @@ const ProjectCard = ({ project, handleDirect, currentUser }: ProjectCardProps) =
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem>
-                  Edit Project
-                </DropdownMenuItem>
+                <DropdownMenuItem>Edit Project</DropdownMenuItem>
                 <DropdownMenuItem className="text-red-600">
                   Delete Project
                 </DropdownMenuItem>
@@ -67,7 +84,12 @@ const ProjectCard = ({ project, handleDirect, currentUser }: ProjectCardProps) =
         <div>
           <div className="flex items-center justify-between mb-2 text-sm">
             <span className="text-gray-600">Progress</span>
-            <span className="font-semibold text-gray-900">20%</span>
+            <span className="font-semibold text-gray-900">
+              {isNaN((countSprintCompleted / sprints.length) * 100)
+                ? 0
+                : ((countSprintCompleted / sprints.length) * 100).toFixed(0)}
+              %
+            </span>
           </div>
         </div>
 
@@ -85,21 +107,23 @@ const ProjectCard = ({ project, handleDirect, currentUser }: ProjectCardProps) =
 
         {/* Footer */}
         <div className="flex items-center justify-between pt-2 border-t">
-          <Badge 
-            variant="outline" 
-            className="text-xs"
-          >
+          <Badge variant="outline" className="text-xs">
             {isOwner ? 'Owner' : isMember ? 'Member' : 'Viewer'}
           </Badge>
-          <Button
+          <Link 
+            href={`/projects/${project._id}`}
+            className="inline-flex items-center text-blue-600 hover:text-blue-700 text-sm font-medium hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50 p-1 rounded-md transition-colors"
+            prefetch={true}
+            >
+            View Details
+            <ArrowUpRight className="w-4 h-4 ml-1" />
+          </Link>
+          {/* <Button
             variant="ghost"
             size="sm"
             className="text-blue-600 hover:text-blue-700"
             onClick={handleDirect}
-          >
-            View Details
-            <ArrowUpRight className="w-4 h-4 ml-1" />
-          </Button>
+          ></Button> */}
         </div>
       </CardContent>
     </Card>

@@ -106,12 +106,12 @@ export function FilterSortPanel({ filters, onFiltersChange, projectMembers }: Fi
                 {projectMembers.slice(0, 4).map((member) => (
                   <div key={member.memberId} className="flex items-center gap-2">
                     <Checkbox
-                      id={`assignee-${member.email}`}
-                      checked={filters.assigneeIds.includes(member.email)}
-                      onCheckedChange={() => handleAssigneeToggle(member.email)}
+                      id={`assignee-${member.memberId}`}
+                      checked={filters.assigneeIds.includes(member.memberId)}
+                      onCheckedChange={() => handleAssigneeToggle(member.memberId)}
                     />
                     <Label
-                      htmlFor={`assignee-${member.email}`}
+                      htmlFor={`assignee-${member.memberId}`}
                       className="text-sm cursor-pointer"
                     >
                       {member.email || 'Team Member'}

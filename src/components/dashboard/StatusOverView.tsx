@@ -6,7 +6,10 @@ import { useSelector } from 'react-redux'
 import { selectCurrentUser } from '@/lib/features/auth/authSlice'
 import { useQueries } from '@tanstack/react-query'
 import { sprintsByProjectOptions } from '@/lib/queries/sprint.queries'
-import { Sprint } from '@/lib/types'
+import { BoardColumn, Sprint } from '@/lib/types'
+import { useBoardColumnDetail } from '@/lib/hooks/useBoardColumns'
+import { boardColumnsBySprintOptions } from '@/lib/queries/boardColumn.queries'
+import { useEffect } from 'react'
 
 const StatusOverview = () => {
   const { data: projects = []} = useAllProjects()
@@ -17,9 +20,20 @@ const StatusOverview = () => {
   const sprintsQueries = useQueries({
     queries: projects.map((project) => {
       const options = sprintsByProjectOptions(project._id)
+      console.log('options: ', options)
       return {
         ...options,
         enabled: !!project._id
+      }
+    }),
+  })
+  const BoardsColumnQueries = useQueries({
+    queries: sprintsQueries.map((sprint) => {
+      const options = boardColumnsBySprintOptions(sprint.data?.[0]?._id || '')
+      console.log('options: ', options)
+      return {
+        ...options,
+        enabled: !!sprint.data?.[0]?._id
       }
     }),
   })
@@ -28,6 +42,20 @@ const StatusOverview = () => {
     const sprints = query.data || []
     return total + sprints.filter((sprint: Sprint) => sprint.status === 'active').length
   }, 0)
+
+  const countTasksCompleted = BoardsColumnQueries.reduce((total, query) => {
+    const boardColumns = query.data || [];
+    let completedCount = 0;
+    boardColumns.forEach((column: BoardColumn) => {
+      if (
+        column.title &&
+        (column.title.toLowerCase() === 'done')
+      ) {
+        completedCount += Array.isArray(column.taskOrderIds) ? column.taskOrderIds.length : 0;
+      }
+    });
+    return total + completedCount;
+  }, 0);
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
@@ -67,7 +95,7 @@ const StatusOverview = () => {
         </CardHeader>
         <CardContent>
           <div className="flex items-center justify-between">
-            <div className="text-3xl font-bold">56</div>
+            <div className="text-3xl font-bold">{countTasksCompleted}</div>
             <CheckCircle2 className="w-8 h-8 opacity-80" />
           </div>
           <div className="flex items-center gap-1 mt-2 text-sm opacity-90">
