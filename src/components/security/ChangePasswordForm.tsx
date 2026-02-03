@@ -26,9 +26,9 @@ export default function ChangePasswordForm() {
       }
       // Call API to change password
       await authApi.changePassword({
-      oldPassword,
-      newPassword
-    })
+        oldPassword,
+        newPassword
+      })
       toast.success('Password changed successfully')
     } catch (error) {
       toast.error(getErrorMessage(error) || 'Failed to change password')
