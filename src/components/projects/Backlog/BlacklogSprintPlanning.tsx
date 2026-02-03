@@ -25,7 +25,7 @@ function BlacklogSprintPlanning({
   onCreateSprint,
   onStartSprint
 }: BlacklogSprintPlanningProps) {
-  const { canEdit } = useProjectPermissions(project)
+  const { isOwner } = useProjectPermissions(project)
 
   const existSprintActive = sprints.some((s) => s.status === 'active')
   const activeSprints = sprints
@@ -49,7 +49,7 @@ function BlacklogSprintPlanning({
             onClick={onCreateSprint}
             variant="outline"
             className="w-full border-dashed border-2 h-auto py-4"
-            disabled={sprints.some((s) => s.status === 'planned') || !canEdit}
+            disabled={sprints.some((s) => s.status === 'planned') || !isOwner}
           >
             <Plus className="w-5 h-5 mr-2" />
             {sprints.some((s) => s.status === 'planned')
@@ -144,7 +144,7 @@ function BlacklogSprintPlanning({
                                 variant="outline"
                                 className="w-full"
                                 onClick={() => onStartSprint(sprint)}
-                                disabled={existSprintActive || !canEdit}
+                                disabled={existSprintActive || !isOwner}
                               >
                                 <Play className="w-3 h-3 mr-1" />
                                 Start Sprint
