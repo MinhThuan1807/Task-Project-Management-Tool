@@ -109,9 +109,7 @@ type TypingUser = {
 
 export function ChatView({ currentUser, allProjects }: ChatViewProps) {
   const { socket, isConnected } = useSocket()
-  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(
-    allProjects.length > 0 ? allProjects[0]._id : null
-  )
+  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [messageInput, setMessageInput] = useState('')
   const [messages, setMessages] = useState<Message[]>([])

@@ -26,6 +26,7 @@ import SprintListViewSkeleton from './CalendarView/SprintCalendarViewSkeleton'
 import SprintCalendarViewSkeleton from './CalendarView/SprintCalendarViewSkeleton'
 import { selectCurrentUser } from '@/lib/features/auth/authSlice'
 import { useSelector } from 'react-redux'
+import { useProjectPermissions } from '@/lib/hooks/useProjectPermissions'
 
 const BoardView = dynamic(() => import('./BoardView/BoardView'), {
   ssr: false,
@@ -83,6 +84,9 @@ const SprintBoardContainer = () => {
     () => allProjects.find((p) => p._id === projectId),
     [allProjects, projectId]
   )
+  
+  const { isOwner, canEdit } = useProjectPermissions(project)
+
   const sprint = useMemo(
     () => sprints.find((s) => s._id === sprintId),
     [sprints, sprintId]
@@ -145,13 +149,6 @@ const SprintBoardContainer = () => {
     return matchesSearch && matchesPriority && matchesAssignee
   })
 
-  const canEditTasks =
-    project?.ownerId === currentUser?._id ||
-    project?.members?.some(
-      (member) =>
-        member.memberId === currentUser?._id && member.role === 'member'
-    )
-
   // Stats
   const totalTasks = filteredTasks.length
   const doneColumn = boardColumns.find(
@@ -212,7 +209,7 @@ const SprintBoardContainer = () => {
             isFilterOpen={isFilterOpen}
             setIsCreateTaskOpen={setIsCreateTaskOpen}
             handleUpdateStatusSprint={handleUpdateStatusSprint}
-            canEditTask={canEditTasks}
+            canEditTask={isOwner}
           />
           <SprintSearch
             sprint={sprint}
@@ -266,14 +263,14 @@ const SprintBoardContainer = () => {
             sprint={sprint}
             project={project}
             boardColumns={boardColumns}
-            canEditTasks={canEditTasks}
+            canEditTasks={canEdit}
             filteredTasks={filteredTasks}
           />
         )}
         {viewMode === 'list' && (
           <SprintListView
             tasks={filteredTasks}
-            canEdit={canEditTasks}
+            canEdit={canEdit}
           />
         )}
         {viewMode === 'calendar' && (
@@ -284,7 +281,7 @@ const SprintBoardContainer = () => {
           />
         )}
       </div>
-      {canEditTasks && isCreateTaskOpen && (
+      {isOwner && isCreateTaskOpen && (
         <CreateTaskModal
           open={isCreateTaskOpen}
           onClose={() => setIsCreateTaskOpen(false)}

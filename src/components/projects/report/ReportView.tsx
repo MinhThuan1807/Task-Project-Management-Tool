@@ -32,10 +32,10 @@ const StatsCards = dynamic(() => import('./StatsCards'), {
   loading: () => <StatsCardsSkeleton />
 })
 
-const BurndownChart = dynamic(() => import('./BurndownChart'), {
-  ssr: false,
-  loading: () => <BurndownChartSkeleton />
-})
+// const BurndownChart = dynamic(() => import('./BurndownChart'), {
+//   ssr: false,
+//   loading: () => <BurndownChartSkeleton />
+// })
 const SprintProgress = dynamic(() => import('./SprintProgress'), {
   ssr: false,
   loading: () => <SprintProgressSkeleton />
@@ -57,13 +57,15 @@ export function ReportsView() {
   const param = useParams<{ id: string }>()
   const projectId = param.id
   const [selectedSprintId, setSelectedSprintId] = useState<string>('')
+
   const { data: projects } = useAllProjects()
   const project = projects?.find((p) => p._id === projectId)
+
   const { data: sprints } = useSprintsByProject(projectId)
+
   const sprintProgress = useSprintProgressReport(selectedSprintId)
   const projectVelocity = useProjectVelocityReport(projectId)
-  const sprintMemberDistribution =
-    useSprintMemberDistributionReport(selectedSprintId)
+  const sprintMemberDistribution = useSprintMemberDistributionReport(selectedSprintId)
 
   useEffect(() => {
     if (sprints?.length) setSelectedSprintId(sprints[0]._id)
@@ -157,7 +159,7 @@ export function ReportsView() {
               value={selectedSprintId}
               onValueChange={setSelectedSprintId}
             >
-              <SelectTrigger className="w-[200px]">
+              <SelectTrigger className="w-50">
                 <SelectValue placeholder="Select Sprint" />
               </SelectTrigger>
               <SelectContent>
@@ -189,8 +191,8 @@ export function ReportsView() {
         />
 
         {/* Charts Row 1 */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <BurndownChart burndownData={burndownData} />
+        <div className="grid grid-cols-1 lg:grid-cols-1 gap-6">
+          {/* <BurndownChart burndownData={burndownData} /> */}
           <SprintProgress progressData={progressData} />
         </div>
 

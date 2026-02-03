@@ -38,7 +38,7 @@ export default async function ProjectReportsPage({ params }: PageProps) {
   const dehydratedState = dehydrate(queryClient)
   return (
     <HydrationBoundary state={dehydratedState}>
-      <div className="h-screen">
+      <div className="h-full">
         <ReportsView />
       </div>
     </HydrationBoundary>
