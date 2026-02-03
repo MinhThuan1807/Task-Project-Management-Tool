@@ -44,7 +44,7 @@ export function AssignToMemberModal({
 
   const activeMembers = project.members.filter(m => m.status === 'active')
   const owner = activeMembers.find(m => m.memberId === project.ownerId)
-  const otherMembers = activeMembers.filter(m => m.memberId !== project.ownerId)
+  const otherMembers = activeMembers.filter(m => m.memberId !== project.ownerId && m.role !== 'viewer')
 
   const handleToggleMember = (memberId: string) => {
     setSelectedMemberIds(prev =>
@@ -127,7 +127,7 @@ export function AssignToMemberModal({
                 </button>
               </PopoverTrigger>
               <PopoverContent className="w-full p-0">
-                <ScrollArea className="max-h-60">
+                <ScrollArea className="max-h-60 overflow-auto">
                   {/* Owner */}
                   {owner && (
                     <>
@@ -157,7 +157,7 @@ export function AssignToMemberModal({
                   )}
 
                   {/* Team members */}
-                  {otherMembers.length > 0 && (
+                  {otherMembers.length > 0 &&(
                     <>
                       <div className="px-2 py-1.5 text-xs text-gray-500 font-medium mt-2">Team Members</div>
                       {otherMembers.map(member => (
@@ -190,7 +190,7 @@ export function AssignToMemberModal({
             </Popover>
           </div>
 
-          {selectedMemberIds.length > 0 && (
+          {selectedMemberIds.length > 0 &&  (
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
               <div className="flex items-start gap-3">
                 <Mail className="w-5 h-5 text-blue-600 mt-0.5" />
