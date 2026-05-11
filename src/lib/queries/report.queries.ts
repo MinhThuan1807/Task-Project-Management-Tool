@@ -22,7 +22,6 @@ export function sprintProgressOptions(sprintId?: string) {
     queryFn: async () => {
       if (!sprintId) return []
       const res = await reportApi.getSprintProgressReport(sprintId)
-      // API returns { progressData: [...] } — return the inner array for consumers
       return res?.data?.progressData ?? []
     },
     enabled: !!sprintId,

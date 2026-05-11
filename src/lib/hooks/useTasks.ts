@@ -110,7 +110,6 @@ export function useMoveTask() {
     mutationFn: ({ taskId, data }: { taskId: string; data: UpdateTaskRequest }) =>
       taskApi.update(taskId, data),
     onSuccess: () => {
-      // Chỉ invalidate các queries liên quan đến sprint và task detail
       queryClient.invalidateQueries({ queryKey: taskKeys.all })
       toast.success('Task moved successfully!')
     },

@@ -102,7 +102,7 @@ export default function CreateProjectModal() {
 
   // Save email to localStorage
   const saveEmailToStorage = (email: string) => {
-    const updatedEmails = [...new Set([email, ...savedEmails])].slice(0, 20) // Keep max 20 emails
+    const updatedEmails = [...new Set([email, ...savedEmails])].slice(0, 20) 
     setSavedEmails(updatedEmails)
     localStorage.setItem(SAVED_EMAILS_KEY, JSON.stringify(updatedEmails))
   }
