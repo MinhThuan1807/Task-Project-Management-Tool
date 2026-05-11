@@ -37,7 +37,6 @@ function BoardView({
   const activeTask = filteredTasks.find((t) => t._id === activeId)
   const moveTaskMutation = useMoveTask()
 
-  // Disable sensors if user doesn't have permission
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
@@ -94,7 +93,7 @@ function BoardView({
   return (
     <div className="flex-1 p-3 overflow-auto">
       <DndContext
-        sensors={canEditTasks ? sensors : disabledSensors} // Disable drag if no permission
+        sensors={canEditTasks ? sensors : disabledSensors}
         collisionDetection={closestCorners}
         onDragStart={handleDragStart}
         onDragOver={handleDragOver}

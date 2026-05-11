@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useActionState, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -35,7 +35,7 @@ const registerSchema = z
       .refine((val) => val === true, 'You must agree to the terms and conditions'),
     confirmPassword: z
       .string()
-      .min(1, 'Confirm Password is required')
+      .min(1, 'Confirm Passworord is required')
       .min(8, 'Confirm Password must be between 8 and 256 characters')
       .max(256, 'Confirm Password must be between 8 and 256 characters')
       .regex(/[A-Z]/, 'Confirm Password must contain at least one uppercase letter')
