@@ -131,6 +131,38 @@ This project is a **full-featured Agile Project Management Tool** inspired by Ji
 
 ---
 
+## 📸 Screenshots & Gallery
+
+### Dashboard
+
+![Dashboard](/public/screenshots/dashboard.png)
+
+### Project Management
+
+![Project Management](/public/screenshots/project.png)
+
+### Sprint Planning
+
+![Sprint Planning](/public/screenshots/sprint.png)
+
+### Kanban Board
+
+![Kanban Board](/public/screenshots/board.png)
+
+### Team Collaboration
+
+![Team Collaboration](/public/screenshots/team.png)
+
+### Reports & Analytics
+
+![Reports](/public/screenshots/report.png)
+
+### Real-time Chat
+
+![Chat](/public/screenshots/chat.png)
+
+---
+
 ## 🧠 Architecture Overview
 
 ### 1️⃣ Data Fetching Strategy
