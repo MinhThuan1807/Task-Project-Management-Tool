@@ -1,17 +1,19 @@
 <div align="center">
 
-# 🚀 Task Project Management Tool (SprintSOS)
+# 🚀 SprintSOS - Agile Project Management Tool
 
 [![Next.js](https://img.shields.io/badge/Next.js-15-black?style=for-the-badge&logo=next.js)](https://nextjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue?style=for-the-badge&logo=typescript)](https://www.typescriptlang.org/)
 [![TailwindCSS](https://img.shields.io/badge/TailwindCSS-3.0-38B2AC?style=for-the-badge&logo=tailwind-css)](https://tailwindcss.com/)
 [![Redux](https://img.shields.io/badge/Redux_Toolkit-2.0-764ABC?style=for-the-badge&logo=redux)](https://redux-toolkit.js.org/)
+[![Shadcn/UI](https://img.shields.io/badge/shadcn/ui-0.0-black?style=for-the-badge&logo=shadcnui)](https://ui.shadcn.com/)
+[![Socket.io](https://img.shields.io/badge/Socket.io-4.0-010101?style=for-the-badge&logo=socket.io)](https://socket.io/)
 
-### A modern Agile Project Management platform built with Next.js App Router + TypeScript
+### A high-performance, real-time Agile Project Management platform built with Next.js 15 App Router & TypeScript.
 
-### Designed to manage projects, sprints, tasks, team collaboration, and real-time communication.
+Designed to optimize workflows with interactive Kanban boards, sprint tracking, real-time team communication, and automated burndown charts.
 
-[🔗 Live Demo](https://sprintos.fittrackwk.online/) • [🔗 Backend Repository](https://github.com/QUANG221222/Sprintos-API) • [📦 Frontend Repository](https://github.com/MinhThuan1807/Task-Project-Management-Tool)
+[🔗 Live Demo](https://sprintos.fittrackwk.online/) • [🔗 Backend Repo](https://github.com/QUANG221222/Sprintos-API) • [📦 Frontend Repo](https://github.com/MinhThuan1807/Task-Project-Management-Tool)
 
 </div>
 
@@ -21,308 +23,174 @@
 
 - [📌 Overview](#-overview)
 - [🛠 Tech Stack](#-tech-stack)
+- [🧠 Key Technical Challenges & Solutions](#-key-technical-challenges--solutions)
 - [✨ Core Features](#-core-features)
-- [🧠 Architecture Overview](#-architecture-overview)
+- [📐 Architecture & Folder Structure](#-architecture--folder-structure)
+- [📸 Screenshots & UI Walkthrough](#-screenshots--ui-walkthrough)
 - [🚀 Getting Started](#-getting-started)
-- [📈 Performance Considerations](#-performance-considerations)
-- [🎯 What I Learned](#-what-i-learned)
-- [📌 Future Improvements](#-future-improvements)
-- [👨‍💻 Author](#-author)
-- [⭐ Why This Project Matters](#-why-this-project-matters)
+- [📈 Performance Optimization](#-performance-optimization)
+- [🎯 Learnings & Reflections](#-learnings--reflections)
+- [👨‍💻 Contact Author](#-contact-author)
 
 ---
 
 ## 📌 Overview
 
-This project is a **full-featured Agile Project Management Tool** inspired by Jira/Trello-style workflows.
-
-### 🎯 It allows teams to:
-
-- ✅ **Manage** projects & members
-- ✅ **Plan and track** sprints
-- ✅ **Organize** tasks with Kanban boards
-- ✅ **Monitor** performance via reports
-- ✅ **Collaborate** via real-time chat
-
-### 🎓 The goal of this project was to:
-
-- 🎯 Practice building a **production-like fullstack architecture**
-- 🎯 Apply **modern React patterns**
-- 🎯 Optimize **performance & state management**
-- 🎯 Implement **real-time communication**
+**SprintSOS** is a modern project management tool designed to model Jira & Trello workflows. It serves as a playground to demonstrate production-grade frontend architecture, emphasizing type-safety, efficient caching, state management, and seamless real-time synchronization.
 
 ---
 
 ## 🛠 Tech Stack
 
-### Frontend
+| Domain | Technology | Key Highlights |
+| :--- | :--- | :--- |
+| **Core** | **Next.js 15 (App Router)** & **TypeScript** | Hybrid Server/Client component structure, route groups, strict type checking. |
+| **State & Caching** | **TanStack Query v5** & **Redux Toolkit** | Caching, deduplication of server requests + predictable UI state management. |
+| **Styling** | **TailwindCSS** & **Shadcn/UI** | Tailwind variables + accessible headless radix-ui primitives for high fidelity UI. |
+| **Realtime** | **Socket.io-client** | Persistent websocket channels for messaging & state synchronizations. |
+| **Forms** | **React Hook Form** + **Zod** | Type-safe form validation and state management. |
+| **HTTP Client** | **Axios** | Dynamic interceptors with retry queuing mechanism on authentication expiration. |
 
-| Technology                   | Purpose                       |
-| ---------------------------- | ----------------------------- |
-| ⚡ **Next.js 15**            | App Router, Server Components |
-| 🔷 **TypeScript**            | Type-safe development         |
-| 🎨 **TailwindCSS**           | Utility-first styling         |
-| 🧠 **Redux Toolkit**         | Global state management       |
-| 🔄 **TanStack Query**        | Server state & caching        |
-| 📡 **Axios**                 | HTTP client                   |
-| 📊 **Recharts**              | Data visualization            |
-| 📝 **React Hook Form + Zod** | Form handling & validation    |
-| 🔔 **Sonner**                | Toast notifications           |
+---
 
-### Realtime
+## 🧠 Key Technical Challenges & Solutions
 
-- 🔌 **Socket.io Client** - WebSocket communication
+### 1️⃣ Advanced Token Rotation (Axios Interceptors)
+*   **Problem:** Handling expired access tokens smoothly without interrupting the user experience or firing duplicate token-refresh API requests when multiple component requests fail simultaneously.
+*   **Solution:** Built a custom Axios interceptor with a token refresh queue. When an API call returns status `410` (Token Expired), the interceptor locks subsequent requests inside a `refreshTokenPromise` queue. Once refreshed successfully, queued requests are automatically retried with the new credentials. If refresh fails, it dispatches a global Redux logout action (`logoutUserAPI()`) to securely wipe session states.
 
-### 🏗️ Architecture Highlights
+### 2️⃣ Seamless Drag-and-Drop UX (Optimistic Updates)
+*   **Problem:** Waiting for the server to confirm task movement on the Kanban board causes a sluggish user experience (latency lag).
+*   **Solution:** Implemented **Optimistic UI Updates** using TanStack Query's `onMutate`. When a user moves a task:
+    1. The query cache is immediately mutated to reflect the new column.
+    2. The previous cache is saved as a fallback checkpoint.
+    3. If the server fails to update the task, the transaction rolls back seamlessly to the saved checkpoint, and a toast error is triggered.
 
-- ✨ Server / Client Component separation (App Router)
-- ✨ Optimized data fetching with TanStack Query
-- ✨ Centralized API service layer
-- ✨ Role-based access control
-- ✨ Cookie-based authentication
-- ✨ Middleware route protection
+### 3️⃣ Real-time Synchronization & Socket.io Lifecycle
+*   **Problem:** Managing WebSocket instances globally in Next.js 15 client-side without memory leaks or redundant connections on route changes.
+*   **Solution:** Created a React Context-based `SocketProvider`. It initiates a single connection on root mount, binds cleanup actions on unmount, and exposes reactive helpers (`useSocket()`) to handle real-time chat, typing indicators, and system-wide notifications dynamically.
 
 ---
 
 ## ✨ Core Features
 
-### 🔐 Authentication
+### 🔐 Authentication & Security
+- **Middleware Protected Routes:** Route guards redirecting unauthorized requests to `/login` and authenticated users away from public pages.
+- **Secure Sessions:** JWT token processing integrated directly into secure HTTP-only cookie wrappers.
+- **RBAC:** Role-based access control (Owner, Member) governing project actions.
 
-- ✅ Register / Login
-- ✅ Cookie-based access token
-- ✅ Middleware protected routes
-- ✅ Role-based permissions
+### 📁 Agile Workflow Management
+- **Project Workspaces:** Dedicated spaces to manage resources, track performance, and invite members.
+- **Sprint Management:** Sprint creation, target metrics, goal tracking, and velocity analysis.
+- **Kanban Board:** Column-based board supporting instant task categorization, priority ratings, and point estimations.
 
-### 📁 Project Management
-
-- ✅ Create & manage projects
-- ✅ Invite members
-- ✅ Assign roles (Owner, Member)
-- ✅ Member status tracking
-
-### 🏃 Sprint Planning
-
-- ✅ Create sprint
-- ✅ Set sprint goals
-- ✅ Track sprint status
-- ✅ Define max story points
-
-### 📋 Kanban Board
-
-- ✅ Drag & drop tasks
-- ✅ Column-based workflow
-- ✅ Update task status
-- ✅ Task priority & story points
-- ✅ Optimistic UI updates
-
-### 📊 Reports & Analytics
-
-- ✅ Sprint progress
-- ✅ Velocity tracking
-- ✅ Burndown charts
-- ✅ Performance visualization
-
-### 💬 Real-time Chat
-
-- ✅ Project-based chat
-- ✅ Typing indicators
-- ✅ Live message updates
-- ✅ File/image preview support
+### 💬 Live Collaboration & Reporting
+- **Real-time Chat:** Instant chat per project workspace featuring typing status indicators and media previews.
+- **Analytics & Burndown Charts:** Custom visual reporting powered by **Recharts** to plot velocity trends and sprint burndowns.
 
 ---
 
-## 📸 Screenshots & Gallery
+## 📐 Architecture & Folder Structure
 
-### Dashboard
-
-![Dashboard](/public/screenshots/dashboard.png)
-
-### Project Management
-
-![Project Management](/public/screenshots/project.png)
-
-### Sprint Planning
-
-![Sprint Planning](/public/screenshots/sprint.png)
-
-### Kanban Board
-
-![Kanban Board](/public/screenshots/board.png)
-
-### Team Collaboration
-
-![Team Collaboration](/public/screenshots/team.png)
-
-### Reports & Analytics
-
-![Reports](/public/screenshots/report.png)
-
-### Real-time Chat
-
-![Chat](/public/screenshots/chat.png)
-
----
-
-## 🧠 Architecture Overview
-
-### 1️⃣ Data Fetching Strategy
-
-This project uses **TanStack Query** for:
-
-- 💾 **Caching** server data
-- 🔄 **Automatic** background refetch
-- ⚡ **Optimistic** updates
-- 🗑️ **Cache** invalidation
-
-**Example pattern:**
-
-```typescript
-GET /tasks → cached with queryKey ['tasks', sprintId]
-PATCH /tasks/:id → optimistic update
-On success → invalidate or update cache directly
-On error → rollback
-```
-
-This approach prevents excessive re-rendering and avoids complex `useEffect` logic.
-
-### 2️⃣ State Management
-
-| Type of State             | Tool           |
-| ------------------------- | -------------- |
-| **Server state**          | TanStack Query |
-| **Global UI state**       | Redux Toolkit  |
-| **Local component state** | useState       |
-
-This separation keeps the architecture **scalable and maintainable**.
-
-### 3️⃣ Folder Structure (Simplified)
+This project follows a clean **Feature-Folder and Layer-Separated Architecture**:
 
 ```bash
 src/
- ├── app/
- ├── components/
- ├── lib/
- │    ├── services/
- │    ├── utils/
- │    └── types.ts
- ├── providers/
- └── middleware.ts
+ ├── app/                    # Next.js pages & layout system
+ │    ├── (auth)/            # Auth routes group (login, register)
+ │    └── (dashboard)/       # Dashboard routes group (projects, boards, chat)
+ ├── components/             # Reusable UI & Layout Components
+ │    ├── auth/              # Auth-related UI modules
+ │    ├── ui/                # Base UI components (Shadcn/UI primitives)
+ │    └── ChatView.tsx       # Live chat component interface
+ ├── lib/                    # Shared core business logic
+ │    ├── features/          # Redux slices (state management)
+ │    ├── queries/           # TanStack query wrapper hooks (cache keys)
+ │    ├── services/          # Pure Axios API services
+ │    ├── types/             # Common TypeScript definitions
+ │    └── axios.ts           # Interceptor-wrapped Axios instance
+ └── middleware.ts           # Route protection middleware
 ```
 
-- `services/` → API layer
-- `providers/` → Socket & global context
-- `middleware.ts` → Route protection
-- `lib/types.ts` → Shared TypeScript types
+*   **Decoupled Queries & Services:** Axios endpoints are declared in `services/`. React Query hooks are declared in `queries/`, keeping components clean of raw HTTP concerns.
 
-### 🔐 Middleware Logic
+---
 
-- 🚫 Redirect unauthenticated users to `/login`
-- 🚫 Prevent logged-in users from accessing public auth routes
-- ✅ Protect private routes with cookie validation
+## 📸 Screenshots & UI Walkthrough
+
+### 📊 Dashboard Workspace Overview
+![Dashboard](/public/screenshots/dashboard.png)
+
+### 📋 Interactive Kanban Board (Optimistic DnD)
+![Kanban Board](/public/screenshots/board.png)
+
+### 🏃 Sprint Backlog & Planning
+![Sprint Planning](/public/screenshots/sprint.png)
+
+### 💬 Real-time Team Chat
+![Chat](/public/screenshots/chat.png)
+
+### 📈 Reports & Velocity Tracking
+![Reports](/public/screenshots/report.png)
 
 ---
 
 ## 🚀 Getting Started
 
-### 1️⃣ Clone the repo
-
+### 1️⃣ Clone the Repository
 ```bash
 git clone https://github.com/MinhThuan1807/Task-Project-Management-Tool.git
 cd Task-Project-Management-Tool
 ```
 
-### 2️⃣ Install dependencies
-
+### 2️⃣ Install Dependencies
 ```bash
 pnpm install
 # or
 npm install
 ```
 
-### 3️⃣ Setup environment variables
-
-Create `.env.local` file:
-
+### 3️⃣ Configure Environment
+Create a `.env.local` file in the root directory:
 ```env
 NEXT_PUBLIC_API_URL=http://localhost:5000
 NEXT_PUBLIC_SOCKET_IO_URL=http://localhost:5000
 ```
 
-### 4️⃣ Run development server
-
+### 4️⃣ Spin up the Dev Server
 ```bash
 pnpm dev
+# open http://localhost:3000
 ```
 
-App runs at: **http://localhost:3000**
+---
+
+## 📈 Performance Optimization
+
+- **Selective Server Rendering (SSR):** Critical metadata is server-fetched, while dynamic interactive modules hydrate dynamically.
+- **Query Cache Synchronization:** `staleTime` is set to `2 minutes` across modules to prevent double-fetching on navigate-back triggers.
+- **Debounced Input handlers:** Input validations are throttled/debounced to minimize layout re-calculations.
 
 ---
 
-## 📈 Performance Considerations
+## 🎯 Learnings & Reflections
 
-- ⚡ Avoid double-fetch between Server & Client
-- ⚡ Optimistic UI updates for drag-drop
-- ⚡ Suspense boundaries for async components
-- ⚡ Code splitting via App Router
-- ⚡ Controlled query invalidation
-
----
-
-## 🎯 What I Learned
-
-- ✅ Real-world project structuring
-- ✅ Server vs Client component boundaries
-- ✅ Data consistency with optimistic updates
-- ✅ Managing complex UI states
-- ✅ Integrating WebSocket in modern React
-- ✅ Production-like auth flow
+- Experienced building production-ready project modules using standard enterprise design systems.
+- Mastered client-server synchronization patterns utilizing React-Query and custom server-state mutations.
+- Configured connection states and fallback states during server websocket dropouts.
+- Understand how to structure route groups efficiently to implement robust cookie authentication.
 
 ---
 
-## 📌 Future Improvements
-
-- 🚀 Add unit & integration tests
-- 🚀 CI/CD with GitHub Actions
-- 🚀 Role-based granular permissions
-- 🚀 Dark mode
-- 🚀 Activity logs
-- 🚀 Audit history
-- 🚀 Micro-frontend architecture exploration
-
----
-
-## 👨‍💻 Author
+## 👨‍💻 Contact Author
 
 **Minh Thuận (Jake Nguyen)**  
-_Frontend Developer (React / Next.js / TypeScript)_
+*Frontend Developer (Next.js / TypeScript)*
 
-- 📧 Email: nguyenthuan05.work.com
+- 📧 Email: nguyenthuan05.work@gmail.com
 - 💼 LinkedIn: [Thuan Nguyen](https://www.linkedin.com/in/thuan-nguyen-a568273b7/)
 - 🐙 GitHub: [@MinhThuan1807](https://github.com/MinhThuan1807)
 
 ---
 
-## ⭐ Why This Project Matters
-
-This project demonstrates:
-
-- 🎯 **Modern React architecture** (App Router)
-- 🎯 **Production-level state management**
-- 🎯 **Real-time system integration**
-- 🎯 **Scalable folder structure**
-- 🎯 **Clean separation of concerns**
-
-> 💡 It reflects my ability to build a complex application from scratch using industry-standard tools.
-
----
-
-<div align="center">
-
-**⭐ If you find this project useful, please consider giving it a star!**
-
-[![MIT License](https://img.shields.io/badge/License-MIT-green.svg)](https://choosealicense.com/licenses/mit/)
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](http://makeapullrequest.com)
-
-Made with ❤️ by [Minh Thuận](https://github.com/MinhThuan1807)
-
-</div>
+⭐ **If you find this project useful, please consider giving it a star!**
