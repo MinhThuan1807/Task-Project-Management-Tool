@@ -13,7 +13,7 @@
 
 Designed to optimize workflows with interactive Kanban boards, sprint tracking, real-time team communication, and automated burndown charts.
 
-[🔗 Live Demo](https://sprintos.fittrackwk.online/) • [🔗 Backend Repo](https://github.com/QUANG221222/Sprintos-API) • [📦 Frontend Repo](https://github.com/MinhThuan1807/Task-Project-Management-Tool)
+[🔗 Backend Repo](https://github.com/QUANG221222/Sprintos-API) • [📦 Frontend Repo](https://github.com/MinhThuan1807/Task-Project-Management-Tool)
 
 </div>
 
